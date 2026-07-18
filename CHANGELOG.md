@@ -9,6 +9,19 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Industry card opens the full market picture
+
+**Added**
+- Tapping the Dashboard's Industry Standing card opens an industry
+  sheet: market share as the turbine pie (all ten carriers, player in
+  the accent color, exact percentages in the legend) and the top-10
+  market-cap ladder as ranked bars — log-scaled so the $8M end and
+  the $9B end share one axis (noted on-screen; the mono figures are
+  exact). The player row carries a "You" badge and the gradient bar.
+  Chevron affordance added to the card; clock holds while the sheet
+  is open.
+
+
 ### 2026-07-18 — Industry rank on the Dashboard
 
 **Added**

@@ -12,6 +12,7 @@ struct DashboardView: View {
     @Environment(GameEngine.self) private var engine
     @State private var trendMetric: TrendMetric = .netWorth
     @State private var settleFlash = false
+    @State private var showingIndustry = false
     private let accent = Theme.sky
 
     enum TrendMetric: String, CaseIterable, Identifiable {
@@ -150,23 +151,33 @@ struct DashboardView: View {
 
     private var industryCard: some View {
         let (rank, total) = engine.industryRank
-        return GameCard {
-            SectionHeader(title: "Industry standing", icon: "chart.bar.xaxis", accent: accent)
-            HStack(spacing: 20) {
-                StatTile(label: "Rank", value: "#\(rank) of \(total)",
-                         color: rank <= 3 ? Theme.profit : Theme.textPrimary)
-                StatTile(label: "Market cap", value: engine.marketCap.money)
-                StatTile(label: "Market share",
-                         value: String(format: "%.1f%%", engine.marketShare * 100))
-            }
-            if let next = engine.nextRival {
-                Text("Next up: \(next.name) · \(next.marketCap.money) market cap")
-                    .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
-            } else {
-                Text("India's largest carrier. The sky is yours.")
-                    .font(.game(.caption2, weight: .semibold)).foregroundStyle(Theme.profit)
+        return Button {
+            showingIndustry = true
+        } label: {
+            GameCard {
+                HStack {
+                    SectionHeader(title: "Industry standing", icon: "chart.bar.xaxis", accent: accent)
+                    Image(systemName: "chevron.right")
+                        .font(.caption2.weight(.bold)).foregroundStyle(Theme.textSecondary)
+                }
+                HStack(spacing: 20) {
+                    StatTile(label: "Rank", value: "#\(rank) of \(total)",
+                             color: rank <= 3 ? Theme.profit : Theme.textPrimary)
+                    StatTile(label: "Market cap", value: engine.marketCap.money)
+                    StatTile(label: "Market share",
+                             value: String(format: "%.1f%%", engine.marketShare * 100))
+                }
+                if let next = engine.nextRival {
+                    Text("Next up: \(next.name) · \(next.marketCap.money) market cap")
+                        .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                } else {
+                    Text("India's largest carrier. The sky is yours.")
+                        .font(.game(.caption2, weight: .semibold)).foregroundStyle(Theme.profit)
+                }
             }
         }
+        .buttonStyle(.plain)
+        .sheet(isPresented: $showingIndustry) { IndustrySheet() }
     }
 
     // ── Trends ───────────────────────────────────────────────────────────
@@ -232,7 +243,131 @@ struct DashboardView: View {
     }
 }
 
+// ── The industry, in full: share pie + cap ladder ─────────────────────────
+
+private struct IndustrySheet: View {
+    @Environment(GameEngine.self) private var engine
+    @Environment(\.dismiss) private var dismiss
+    private let accent = Theme.sky
+    /// Rival slice/bar palette; the player is always Theme.sky.
+    private let palette: [Color] = [
+        Theme.teal, Theme.violet, Theme.orange, Theme.warn, Theme.mint,
+        Theme.loss, Color.white.opacity(0.7), Color.white.opacity(0.5),
+        Color.white.opacity(0.35),
+    ]
+
+    private struct Carrier: Identifiable {
+        let name: String
+        let cap: Double
+        let pax: Double
+        let isPlayer: Bool
+        var id: String { name }
+    }
+
+    private var carriers: [Carrier] {
+        var all = Balance.industryRivals.map {
+            Carrier(name: $0.name, cap: $0.marketCap, pax: $0.weeklyPax, isPlayer: false)
+        }
+        all.append(Carrier(name: engine.state.airlineName.isEmpty ? "You"
+                                : engine.state.airlineName,
+                           cap: engine.marketCap, pax: engine.weeklyPax, isPlayer: true))
+        return all.sorted { $0.cap > $1.cap }
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("The industry")
+                    .font(.game(.title2, weight: .bold)).foregroundStyle(Theme.textPrimary)
+                    .padding(.top, 20)
+
+                SectionHeader(title: "Market share · weekly passengers",
+                              icon: "chart.pie.fill", accent: accent)
+                ExpensePie(slices: shareSlices)
+
+                Divider().overlay(Theme.hairline)
+
+                SectionHeader(title: "Market cap · top \(carriers.count)",
+                              icon: "chart.bar.xaxis", accent: accent)
+                Text("Bars are log-scaled; the numbers are exact.")
+                    .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                VStack(spacing: 8) {
+                    ForEach(Array(carriers.enumerated()), id: \.element.id) { index, carrier in
+                        capRow(rank: index + 1, carrier)
+                    }
+                }
+
+                Button("Done") { dismiss() }
+                    .buttonStyle(GameButtonStyle(color: accent))
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, 24)
+            }
+            .padding(.horizontal, 20)
+        }
+        .background(Theme.bgElevated)
+        .presentationDetents([.large])
+        .presentationBackground(Theme.bgElevated)
+        .preferredColorScheme(.dark)
+        .holdsSimClock()
+    }
+
+    private var shareSlices: [ExpenseSlice] {
+        var colorIndex = 0
+        return carriers.map { carrier in
+            if carrier.isPlayer {
+                return ExpenseSlice(label: carrier.name, amount: max(carrier.pax, 1),
+                                    color: accent)
+            }
+            let color = palette[colorIndex % palette.count]
+            colorIndex += 1
+            return ExpenseSlice(label: carrier.name, amount: carrier.pax, color: color)
+        }
+    }
+
+    private func capRow(rank: Int, _ carrier: Carrier) -> some View {
+        // Log scale: $8M and $9B on one axis without erasing the small end.
+        let maxCap = carriers.first?.cap ?? 1
+        let floorLog = 6.0   // $1M
+        let span = max(log10(maxCap) - floorLog, 0.1)
+        let fraction = max(0.04, (log10(max(carrier.cap, 1_500_000)) - floorLog) / span)
+        return HStack(spacing: 8) {
+            Text("#\(rank)")
+                .font(.data(.caption2, weight: .bold))
+                .foregroundStyle(Theme.textSecondary)
+                .frame(width: 26, alignment: .leading)
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
+                    Text(carrier.name)
+                        .font(.game(.caption, weight: carrier.isPlayer ? .bold : .semibold))
+                        .foregroundStyle(carrier.isPlayer ? accent : Theme.textPrimary)
+                    if carrier.isPlayer {
+                        StatusBadge(text: "You", color: accent)
+                    }
+                    Spacer()
+                    TickerText(text: carrier.cap.money,
+                               font: .game(.caption2, weight: .bold),
+                               color: Theme.textSecondary)
+                }
+                GeometryReader { geo in
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(carrier.isPlayer
+                              ? AnyShapeStyle(Theme.accentGradient(accent))
+                              : AnyShapeStyle(Color.white.opacity(0.18)))
+                        .frame(width: geo.size.width * fraction)
+                }
+                .frame(height: 6)
+            }
+        }
+    }
+}
+
 #Preview {
     DashboardView().environment(GameEngine.previewGame())
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Industry sheet") {
+    IndustrySheet()
+        .environment(GameEngine.previewGame())
         .preferredColorScheme(.dark)
 }
