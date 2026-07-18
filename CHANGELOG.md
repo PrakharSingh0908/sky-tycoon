@@ -9,6 +9,21 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Globe coastlines no longer tear at the view edge
+
+**Fixed**
+- Land rings crossing the orthographic horizon tore into slivers
+  (visible around the Black Sea when panning). Two causes: hidden
+  vertices were dropped and each visible fragment force-closed,
+  drawing closure lines across the map; and the -0.02 horizon
+  overshoot let just-hidden points project folded back inside the
+  disc. Land now projects whole rings with behind-horizon vertices
+  clamped onto the horizon rim (the standard orthographic treatment),
+  and fills even-odd so lake holes like the Caspian render as water.
+  Verified with the camera parked on the Black Sea with the full
+  horizon in frame.
+
+
 ### 2026-07-18 — Expense chart restyled as a turbofan face
 
 **Changed**

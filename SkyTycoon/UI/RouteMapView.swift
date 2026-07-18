@@ -131,11 +131,34 @@ struct RouteMapView: View {
         let φ = latRad
         let φ0 = camera.centerLat * .pi / 180
         let cosC = sin(φ0) * sin(φ) + cos(φ0) * cos(φ) * cos(λ)
-        guard cosC > -0.02 else { return nil }   // small overshoot for edge continuity
+        guard cosC > 0 else { return nil }
         let x = cos(φ) * sin(λ)
         let y = cos(φ0) * sin(φ) - sin(φ0) * cos(φ) * cos(λ)
         return CGPoint(x: size.width / 2 + radius * x,
                        y: size.height / 2 - radius * y)
+    }
+
+    /// Projection for FILLED land rings: vertices behind the horizon clamp
+    /// onto the horizon rim instead of vanishing (or folding back through
+    /// the disc, which tore coastlines near the view edge). Rings stay
+    /// closed; hidden stretches hug the rim. Also reports visibility so
+    /// fully-hidden rings can be skipped.
+    private func projectClamped(_ lonRad: Double, _ latRad: Double,
+                                size: CGSize, radius: Double) -> (point: CGPoint, visible: Bool) {
+        let λ = lonRad - camera.centerLon * .pi / 180
+        let φ = latRad
+        let φ0 = camera.centerLat * .pi / 180
+        let cosC = sin(φ0) * sin(φ) + cos(φ0) * cos(φ) * cos(λ)
+        var x = cos(φ) * sin(λ)
+        var y = cos(φ0) * sin(φ) - sin(φ0) * cos(φ) * cos(λ)
+        if cosC <= 0 {
+            let len = max(hypot(x, y), 1e-9)
+            x /= len
+            y /= len
+        }
+        return (CGPoint(x: size.width / 2 + radius * x,
+                        y: size.height / 2 - radius * y),
+                cosC > 0)
     }
 
     // MARK: - Drawing
@@ -171,24 +194,26 @@ struct RouteMapView: View {
         }
         globe.stroke(grid, with: .color(.white.opacity(0.05)), lineWidth: 0.7)
 
-        // Land.
+        // Land. Rings project whole, with hidden vertices clamped to the
+        // horizon rim — never split-and-closed, which tore coastlines.
+        // Even-odd fill keeps lake holes (e.g. the Caspian) as holes.
         var land = Path()
         for ring in WorldGeometry.shared.rings {
-            var subpath: [CGPoint] = []
+            var projected: [CGPoint] = []
+            projected.reserveCapacity(ring.count)
             var anyVisible = false
             for point in ring {
-                if let p = project(point.x, point.y, size: size, radius: radius) {
-                    subpath.append(p); anyVisible = true
-                } else if !subpath.isEmpty {
-                    land.addLines(subpath); land.closeSubpath()
-                    subpath = []
-                }
+                let (p, visible) = projectClamped(point.x, point.y,
+                                                  size: size, radius: radius)
+                projected.append(p)
+                anyVisible = anyVisible || visible
             }
-            if anyVisible, subpath.count > 2 {
-                land.addLines(subpath); land.closeSubpath()
-            }
+            guard anyVisible, projected.count > 2 else { continue }
+            land.addLines(projected)
+            land.closeSubpath()
         }
-        globe.fill(land, with: .color(Color(red: 0.13, green: 0.19, blue: 0.28)))
+        globe.fill(land, with: .color(Color(red: 0.13, green: 0.19, blue: 0.28)),
+                   style: FillStyle(eoFill: true))
         globe.stroke(land, with: .color(.white.opacity(0.10)), lineWidth: 0.8)
 
         // Route arcs: flight-map bows (a quadratic curve lifted from the
