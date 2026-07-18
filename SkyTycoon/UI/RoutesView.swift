@@ -123,6 +123,7 @@ private struct BoardingPassCard: View {
     let destName: String
     let accent: Color
     @State private var confirmingCancel = false
+    @State private var showingAircraft = false
 
     private let stubHeight: CGFloat = 102
 
@@ -136,6 +137,10 @@ private struct BoardingPassCard: View {
             }
             .padding(Theme.cardPadding)
             .padding(.vertical, 2)
+
+            // ── Who's flying it: lives ABOVE the perforation because the
+            // stub is fixed-height (the ticket notches depend on it).
+            aircraftDropdown
 
             PerforationLine().padding(.horizontal, 16)
 
@@ -186,6 +191,47 @@ private struct BoardingPassCard: View {
                 .fill(Theme.card, style: FillStyle(eoFill: true))
         )
         .shadow(color: .black.opacity(0.25), radius: 10, y: 5)
+    }
+
+    /// The aircraft actively serving this route, collapsible.
+    @ViewBuilder private var aircraftDropdown: some View {
+        let assigned = engine.state.fleet.filter { $0.assignedRouteID == route.id }
+        if !assigned.isEmpty {
+            DisclosureGroup(isExpanded: $showingAircraft) {
+                VStack(spacing: 6) {
+                    ForEach(assigned) { plane in
+                        aircraftRow(plane)
+                    }
+                }
+                .padding(.top, 8)
+            } label: {
+                Label("Aircraft on this route (\(assigned.count))", systemImage: "airplane")
+                    .font(.game(.caption, weight: .semibold))
+                    .foregroundStyle(Theme.textSecondary)
+            }
+            .tint(Theme.textSecondary)
+            .padding(.horizontal, Theme.cardPadding)
+            .padding(.bottom, 10)
+        }
+    }
+
+    private func aircraftRow(_ plane: Aircraft) -> some View {
+        let spec = Balance.specs[plane.type]!
+        return HStack(spacing: 8) {
+            Image(systemName: "airplane").font(.caption2).foregroundStyle(accent)
+            Text(plane.nickname)
+                .font(.game(.caption, weight: .semibold)).foregroundStyle(Theme.textPrimary)
+            Text(spec.displayName)
+                .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+            Spacer()
+            if plane.groundedWeeksRemaining > 0 {
+                StatusBadge(text: "In shop · \(plane.groundedWeeksRemaining) wk", color: Theme.warn)
+            } else {
+                TickerText(text: "cond \(Int(plane.condition))%",
+                           font: .game(.caption2, weight: .semibold),
+                           color: Theme.health(plane.condition / 100))
+            }
+        }
     }
 
     private func codeBlock(code: String, city: String, alignment: HorizontalAlignment) -> some View {

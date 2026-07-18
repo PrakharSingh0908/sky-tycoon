@@ -9,6 +9,18 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Boarding passes list their active aircraft
+
+**Added**
+- Each route's boarding pass gains a collapsible "Aircraft on this
+  route (N)" dropdown above the perforation, one row per assigned
+  plane: registration, type, and condition (or an "In shop" badge
+  while grounded). Hidden entirely on unstaffed routes. It sits in
+  the flexible top section because the ticket stub is fixed-height
+  (the punched notches depend on it). *Why:* seeing who actually
+  flies a route previously required opening the detail screen.
+
+
 ### 2026-07-18 — Milestones move to the bottom of the Dashboard
 
 **Changed**
