@@ -9,6 +9,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Pending starts visible on the collapsed roster row
+
+**Changed**
+- The roster disclosure label now reads "Roster (8) · 2 join next wk"
+  in teal while hires are pending, so the start-week signal shows
+  without expanding the dropdown (it already appeared on the pool
+  header and inside the roster rows).
+
+
 ### 2026-07-18 — New hires say when they start
 
 **Added**

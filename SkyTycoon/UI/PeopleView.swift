@@ -100,9 +100,18 @@ private struct StaffPoolCard: View {
                         memberRow(member)
                     }
                 } label: {
-                    Label("Roster (\(pool.members.count))", systemImage: "person.text.rectangle")
-                        .font(.game(.caption, weight: .semibold))
-                        .foregroundStyle(Theme.textSecondary)
+                    HStack(spacing: 6) {
+                        Label("Roster (\(pool.members.count))", systemImage: "person.text.rectangle")
+                            .font(.game(.caption, weight: .semibold))
+                            .foregroundStyle(Theme.textSecondary)
+                        // Pending starts surface on the collapsed row too.
+                        let joining = pool.members.filter { $0.hiredOn == engine.state.date }.count
+                        if joining > 0 {
+                            Text("· \(joining) join\(joining == 1 ? "s" : "") next wk")
+                                .font(.game(.caption, weight: .semibold))
+                                .foregroundStyle(Theme.teal)
+                        }
+                    }
                 }
                 .tint(Theme.textSecondary)
             }
