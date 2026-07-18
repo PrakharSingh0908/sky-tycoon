@@ -9,6 +9,17 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Assign list shows where a plane is already flying
+
+**Changed**
+- Route detail's Assign Aircraft rows now surface each plane's current
+  commitment: an "On DEL ⇄ BOM" badge plus a warning line ("Assigning
+  here pulls it off DEL ⇄ BOM"), so reassignment is a deliberate steal
+  rather than a silent one. In-shop planes show their remaining
+  grounding, and the row's range figure is now payload-corrected
+  (matching what assignment actually checks).
+
+
 ### 2026-07-18 — The roster: staff become individuals
 
 **Added**

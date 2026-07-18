@@ -79,6 +79,16 @@ struct RoutesView: View {
     }
 }
 
+#Preview("Assign, busy elsewhere") {
+    let engine = GameEngine.previewGame()
+    return NavigationStack {
+        // Route 1 (BOM–BLR) is unassigned; VT-A is busy on DEL–BOM.
+        RouteDetailView(routeID: engine.state.routes[1].id)
+    }
+    .environment(engine)
+    .preferredColorScheme(.dark)
+}
+
 #Preview("Assign, empty fleet") {
     let engine = GameEngine.newGame(airlineName: "Preview Air", country: .india, seed: 9)
     let route = engine.openRoute(from: "DEL", to: "GOI", fare: 90, frequency: 7)!
@@ -352,6 +362,12 @@ struct RouteDetailView: View {
             ForEach(engine.state.fleet) { plane in
                 let assigned = route.assignedAircraftIDs.contains(plane.id)
                 let spec = Balance.specs[plane.type]!
+                // Busy elsewhere? Name the route so a reassignment is a
+                // deliberate steal, not a surprise.
+                let busyOn = plane.assignedRouteID.flatMap { otherID -> Route? in
+                    otherID == routeID ? nil
+                        : engine.state.routes.first { $0.id == otherID }
+                }
                 Button {
                     engine.assign(aircraftID: plane.id, to: routeID)
                 } label: {
@@ -362,14 +378,22 @@ struct RouteDetailView: View {
                             Text(plane.nickname)
                                 .font(.game(.subheadline, weight: .semibold))
                                 .foregroundStyle(Theme.textPrimary)
-                            Text("\(spec.displayName) · range \(Int(spec.rangeKm)) km")
+                            Text("\(spec.displayName) · range \(Int(plane.effectiveRangeKm(spec: spec))) km")
                                 .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                            if let busyOn {
+                                Text("Assigning here pulls it off \(busyOn.originID) ⇄ \(busyOn.destinationID)")
+                                    .font(.game(.caption2)).foregroundStyle(Theme.warn)
+                            }
                         }
                         Spacer()
-                        if spec.rangeKm < route.distanceKm {
+                        if plane.effectiveRangeKm(spec: spec) < route.distanceKm {
                             StatusBadge(text: "Out of range", color: Theme.loss)
                         } else if plane.status == .onOrder {
                             StatusBadge(text: "On order", color: Theme.warn)
+                        } else if plane.groundedWeeksRemaining > 0 {
+                            StatusBadge(text: "In shop · \(plane.groundedWeeksRemaining) wk", color: Theme.warn)
+                        } else if let busyOn {
+                            StatusBadge(text: "On \(busyOn.originID) ⇄ \(busyOn.destinationID)", color: Theme.warn)
                         }
                     }
                 }
