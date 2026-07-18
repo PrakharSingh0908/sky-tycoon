@@ -9,6 +9,18 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Founding CTA gets an accessible docked box
+
+**Changed**
+- The docked "Found the airline" button now sits in a solid elevated
+  box with a hairline top edge, and its disabled state no longer dims
+  the whole control to 40% opacity. Instead it renders at full opacity
+  in neutral colors with a hint line ("Enter an airline name to take
+  off."). *Why:* opacity-dimmed controls on a dark background fall
+  below readable contrast, and a ghost button explains nothing; a
+  full-contrast state plus a reason is legible to everyone.
+
+
 ### 2026-07-18 — Sticky founding CTA; hot-reload wiring for UI work
 
 **Changed**

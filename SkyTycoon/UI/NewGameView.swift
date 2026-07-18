@@ -69,23 +69,35 @@ struct NewGameView: View {
         .onAppear { nameFocused = true }
     }
 
-    /// Docked above the safe area (and the keyboard); scroll content fades
-    /// out underneath it instead of carrying the button away.
+    private var canFound: Bool {
+        !airlineName.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
+    /// Docked above the safe area (and the keyboard) in a solid box.
+    /// Disabled state stays at full opacity — neutral colors plus a hint
+    /// line, so the label never drops below readable contrast.
     private var foundButton: some View {
-        Button {
-            onStart(airlineName.trimmingCharacters(in: .whitespaces), .india)
-        } label: {
-            Text("Found the airline").frame(maxWidth: .infinity)
+        VStack(spacing: 8) {
+            Button {
+                onStart(airlineName.trimmingCharacters(in: .whitespaces), .india)
+            } label: {
+                Text("Found the airline").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(GameButtonStyle(color: canFound ? Theme.sky : Theme.textSecondary,
+                                         prominent: canFound))
+            .disabled(!canFound)
+            if !canFound {
+                Text("Enter an airline name to take off.")
+                    .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+            }
         }
-        .buttonStyle(GameButtonStyle(color: Theme.sky, prominent: true))
-        .disabled(airlineName.trimmingCharacters(in: .whitespaces).isEmpty)
-        .opacity(airlineName.trimmingCharacters(in: .whitespaces).isEmpty ? 0.4 : 1)
         .padding(.horizontal, Theme.gutter)
         .padding(.top, 12)
         .padding(.bottom, 8)
+        .frame(maxWidth: .infinity)
         .background(
-            LinearGradient(colors: [Theme.bg.opacity(0), Theme.bg, Theme.bg],
-                           startPoint: .top, endPoint: .bottom)
+            Theme.bgElevated
+                .overlay(alignment: .top) { Theme.hairline.frame(height: 1) }
                 .ignoresSafeArea(edges: .bottom)
         )
     }
