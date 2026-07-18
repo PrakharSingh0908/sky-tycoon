@@ -9,6 +9,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Milestones move to the bottom of the Dashboard
+
+**Changed**
+- Dashboard order is now hero → trends → last week → milestones, with
+  panel indices renumbered to match. *Why:* user direction; the live
+  numbers are the daily read, the objective checklist is reference.
+
+
 ### 2026-07-18 — Globe coastlines no longer tear at the view edge
 
 **Fixed**
