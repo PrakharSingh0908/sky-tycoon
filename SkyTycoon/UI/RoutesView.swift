@@ -79,6 +79,16 @@ struct RoutesView: View {
     }
 }
 
+#Preview("Assign, empty fleet") {
+    let engine = GameEngine.newGame(airlineName: "Preview Air", country: .india, seed: 9)
+    let route = engine.openRoute(from: "DEL", to: "GOI", fare: 90, frequency: 7)!
+    return NavigationStack {
+        RouteDetailView(routeID: route.id)
+    }
+    .environment(engine)
+    .preferredColorScheme(.dark)
+}
+
 #Preview {
     RoutesView().environment(GameEngine.previewGame())
         .preferredColorScheme(.dark)
@@ -320,11 +330,24 @@ struct RouteDetailView: View {
     }
 
     private func assignCard(_ route: Route) -> some View {
-        GameCard {
+        // Can anything in the fleet actually take this route?
+        let hasCandidate = engine.state.fleet.contains {
+            engine.canOperate(aircraftID: $0.id, routeID: route.id)
+        }
+        return GameCard {
             SectionHeader(title: "Assign aircraft", icon: "airplane.circle.fill", accent: accent)
-            if engine.state.fleet.isEmpty {
-                Text("No aircraft in the fleet yet — visit the showroom.")
+            if !hasCandidate {
+                Text(engine.state.fleet.isEmpty
+                     ? "No aircraft in the fleet yet."
+                     : "Nothing in the fleet can fly this route — check range and runway class.")
                     .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+                NavigationLink {
+                    ShowroomView(fittingRoute: route)
+                } label: {
+                    Label("Get an aircraft for this route", systemImage: "cart.fill")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(GameButtonStyle(color: Theme.orange, prominent: true))
             }
             ForEach(engine.state.fleet) { plane in
                 let assigned = route.assignedAircraftIDs.contains(plane.id)

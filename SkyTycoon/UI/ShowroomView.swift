@@ -21,9 +21,32 @@ struct AcquisitionReceipt: Identifiable {
 
 struct ShowroomView: View {
     @Environment(GameEngine.self) private var engine
+    /// When shopping for a specific route, every offer shows whether the
+    /// airframe can actually fly it (payload-corrected range + runways).
+    var fittingRoute: Route? = nil
     @State private var tab: Tab = .used
     @State private var receipt: AcquisitionReceipt?
     private let accent = Theme.orange
+
+    /// Fit verdict for an archetype against the target route, using the
+    /// standard cabin's payload-corrected range — the same rules as
+    /// canOperate, evaluated before the plane exists.
+    private func fitBadge(for type: AircraftType) -> (text: String, good: Bool)? {
+        guard let route = fittingRoute,
+              let origin = engine.city(route.originID),
+              let dest = engine.city(route.destinationID) else { return nil }
+        let spec = Balance.specs[type]!
+        let effectiveRange = spec.rangeKm
+            * CabinLayout.standard(abreast: spec.seatsAbreast).rangeFactor(spec: spec)
+        if effectiveRange < route.distanceKm {
+            return ("Beyond range for \(route.originID) ⇄ \(route.destinationID)", false)
+        }
+        if origin.runwayClass < spec.requiredRunwayClass
+            || dest.runwayClass < spec.requiredRunwayClass {
+            return ("Runway too short at \(origin.runwayClass < spec.requiredRunwayClass ? route.originID : route.destinationID)", false)
+        }
+        return ("Fits \(route.originID) ⇄ \(route.destinationID)", true)
+    }
 
     enum Tab: String, CaseIterable, Identifiable {
         case new = "New", used = "Used", lease = "Lease"
@@ -154,6 +177,10 @@ struct ShowroomView: View {
                     Text(spec.displayName).font(.game(.headline, weight: .bold))
                     Text(detail).font(.game(.caption)).foregroundStyle(Theme.textSecondary)
                 }
+                Spacer()
+                if let fit = fitBadge(for: type) {
+                    StatusBadge(text: fit.text, color: fit.good ? Theme.profit : Theme.loss)
+                }
             }
             // Showroom planes wear factory paint — yours get the livery
             // once they join the fleet.
@@ -271,6 +298,16 @@ private struct AcquisitionReceiptView: View {
                 .foregroundStyle(Theme.textPrimary)
         }
     }
+}
+
+#Preview("Fit badges") {
+    let engine = GameEngine.newGame(airlineName: "Preview Air", country: .india, seed: 9)
+    let route = engine.openRoute(from: "DEL", to: "GOI", fare: 90, frequency: 7)!
+    return NavigationStack {
+        ShowroomView(fittingRoute: route)
+    }
+    .environment(engine)
+    .preferredColorScheme(.dark)
 }
 
 #Preview("Receipt") {

@@ -9,6 +9,19 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Buy an aircraft straight from route assignment
+
+**Added**
+- When a route has nothing that can fly it (empty fleet, or every plane
+  out of range/runway class), the Assign Aircraft card explains why and
+  offers **"Get an aircraft for this route"** — pushing a route-aware
+  Showroom where every offer (new/used/lease) carries a fit badge:
+  green "Fits DEL ⇄ GOI", or the reason it can't ("Beyond range",
+  "Runway too short at GOI"). Fit uses the standard cabin's
+  payload-corrected range and the same runway rules as canOperate, so
+  the badge never promises what assignment would refuse.
+
+
 ### 2026-07-18 — Polish: arced routes, zoomed map, days on the clock, route P&L up front
 
 **Changed**
