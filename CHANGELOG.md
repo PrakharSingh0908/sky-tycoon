@@ -9,6 +9,21 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Receipt sheet sizes itself to the receipt
+
+**Fixed**
+- The acquisition receipt now measures its content and uses an exact
+  .height presentation detent (+ home-indicator allowance) instead of
+  .medium, so the whole receipt is visible with no cropping and no
+  scrolling. The earlier scroll-anchor fix stopped the top clipping
+  but still left the Done button below the fold at .medium; sizing
+  the sheet to the content is the actual fix. ScrollView remains as
+  a safety net when the receipt exceeds the screen (tiny devices,
+  XXL type). Added a sheet-presented preview as the regression pin —
+  the flat preview never exercised detents, which is how this
+  survived two fixes.
+
+
 ### 2026-07-18 — Assign card always offers the showroom
 
 **Changed**

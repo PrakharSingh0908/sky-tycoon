@@ -205,6 +205,10 @@ private struct AcquisitionReceiptView: View {
     @Environment(GameEngine.self) private var engine
     @Environment(\.dismiss) private var dismiss
     let receipt: AcquisitionReceipt
+    /// Measured content height → the sheet's detent, so the sheet fits the
+    /// receipt exactly: nothing cropped, nothing to scroll. The ScrollView
+    /// stays purely as a safety net for very small screens / huge type.
+    @State private var contentHeight: CGFloat = 620
 
     var body: some View {
         VStack(spacing: 16) {
@@ -256,12 +260,18 @@ private struct AcquisitionReceiptView: View {
                 .frame(maxWidth: .infinity)
         }
         .padding(20)
-        // Scroll container so the receipt can NEVER crop: taller-than-detent
-        // content anchors to the top and scrolls instead of clipping.
         .frame(maxWidth: .infinity)
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.size.height
+        } action: { height in
+            contentHeight = height
+        }
         .modifier(ReceiptScroll())
         .background(Theme.bgElevated)
-        .presentationDetents([.medium, .large])
+        // The sheet fits the measured receipt (+ home-indicator inset); the
+        // system clamps to screen height if it can't, then ScrollView takes
+        // over. Nothing crops in either case.
+        .presentationDetents([.height(contentHeight + 34)])
         .presentationBackground(Theme.bgElevated)
         .preferredColorScheme(.dark)
         .holdsSimClock()
@@ -336,4 +346,18 @@ private struct AcquisitionReceiptView: View {
         amount: Balance.specs[.propeller28]!.purchasePrice * Balance.leaseRatePerWeek,
         deliveryWeeks: nil))
         .environment(GameEngine.previewGame())
+}
+
+#Preview("Receipt in sheet") {
+    // The detent stress case: the receipt presented as a real sheet, the
+    // way players see it — regressions crop here, not in the flat preview.
+    Theme.bg.ignoresSafeArea()
+        .sheet(isPresented: .constant(true)) {
+            AcquisitionReceiptView(receipt: AcquisitionReceipt(
+                kind: .leased, type: .turboprop12, nickname: "VT-D",
+                amount: Balance.specs[.turboprop12]!.purchasePrice * Balance.leaseRatePerWeek,
+                deliveryWeeks: nil))
+        }
+        .environment(GameEngine.previewGame())
+        .preferredColorScheme(.dark)
 }
