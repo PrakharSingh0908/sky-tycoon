@@ -1234,6 +1234,44 @@ final class GameEngine {
     func city(_ id: String) -> City? { state.cities.first { $0.id == id } }
     var latestReport: WeeklyReport? { state.reports.last }
 
+    // ── The industry ladder (2026-07-18) ─────────────────────────────────
+    // Player valuation: book value plus an earnings multiple on the
+    // trailing year — simple enough to explain, moves with both growth
+    // levers (assets AND profitability).
+
+    var marketCap: Double {
+        let trailingYearProfit = state.reports.suffix(52).map(\.profit).reduce(0, +)
+        return max(0, max(0, netWorth)
+            + Balance.marketCapEarningsMultiple * max(0, trailingYearProfit))
+    }
+
+    /// Player's weekly passengers, live-projected (immediacy rule).
+    var weeklyPax: Double {
+        state.routes.compactMap { routeEconomics(routeID: $0.id)?.pax }.reduce(0, +)
+    }
+
+    /// Share of the whole industry's weekly traffic, rivals included.
+    var marketShare: Double {
+        let pax = weeklyPax
+        let industry = Balance.industryRivals.map(\.weeklyPax).reduce(0, +) + pax
+        return industry > 0 ? pax / industry : 0
+    }
+
+    /// Rank by market cap among the nine incumbents (1 = biggest).
+    var industryRank: (rank: Int, total: Int) {
+        let cap = marketCap
+        let above = Balance.industryRivals.filter { $0.marketCap > cap }.count
+        return (above + 1, Balance.industryRivals.count + 1)
+    }
+
+    /// The next carrier to overtake, if anyone is still above us.
+    var nextRival: Balance.IndustryRival? {
+        let cap = marketCap
+        return Balance.industryRivals
+            .filter { $0.marketCap > cap }
+            .min { $0.marketCap < $1.marketCap }
+    }
+
     // ── Persistence (snapshot save) ──────────────────────────────────────
 
     private static var saveURL: URL {

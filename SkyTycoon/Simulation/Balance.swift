@@ -123,6 +123,29 @@ enum Balance {
             startingTrustFund: 5_500_000, startingSavings: 1_100_000),
     ]
 
+    // ── The industry ladder (2026-07-18): nine incumbent carriers to
+    // climb past. Static for MVP (competitor AI is v1.0); market caps in
+    // game dollars, weekly pax at game scale (~1/100 of real India).
+    struct IndustryRival {
+        let name: String
+        let marketCap: Double
+        let weeklyPax: Double
+    }
+    static let industryRivals: [IndustryRival] = [
+        .init(name: "Himalaya Air",      marketCap: 9_000_000_000, weeklyPax: 60_000),
+        .init(name: "AirBharat",         marketCap: 4_500_000_000, weeklyPax: 38_000),
+        .init(name: "Monsoon Airways",   marketCap: 2_000_000_000, weeklyPax: 24_000),
+        .init(name: "Peacock Air",       marketCap: 900_000_000,   weeklyPax: 15_000),
+        .init(name: "Deccan Connect",    marketCap: 400_000_000,   weeklyPax: 9_000),
+        .init(name: "Saffron Skies",     marketCap: 150_000_000,   weeklyPax: 5_000),
+        .init(name: "Ganga Air",         marketCap: 60_000_000,    weeklyPax: 2_800),
+        .init(name: "Coastal Feeders",   marketCap: 25_000_000,    weeklyPax: 1_600),
+        .init(name: "Palm Air Charters", marketCap: 8_000_000,     weeklyPax: 900),
+    ]
+    /// Earnings multiple in the player-valuation formula
+    /// (marketCap = max(0, netWorth) + multiple × trailing-year profit).
+    static let marketCapEarningsMultiple = 6.0
+
     /// MVP: India only. Other countries slot in identically later.
     /// Coordinates are the real airports (IGI, CSMIA, Kempegowda, …).
     static let indiaCities: [City] = [

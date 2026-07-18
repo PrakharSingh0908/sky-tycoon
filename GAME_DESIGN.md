@@ -334,3 +334,16 @@ levers; standard = 1.0 everywhere, so the calibrated game IS standard.
 - Tycoon: cash ×0.75, demand ×0.93, costs ×1.10 — passive play survives
   but cannot win the fund (0/10); smart expansion wins it 5/10.
 Stored optionally in the save; old saves read as standard.
+
+---
+
+## 12. Amendment — The industry ladder (2026-07-18)
+
+Nine fictional incumbent carriers (Palm Air Charters $8M → Himalaya
+Air $9B) form a static ladder the player climbs. Player market cap =
+max(0, net worth) + 6 × trailing-year profit; rank is cap-ordered
+among the ten. Market share = live-projected weekly pax vs the
+industry total (~156K pax/wk at game scale). A new airline opens at
+#10 with ~1% share; the trust-fund winner reaches ~#8; the top ranks
+are long-game aspirations. Competitor AI (v1.0) will make the ladder
+move back.

@@ -24,6 +24,7 @@ struct DashboardView: View {
             heroCard
             if engine.state.reputation < 2.0 { reputationCollapseBanner }
             if !engine.state.activeEffects.isEmpty { opsConditionsCard }
+            industryCard
             trendsCard
             if let report = engine.latestReport { lastWeekCard(report) }
             milestonesCard
@@ -141,6 +142,29 @@ struct DashboardView: View {
                 }
                 StatTile(label: "Fleet", value: "\(engine.state.fleet.count)")
                 StatTile(label: "Routes", value: "\(engine.state.routes.count)")
+            }
+        }
+    }
+
+    // ── Industry standing: the ladder to climb (starts at the bottom) ────
+
+    private var industryCard: some View {
+        let (rank, total) = engine.industryRank
+        return GameCard {
+            SectionHeader(title: "Industry standing", icon: "chart.bar.xaxis", accent: accent)
+            HStack(spacing: 20) {
+                StatTile(label: "Rank", value: "#\(rank) of \(total)",
+                         color: rank <= 3 ? Theme.profit : Theme.textPrimary)
+                StatTile(label: "Market cap", value: engine.marketCap.money)
+                StatTile(label: "Market share",
+                         value: String(format: "%.1f%%", engine.marketShare * 100))
+            }
+            if let next = engine.nextRival {
+                Text("Next up: \(next.name) · \(next.marketCap.money) market cap")
+                    .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+            } else {
+                Text("India's largest carrier. The sky is yours.")
+                    .font(.game(.caption2, weight: .semibold)).foregroundStyle(Theme.profit)
             }
         }
     }

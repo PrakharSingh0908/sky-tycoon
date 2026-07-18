@@ -9,6 +9,17 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Industry rank on the Dashboard
+
+**Added**
+- An "Industry standing" card: rank among nine fictional incumbents
+  (Palm Air Charters $8M up to Himalaya Air $9B), market cap (net
+  worth + 6x trailing-year profit, floored at zero), and market share
+  (live-projected weekly pax vs industry traffic). Shows the next
+  rival to overtake; a fresh airline starts #10 of 10 at ~1% share.
+  All sim-side computed properties — deterministic, nothing stored.
+
+
 ### 2026-07-18 — Balance pass (audited by simulation) + difficulty select
 
 **Fixed (the big one)**
