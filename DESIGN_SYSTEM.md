@@ -116,6 +116,27 @@ graphics, no texture.**
 
 ---
 
+### 2.6 Borders, gradients & game feel (v2.1 — planned)
+
+**Borders are hierarchy, not decoration.** Cards stay borderless by
+default. A 1pt gradient hairline (accent → transparent, top-leading →
+bottom-trailing) plus a faint tinted glow marks the FEW surfaces that
+deserve attention right now: the Dashboard hero, an event card being
+dealt, a just-completed milestone, the celebration banner. Never more
+than ~2 bordered surfaces on screen.
+
+**Gradient masks** do quiet work: fading chart tops, softening the cut
+edge of collapsed/scrolling content, and letting long lists breathe.
+No texture, no images — gradients only ever shade existing geometry.
+
+**The loop's wins must feel like wins (pure UI, no sim changes):**
+milestone completion → sliding celebration banner with the reward;
+quarter close → a "report card" sheet (grade from profit, streak,
+reputation) that holds the clock; aircraft delivery → the fleet card
+arrives with a transition. Motion budget: alive but calm — one-shot
+animations on state changes, nothing perpetual, nothing animates while
+the player is just reading.
+
 ## 3. Component library (`UI/DesignSystem/`)
 
 | Component | Job | Rules |
@@ -227,6 +248,32 @@ and their chosen speed resumes on dismissal. The clock pill shows a pause
 glyph during holds.
 
 ## 5. Iteration log
+
+- **v2.1 (2026-07-18, planned): "Game Feel."** Audit + plan; execution
+  phased below. Audit found People and Money carrying most of the
+  clutter (People: ~7 competing elements per pool card — meters,
+  warning banner, wage stepper, ad row, roster with per-person Fire,
+  applicant rows; Money: six full cards, wrapping balance-sheet tiles,
+  a long serif letter block). Dashboard's hero reads like any other
+  card despite being the score. Repeated red destructive buttons and
+  always-on warning banners add noise everywhere.
+
+  **Phase 1 — primitives (DesignSystem):** `Theme.accentGradient(_:)`;
+  `GameCard(highlight:)` gradient border + tinted glow (nil = today's
+  borderless card); `.fadeEdges()` gradient-mask modifier;
+  `CelebrationBanner` and `ReportCardSheet` components.
+  **Phase 2 — de-clutter:** People applicants move to a per-role
+  Hiring sheet (count badge on the card), roster collapsed by default,
+  Fire demoted off the top level; Money letters collapse to the latest
+  line + archive count, balance-sheet tiles get a non-wrapping compact
+  money format, bank offers behind a disclosure; Fleet Sell/Return
+  fold into the Service menu.
+  **Phase 3 — hierarchy & wins:** hero card gets the standing gradient
+  border; milestone completion banner (UI diffs completedMilestones);
+  quarter report card on quarter close; delivery transition on fleet
+  insert; one-shot accent flash on the weekly profit ticker.
+  **Phase 4 — verify:** renders per screen at default + XXL type;
+  changelog + this log updated with what shipped.
 
 - **v2.0 (2026-07-18): "Flight Deck."** Aerospace/mechanical direction,
   pure UI system — no gimmicks, no graphics. Typography split into
