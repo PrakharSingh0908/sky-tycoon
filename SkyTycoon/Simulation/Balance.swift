@@ -110,7 +110,7 @@ enum Balance {
             fuelCost: 1.3, demandGrowthPerYear: 0.09,
             startingTrustFund: 2_000_000, startingSavings: 400_000),
         .us: .init(fareLevel: 1.3, priceElasticity: 1.2, laborCost: 1.5,
-            fuelCost: 1.0, demandGrowthPerYear: 0.02,
+            fuelCost: 1.0, demandGrowthPerYear: 0.02, demandLevel: 1.5,
             startingTrustFund: 6_000_000, startingSavings: 1_200_000),
         .uk: .init(fareLevel: 1.2, priceElasticity: 1.2, laborCost: 1.3,
             fuelCost: 1.1, demandGrowthPerYear: 0.015,
@@ -172,6 +172,38 @@ enum Balance {
         .init(id: "VNS", name: "Varanasi",  population: 1.6,  businessIndex: 0.12, runwayClass: 1, weeklySlots: 20, latitude: 25.452, longitude: 82.859),
     ]
 
+    /// US city set (2026-07-18): metro-area populations in millions,
+    /// majors class 3, regionals class 2. Distances come from the
+    /// haversine fallback. First-pass balance — the US plays long, thin,
+    /// and expensive (fareLevel 1.3, laborCost 1.5).
+    static let usCities: [City] = [
+        .init(id: "JFK", name: "New York",      population: 19.5, businessIndex: 0.50, runwayClass: 3, weeklySlots: 60, latitude: 40.640, longitude: -73.779),
+        .init(id: "LAX", name: "Los Angeles",   population: 12.5, businessIndex: 0.40, runwayClass: 3, weeklySlots: 55, latitude: 33.941, longitude: -118.409),
+        .init(id: "ORD", name: "Chicago",       population: 9.0,  businessIndex: 0.42, runwayClass: 3, weeklySlots: 55, latitude: 41.978, longitude: -87.904),
+        .init(id: "DFW", name: "Dallas",        population: 7.9,  businessIndex: 0.38, runwayClass: 3, weeklySlots: 55, latitude: 32.897, longitude: -97.038),
+        .init(id: "ATL", name: "Atlanta",       population: 6.2,  businessIndex: 0.38, runwayClass: 3, weeklySlots: 60, latitude: 33.640, longitude: -84.427),
+        .init(id: "MIA", name: "Miami",         population: 6.1,  businessIndex: 0.30, runwayClass: 3, weeklySlots: 45, latitude: 25.795, longitude: -80.279),
+        .init(id: "SFO", name: "San Francisco", population: 4.7,  businessIndex: 0.50, runwayClass: 3, weeklySlots: 45, latitude: 37.621, longitude: -122.379),
+        .init(id: "BOS", name: "Boston",        population: 4.9,  businessIndex: 0.45, runwayClass: 3, weeklySlots: 45, latitude: 42.366, longitude: -71.010),
+        .init(id: "SEA", name: "Seattle",       population: 4.0,  businessIndex: 0.40, runwayClass: 3, weeklySlots: 45, latitude: 47.448, longitude: -122.309),
+        .init(id: "PHX", name: "Phoenix",       population: 4.9,  businessIndex: 0.28, runwayClass: 3, weeklySlots: 40, latitude: 33.437, longitude: -112.008),
+        .init(id: "DEN", name: "Denver",        population: 3.0,  businessIndex: 0.32, runwayClass: 3, weeklySlots: 45, latitude: 39.850, longitude: -104.674),
+        .init(id: "MSP", name: "Minneapolis",   population: 3.7,  businessIndex: 0.32, runwayClass: 2, weeklySlots: 35, latitude: 44.882, longitude: -93.222),
+        .init(id: "LAS", name: "Las Vegas",     population: 2.3,  businessIndex: 0.10, runwayClass: 2, weeklySlots: 40, latitude: 36.084, longitude: -115.154),
+        .init(id: "AUS", name: "Austin",        population: 2.4,  businessIndex: 0.35, runwayClass: 2, weeklySlots: 30, latitude: 30.194, longitude: -97.670),
+    ]
+
+    /// The playable map for a country.
+    static func cities(for country: Country) -> [City] {
+        switch country {
+        case .us: usCities
+        default: indiaCities
+        }
+    }
+
+    /// Every known airport (coordinate lookups for distance).
+    static var allCities: [City] { indiaCities + usCities }
+
     /// Straight-line-ish distances (km) for the MVP city set.
     static let distances: [String: Double] = [
         "DEL-BOM": 1150, "DEL-BLR": 1750, "DEL-HYD": 1270, "DEL-MAA": 1770,
@@ -188,8 +220,8 @@ enum Balance {
         if let d = distances["\(a)-\(b)"] ?? distances["\(b)-\(a)"] { return d }
         // Haversine from airport coordinates × 1.06 route factor — new
         // airports never need hand-tabled pairs. Deterministic.
-        guard let ca = indiaCities.first(where: { $0.id == a }),
-              let cb = indiaCities.first(where: { $0.id == b }) else { return 1000 }
+        guard let ca = allCities.first(where: { $0.id == a }),
+              let cb = allCities.first(where: { $0.id == b }) else { return 1000 }
         let φ1 = ca.latitude * .pi / 180, φ2 = cb.latitude * .pi / 180
         let dφ = (cb.latitude - ca.latitude) * .pi / 180
         let dλ = (cb.longitude - ca.longitude) * .pi / 180

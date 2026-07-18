@@ -38,6 +38,7 @@ struct DashboardView: View {
             industryCard
             if let report = engine.latestReport { lastWeekCard(report) }
             milestonesCard
+            savedGamesCard
         }
         // One-shot settle flash: the hero border blinks profit-green when a
         // week's numbers land, then eases back. Nothing moves while reading.
@@ -154,6 +155,35 @@ struct DashboardView: View {
                 StatTile(label: "Routes", value: "\(engine.state.routes.count)")
             }
         }
+    }
+
+    // ── Saved games: the three slots, one tap away ───────────────────────
+
+    @State private var showingSlots = false
+
+    private var savedGamesCard: some View {
+        Button {
+            showingSlots = true
+        } label: {
+            GameCard {
+                HStack {
+                    Image(systemName: "tray.full")
+                        .font(.subheadline).foregroundStyle(Theme.cornflower)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Saved games")
+                            .font(.game(.subheadline, weight: .medium))
+                            .foregroundStyle(Theme.textPrimary)
+                        Text("Load, start new, or clear one of 3 slots")
+                            .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption2.weight(.semibold)).foregroundStyle(Theme.textSecondary)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .sheet(isPresented: $showingSlots) { SaveSlotsView() }
     }
 
     // ── Industry standing: the ladder to climb (starts at the bottom) ────

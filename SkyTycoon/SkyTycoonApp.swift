@@ -2,17 +2,60 @@
 //  SkyTycoonApp.swift
 //  SkyTycoon
 //
-//  App entry. The engine is created once (loaded from save, or a fresh
-//  new game) and injected into the environment. Views are dumb renderers
-//  of engine state.
+//  App entry. A GameSession owns the active engine (one of three save
+//  slots); views are dumb renderers of engine state. Swapping engines
+//  (load/new/delete via the slots screen) happens here and only here.
 //
 
 import SwiftUI
 
+/// The one object allowed to swap the running engine between save slots.
+@Observable
+final class GameSession {
+    var engine: GameEngine?
+    /// Set when the player chose "New game" for a specific slot — the
+    /// founding screen commits into it.
+    var newGameSlot: Int? = nil
+
+    init() {
+        GameEngine.migrateLegacySave()
+        engine = GameEngine.load()   // active slot, if it has a save
+    }
+
+    /// Park the current game safely before any slot operation.
+    func parkCurrentGame() {
+        engine?.stopClock()
+        engine?.save()
+    }
+
+    func activate(slot: Int) {
+        parkCurrentGame()
+        GameEngine.activeSlot = slot
+        engine = GameEngine.load(slot: slot)
+        engine?.startClock()
+    }
+
+    func beginNewGame(inSlot slot: Int) {
+        parkCurrentGame()
+        newGameSlot = slot
+        engine = nil
+    }
+
+    func found(airlineName: String, country: Country, difficulty: Difficulty) {
+        let slot = newGameSlot ?? GameEngine.activeSlot
+        GameEngine.activeSlot = slot
+        let newEngine = GameEngine.newGame(airlineName: airlineName, country: country,
+                                           difficulty: difficulty)
+        newEngine.save()
+        newEngine.startClock()
+        engine = newEngine
+        newGameSlot = nil
+    }
+}
+
 @main
 struct SkyTycoonApp: App {
-    /// nil until a save exists or the player founds an airline (M8).
-    @State private var engine: GameEngine? = GameEngine.load()
+    @State private var session = GameSession()
 
     init() {
         #if DEBUG
@@ -26,19 +69,18 @@ struct SkyTycoonApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                if let engine {
+                if let engine = session.engine {
                     RootView()
                         .environment(engine)
                         .onAppear { engine.startClock() }
                 } else {
                     NewGameView { name, country, difficulty in
-                        let newEngine = GameEngine.newGame(airlineName: name, country: country,
-                                                           difficulty: difficulty)
-                        newEngine.save()
-                        engine = newEngine
+                        session.found(airlineName: name, country: country,
+                                      difficulty: difficulty)
                     }
                 }
             }
+            .environment(session)
             #if DEBUG
             .modifier(InjectionReloader())
             #endif

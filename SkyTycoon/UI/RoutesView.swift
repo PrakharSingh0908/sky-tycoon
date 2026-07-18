@@ -52,8 +52,13 @@ struct RoutesView: View {
 private struct NewRouteSheet: View {
     @Environment(GameEngine.self) private var engine
     @Environment(\.dismiss) private var dismiss
-    @State private var origin = "DEL"
+    @State private var origin = ""
     private let accent = Theme.teal
+
+    /// Defaults to the country's first (largest) airport.
+    private var effectiveOrigin: String {
+        origin.isEmpty ? (engine.state.cities.first?.id ?? "") : origin
+    }
 
     private struct Prospect: Identifiable {
         let city: City
@@ -64,15 +69,16 @@ private struct NewRouteSheet: View {
 
     private var prospects: [Prospect] {
         engine.state.cities
-            .filter { $0.id != origin }
+            .filter { $0.id != effectiveOrigin }
             .map { city in
-                let dist = Balance.distance(origin, city.id)
-                guard let from = engine.city(origin) else {
+                let dist = Balance.distance(effectiveOrigin, city.id)
+                guard let from = engine.city(effectiveOrigin) else {
                     return Prospect(city: city, distanceKm: dist, demand: 0)
                 }
                 // The sim's gravity term (computeEconomics uses the same
                 // form), so ranking here matches what the route will earn.
-                let demand = Balance.demandK
+                let level = Balance.countryProfiles[engine.state.country]!.demandLevel
+                let demand = Balance.demandK * level
                     * pow(from.population * city.population, 0.55)
                     / pow(max(dist, 100), 0.35)
                 return Prospect(city: city, distanceKm: dist, demand: demand)
@@ -93,12 +99,12 @@ private struct NewRouteSheet: View {
                         ForEach(engine.state.cities) { city in
                             Button(city.id) { origin = city.id }
                                 .buttonStyle(GameButtonStyle(color: accent,
-                                                             prominent: origin == city.id))
+                                                             prominent: effectiveOrigin == city.id))
                         }
                     }
                 }
                 .fadeEdge(.trailing, length: 16)
-                Text("From \(engine.city(origin)?.name ?? origin) · \(engine.freeSlots(at: origin)) free slots")
+                Text("From \(engine.city(effectiveOrigin)?.name ?? effectiveOrigin) · \(engine.freeSlots(at: effectiveOrigin)) free slots")
                     .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
 
                 VStack(spacing: 8) {
@@ -119,10 +125,10 @@ private struct NewRouteSheet: View {
 
     @ViewBuilder private func prospectRow(_ prospect: Prospect) -> some View {
         let existing = engine.state.routes.contains {
-            ($0.originID == origin && $0.destinationID == prospect.city.id) ||
-            ($0.destinationID == origin && $0.originID == prospect.city.id)
+            ($0.originID == effectiveOrigin && $0.destinationID == prospect.city.id) ||
+            ($0.destinationID == effectiveOrigin && $0.originID == prospect.city.id)
         }
-        let hasSlots = engine.freeSlots(at: origin) > 0
+        let hasSlots = engine.freeSlots(at: effectiveOrigin) > 0
             && engine.freeSlots(at: prospect.city.id) > 0
         HStack(spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
@@ -144,7 +150,7 @@ private struct NewRouteSheet: View {
                 Button("Open") {
                     let dist = prospect.distanceKm
                     let fareLevel = Balance.countryProfiles[engine.state.country]!.fareLevel
-                    _ = engine.openRoute(from: origin, to: prospect.city.id,
+                    _ = engine.openRoute(from: effectiveOrigin, to: prospect.city.id,
                         fare: dist * Balance.referenceFarePerKm * fareLevel,
                         frequency: 7)
                 }

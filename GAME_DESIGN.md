@@ -347,3 +347,20 @@ industry total (~156K pax/wk at game scale). A new airline opens at
 #10 with ~1% share; the trust-fund winner reaches ~#8; the top ranks
 are long-game aspirations. Competitor AI (v1.0) will make the ladder
 move back.
+
+---
+
+## 13. Amendment — US market + save slots (2026-07-18)
+
+- **US is the default founding country** (India remains playable; UK/
+  China/Australia stay "coming soon"). 14 US airports (JFK...AUS),
+  metro populations, majors class-3. Distances come from the haversine
+  fallback. CountryProfile gained `demandLevel` (propensity-to-fly
+  multiplier; US = 1.5) because demandK was calibrated on India's 30M
+  metros — first-pass US balance: a right-sized opener (30-prop on
+  JFK-ORD) nets ~+150K/wk at LF 70% against the $7.2M richer start.
+  A full US bot audit is future work.
+- **Three save slots.** Autosave writes the active slot; a Saved
+  Games sheet (Dashboard) loads, starts new games into, or deletes
+  slots. Legacy single-file saves migrate to slot 1. GameSession (app
+  layer) is the only object that swaps running engines.

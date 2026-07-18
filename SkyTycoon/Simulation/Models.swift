@@ -41,6 +41,10 @@ struct CountryProfile: Codable {
     var laborCost: Double        // wage multiplier
     var fuelCost: Double         // fuel multiplier
     var demandGrowthPerYear: Double
+    /// Propensity-to-fly multiplier on gravity demand (demandK was
+    /// calibrated on India's 30M metros; smaller-metro/high-income
+    /// markets fly more per capita).
+    var demandLevel: Double = 1.0
     var startingTrustFund: Double
     var startingSavings: Double
 }

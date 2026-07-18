@@ -12,8 +12,12 @@ import SwiftUI
 struct NewGameView: View {
     let onStart: (String, Country, Difficulty) -> Void
     @State private var airlineName = ""
+    @State private var country: Country = .us
     @State private var difficulty: Difficulty = .standard
     @FocusState private var nameFocused: Bool
+
+    /// Playable markets, in display order (US is the default home).
+    private static let playable: [Country] = [.us, .india]
 
     private static let fantasies: [Country: (flag: String, blurb: String)] = [
         .india: ("🇮🇳", "The volume game: 1.4B people, cheap fares, ferocious growth."),
@@ -29,7 +33,7 @@ struct NewGameView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("SkyTycoon")
                         .font(.display(.largeTitle)).foregroundStyle(Theme.textPrimary)
-                    Text("Your aunt left you $2.4M and one condition: make it fly.")
+                    Text("Your aunt left you a trust fund and one condition: make it fly.")
                         .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
                 }
                 .padding(.top, 24)
@@ -58,8 +62,9 @@ struct NewGameView: View {
 
                 GameCard {
                     SectionHeader(title: "Home country", icon: "globe.asia.australia.fill", accent: Theme.teal)
-                    ForEach(Country.allCases) { country in
-                        countryRow(country)
+                    let ordered = Self.playable + Country.allCases.filter { !Self.playable.contains($0) }
+                    ForEach(ordered) { c in
+                        countryRow(c)
                     }
                 }
 
@@ -91,7 +96,7 @@ struct NewGameView: View {
     private var foundButton: some View {
         VStack(spacing: 8) {
             Button {
-                onStart(airlineName.trimmingCharacters(in: .whitespaces), .india, difficulty)
+                onStart(airlineName.trimmingCharacters(in: .whitespaces), country, difficulty)
             } label: {
                 Text("Found the airline").frame(maxWidth: .infinity)
             }
@@ -140,32 +145,39 @@ struct NewGameView: View {
         .sensoryFeedback(.selection, trigger: difficulty)
     }
 
-    private func countryRow(_ country: Country) -> some View {
-        let fantasy = Self.fantasies[country]!
-        let available = country == .india
-        return HStack(spacing: 10) {
-            Text(fantasy.flag).font(.title2)
-                .saturation(available ? 1 : 0)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(country.displayName)
-                    .font(.game(.subheadline, weight: .semibold))
-                    .foregroundStyle(available ? Theme.textPrimary : Theme.textSecondary)
-                Text(fantasy.blurb)
-                    .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+    private func countryRow(_ c: Country) -> some View {
+        let fantasy = Self.fantasies[c]!
+        let available = Self.playable.contains(c)
+        let selected = country == c
+        return Button {
+            if available { country = c }
+        } label: {
+            HStack(spacing: 10) {
+                Text(fantasy.flag).font(.title2)
+                    .saturation(available ? 1 : 0)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(c.displayName)
+                        .font(.game(.subheadline, weight: .semibold))
+                        .foregroundStyle(available ? Theme.textPrimary : Theme.textSecondary)
+                    Text(fantasy.blurb)
+                        .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                }
+                Spacer()
+                if selected {
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.cornflower)
+                } else if !available {
+                    StatusBadge(text: "Coming soon", color: Theme.textSecondary)
+                }
             }
-            Spacer()
-            if available {
-                Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.teal)
-            } else {
-                StatusBadge(text: "Coming soon", color: Theme.textSecondary)
-            }
+            .padding(8)
+            .background(
+                RoundedRectangle(cornerRadius: Theme.corner)
+                    .fill(selected ? Theme.cornflower.opacity(0.10) : .clear)
+            )
+            .opacity(available ? 1 : 0.6)
         }
-        .padding(8)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(available ? Theme.teal.opacity(0.08) : .clear)
-        )
-        .opacity(available ? 1 : 0.6)
+        .buttonStyle(.plain)
+        .sensoryFeedback(.selection, trigger: country)
     }
 }
 

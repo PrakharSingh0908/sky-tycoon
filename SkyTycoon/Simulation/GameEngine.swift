@@ -82,7 +82,7 @@ final class GameEngine {
             brandAwareness: Balance.startingAwareness, weeklyMarketingSpend: 0,
             letters: [], completedMilestones: [],
             weeksInsolvent: 0, isBankrupt: false,
-            cities: Balance.indiaCities,          // MVP: India city set for all, swap per-country later
+            cities: Balance.cities(for: country),
             fleet: [], routes: [], staff: staff, loans: [],
             usedMarket: initialMarket,
             weeksUntilMarketRefresh: Balance.usedMarketRefreshWeeksMin,
@@ -499,6 +499,7 @@ final class GameEngine {
         let priceResponse = pow(priceRatio, -profile.priceElasticity)
         let demand = gravity * growth * season * brand * min(priceResponse, 2.5)
             * (state.difficulty ?? .standard).demandFactor
+            * profile.demandLevel
             * demandEventMult
 
         var seatsOffered = 0
@@ -1283,26 +1284,61 @@ final class GameEngine {
             .min { $0.marketCap < $1.marketCap }
     }
 
-    // ── Persistence (snapshot save) ──────────────────────────────────────
+    // ── Persistence: three save slots (2026-07-18) ───────────────────────
+    // Autosave always writes the ACTIVE slot; the slots screen switches it.
 
-    private static var saveURL: URL {
+    static let slotCount = 3
+
+    static var activeSlot: Int {
+        get {
+            let raw = UserDefaults.standard.integer(forKey: "activeSaveSlot")
+            return (1...slotCount).contains(raw) ? raw : 1
+        }
+        set { UserDefaults.standard.set(newValue, forKey: "activeSaveSlot") }
+    }
+
+    private static func saveURL(slot: Int) -> URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("skytycoon_save_\(slot).json")
+    }
+
+    /// Pre-slots saves become slot 1 (run once at launch).
+    static func migrateLegacySave() {
+        let legacy = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("skytycoon_save.json")
+        guard FileManager.default.fileExists(atPath: legacy.path),
+              !FileManager.default.fileExists(atPath: saveURL(slot: 1).path) else { return }
+        try? FileManager.default.moveItem(at: legacy, to: saveURL(slot: 1))
     }
 
     func save() {
         do {
             let data = try JSONEncoder().encode(state)
-            try data.write(to: Self.saveURL, options: .atomic)
+            try data.write(to: Self.saveURL(slot: Self.activeSlot), options: .atomic)
         } catch {
             print("Save failed: \(error)")   // never crash the game over a save
         }
     }
 
-    static func load() -> GameEngine? {
-        guard let data = try? Data(contentsOf: saveURL),
+    /// Loads the active slot.
+    static func load() -> GameEngine? { load(slot: activeSlot) }
+
+    static func load(slot: Int) -> GameEngine? {
+        guard let data = try? Data(contentsOf: saveURL(slot: slot)),
               let state = try? JSONDecoder().decode(GameState.self, from: data)
         else { return nil }
         return GameEngine(state: state)
+    }
+
+    /// Lightweight peek for the slots screen (nil = empty slot).
+    static func slotState(_ slot: Int) -> GameState? {
+        guard let data = try? Data(contentsOf: saveURL(slot: slot)),
+              let state = try? JSONDecoder().decode(GameState.self, from: data)
+        else { return nil }
+        return state
+    }
+
+    static func deleteSave(slot: Int) {
+        try? FileManager.default.removeItem(at: saveURL(slot: slot))
     }
 }

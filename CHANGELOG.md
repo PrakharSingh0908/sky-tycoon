@@ -9,6 +9,26 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased — design-system branch]
 
+### 2026-07-18 — US market (new default) + three save slots
+
+**Added**
+- United States as the default founding country: 14 airports with
+  real coordinates (majors class-3), haversine distances, and a new
+  per-country demandLevel lever (US 1.5) so gravity demand scales to
+  US metro sizes. Country picker on the founding screen is now truly
+  selectable (US first/default, India second). Sanity-verified
+  headless: right-sized US opener nets ~+150K/wk at LF 70%.
+- Save system: 3 slots. GameSession owns the running engine; the
+  Dashboard's Saved Games card opens a slots sheet with Load / New
+  game / Delete (confirmed), active slot badged and autosaving
+  weekly. Legacy saves migrate to slot 1.
+
+**Changed**
+- Route desk origin defaults to the country's first airport instead
+  of hardcoded DEL; its demand ranking includes demandLevel so it
+  matches the sim exactly.
+
+
 ### 2026-07-18 — Finances: W/M/Y ranges and a redesigned chart
 
 **Added**
