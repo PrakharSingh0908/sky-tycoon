@@ -9,6 +9,35 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Game Feel v2.1 shipped: hierarchy borders, de-clutter, win moments
+
+**Added**
+- GameCard(highlight:): gradient hairline + tinted glow for the few
+  surfaces that deserve attention; Theme.accentGradient; .fadeEdge()
+  gradient-mask modifier; CelebrationBanner; QuarterReportCard.
+- Milestone completions slide a celebration banner in from the top
+  (auto-dismisses in 3.5s); quarter close presents a graded report
+  card (grade from quarter profit + streak, clock held); deliveries
+  animate into the fleet list and sales animate out; the Dashboard
+  hero wears the one standing gradient border and blinks profit-green
+  when a week settles. All diffed from existing state — no sim changes.
+
+**Changed (de-clutter)**
+- People: applicants moved out of pool cards into a per-role Hiring
+  sheet ("Applicants waiting (N)" button); roster collapsed by default.
+- Money: Aunt Meera's letters collapse to a one-line teaser + count;
+  bank offers fold behind a disclosure; balance-sheet readouts scale
+  down instead of wrapping ("$6.23 M" across two lines is gone —
+  TickerText is now lineLimit(1) + minimumScaleFactor globally).
+- Fleet: Sell/Return moved into the Service menu (with resale value
+  shown on Sell), removing the always-on red button from every card;
+  the action row fades at its trailing edge instead of cutting.
+
+*Why:* the v2.1 plan (DESIGN_SYSTEM.md §2.6) — borders as hierarchy
+not decoration, one clear thing per card, and the loop's wins made
+visible without a single image asset or sim-layer change.
+
+
 ### 2026-07-18 — Fleet status line: tighter badge, full-width spread
 
 **Changed**

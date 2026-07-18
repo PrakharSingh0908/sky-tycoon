@@ -20,9 +20,12 @@ struct FleetView: View {
                 ForEach(engine.state.fleet) { plane in
                     AircraftCard(plane: plane, accent: accent,
                                  onArchitect: { architectingPlane = $0 })
+                        // Deliveries arrive, sales depart (v2.1 win moments).
+                        .transition(.scale(scale: 0.96).combined(with: .opacity))
                 }
                 showroomCard
             }
+            .animation(.snappy(duration: 0.35), value: engine.state.fleet.count)
             .toolbar(.hidden, for: .navigationBar)
         }
         .sheet(item: $architectingPlane) { plane in
@@ -161,19 +164,15 @@ private struct AircraftCard: View {
                 Button("Cabin") { onArchitect(plane) }
                     .buttonStyle(GameButtonStyle(color: accent))
                 serviceMenu
-                if plane.acquisition == .leased {
-                    Button("Return") { engine.returnLeasedAircraft(aircraftID: plane.id) }
-                        .buttonStyle(GameButtonStyle(color: Theme.loss))
-                } else {
-                    Button("Sell") { engine.sellAircraft(aircraftID: plane.id) }
-                        .buttonStyle(GameButtonStyle(color: Theme.loss))
-                }
             }
         }
+        .fadeEdge(.trailing, length: 16)
         .disabled(plane.groundedWeeksRemaining > 0)
         .opacity(plane.groundedWeeksRemaining > 0 ? 0.4 : 1)
     }
 
+    /// Checks plus the exit door: Sell/Return live here now, one level
+    /// down, so the card isn't shouting a red button all day (v2.1).
     private var serviceMenu: some View {
         Menu {
             Button("Line check · $30K · 1 wk") {
@@ -181,6 +180,17 @@ private struct AircraftCard: View {
             }
             Button("Heavy check · $250K · 2 wk") {
                 engine.orderCheck(aircraftID: plane.id, heavy: true)
+            }
+            Divider()
+            if plane.acquisition == .leased {
+                Button("Return to lessor", role: .destructive) {
+                    engine.returnLeasedAircraft(aircraftID: plane.id)
+                }
+            } else {
+                Button("Sell · \(Balance.resaleValue(type: plane.type, ageYears: plane.ageYears, condition: plane.condition).money)",
+                       role: .destructive) {
+                    engine.sellAircraft(aircraftID: plane.id)
+                }
             }
         } label: {
             menuChip("Service", icon: "wrench.and.screwdriver.fill", color: accent)

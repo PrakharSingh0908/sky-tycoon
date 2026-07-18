@@ -117,19 +117,30 @@ struct MoneyView: View {
         return GameCard {
             SectionHeader(title: "Letters from Aunt Meera", icon: "envelope.open.fill",
                           accent: Theme.warn)
+            // Collapsed to a one-line teaser; the archive opens on demand.
             if let latest = letters.first {
-                letterView(latest)
-            }
-            if letters.count > 1 {
                 DisclosureGroup {
-                    ForEach(Array(letters.dropFirst())) { letter in
-                        letterView(letter)
-                        Divider().overlay(Theme.hairline)
+                    VStack(alignment: .leading, spacing: 8) {
+                        letterView(latest)
+                        ForEach(Array(letters.dropFirst())) { letter in
+                            letterView(letter)
+                        }
                     }
+                    .padding(.top, 8)
                 } label: {
-                    Text("Older letters (\(letters.count - 1))")
-                        .font(.game(.caption, weight: .semibold))
-                        .foregroundStyle(Theme.textSecondary)
+                    HStack(spacing: 6) {
+                        Text(latest.date.description)
+                            .font(.data(.caption2, weight: .bold))
+                            .foregroundStyle(Theme.warn)
+                        Text("“\(latest.body.prefix(48))…”")
+                            .font(.system(.caption, design: .serif)).italic()
+                            .foregroundStyle(Theme.textSecondary)
+                            .lineLimit(1)
+                        Spacer(minLength: 4)
+                        Text("\(letters.count)")
+                            .font(.data(.caption2, weight: .bold))
+                            .foregroundStyle(Theme.textSecondary)
+                    }
                 }
                 .tint(Theme.textSecondary)
             }
@@ -317,22 +328,33 @@ struct MoneyView: View {
                          display: loan.remaining.money,
                          color: Theme.warn)
             }
-            ForEach(Balance.loanOffers) { offer in
-                let allowed = engine.canBorrow(offer)
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(offer.name).font(.game(.subheadline, weight: .semibold))
-                            .foregroundStyle(Theme.textPrimary)
-                        Text("\(offer.amount.money) · \(String(format: "%.2f", offer.weeklyRate * 100))%/wk · \(offer.weeks) wk")
-                            .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+            // Offers stay folded until you're actually shopping for money.
+            DisclosureGroup {
+                VStack(spacing: 10) {
+                    ForEach(Balance.loanOffers) { offer in
+                        let allowed = engine.canBorrow(offer)
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(offer.name).font(.game(.subheadline, weight: .semibold))
+                                    .foregroundStyle(Theme.textPrimary)
+                                Text("\(offer.amount.money) · \(String(format: "%.2f", offer.weeklyRate * 100))%/wk · \(offer.weeks) wk")
+                                    .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                            }
+                            Spacer()
+                            Button(allowed ? "Borrow" : "Over limit") { engine.takeLoan(offer: offer) }
+                                .buttonStyle(GameButtonStyle(color: accent, prominent: allowed))
+                                .disabled(!allowed)
+                                .opacity(allowed ? 1 : 0.4)
+                        }
                     }
-                    Spacer()
-                    Button(allowed ? "Borrow" : "Over limit") { engine.takeLoan(offer: offer) }
-                        .buttonStyle(GameButtonStyle(color: accent, prominent: allowed))
-                        .disabled(!allowed)
-                        .opacity(allowed ? 1 : 0.4)
                 }
+                .padding(.top, 8)
+            } label: {
+                Label("Offers (\(Balance.loanOffers.count))", systemImage: "banknote")
+                    .font(.game(.caption, weight: .semibold))
+                    .foregroundStyle(Theme.textSecondary)
             }
+            .tint(Theme.textSecondary)
         }
     }
 }

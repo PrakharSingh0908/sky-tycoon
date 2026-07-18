@@ -11,6 +11,10 @@ import SwiftUI
 // ── GameCard — the universal surface ─────────────────────────────────────
 
 struct GameCard<Content: View>: View {
+    /// v2.1: borders are hierarchy. A highlight color adds a gradient
+    /// hairline + tinted glow — reserved for the FEW surfaces that deserve
+    /// attention (hero, event, celebration). Nil = the ordinary borderless card.
+    var highlight: Color? = nil
     @ViewBuilder var content: Content
 
     var body: some View {
@@ -18,7 +22,62 @@ struct GameCard<Content: View>: View {
             .padding(Theme.cardPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.corner))
-            .shadow(color: .black.opacity(0.25), radius: 10, y: 5)
+            .overlay {
+                if let highlight {
+                    RoundedRectangle(cornerRadius: Theme.corner)
+                        .strokeBorder(Theme.accentGradient(highlight), lineWidth: 1)
+                }
+            }
+            .shadow(color: highlight?.opacity(0.28) ?? .black.opacity(0.25),
+                    radius: highlight == nil ? 10 : 12, y: highlight == nil ? 5 : 3)
+    }
+}
+
+/// Gradient mask fading one edge — the soft cut for scrolling or collapsed
+/// content (v2.1: gradients only ever shade existing geometry).
+struct FadeEdgeModifier: ViewModifier {
+    var edge: Edge = .bottom
+    var length: CGFloat = 24
+
+    func body(content: Content) -> some View {
+        content.mask {
+            switch edge {
+            case .top, .bottom:
+                VStack(spacing: 0) {
+                    if edge == .top {
+                        LinearGradient(colors: [.clear, .black],
+                                       startPoint: .top, endPoint: .bottom)
+                            .frame(height: length)
+                    }
+                    Rectangle()
+                    if edge == .bottom {
+                        LinearGradient(colors: [.black, .clear],
+                                       startPoint: .top, endPoint: .bottom)
+                            .frame(height: length)
+                    }
+                }
+            case .leading, .trailing:
+                HStack(spacing: 0) {
+                    if edge == .leading {
+                        LinearGradient(colors: [.clear, .black],
+                                       startPoint: .leading, endPoint: .trailing)
+                            .frame(width: length)
+                    }
+                    Rectangle()
+                    if edge == .trailing {
+                        LinearGradient(colors: [.black, .clear],
+                                       startPoint: .leading, endPoint: .trailing)
+                            .frame(width: length)
+                    }
+                }
+            }
+        }
+    }
+}
+
+extension View {
+    func fadeEdge(_ edge: Edge = .bottom, length: CGFloat = 24) -> some View {
+        modifier(FadeEdgeModifier(edge: edge, length: length))
     }
 }
 
@@ -104,6 +163,10 @@ struct TickerText: View {
             // Every live value is an instrument readout (Flight Deck v2.0):
             // full mono, not just mono digits, whatever font callers pass.
             .fontDesign(.monospaced)
+            // Readouts never wrap ("$6.23 M" across two lines is not a
+            // readout); they scale down before they break.
+            .lineLimit(1)
+            .minimumScaleFactor(0.65)
             .foregroundStyle(color)
             .contentTransition(.numericText())
             .animation(.snappy, value: text)

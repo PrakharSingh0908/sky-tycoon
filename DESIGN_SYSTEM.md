@@ -116,7 +116,7 @@ graphics, no texture.**
 
 ---
 
-### 2.6 Borders, gradients & game feel (v2.1 — planned)
+### 2.6 Borders, gradients & game feel (v2.1)
 
 **Borders are hierarchy, not decoration.** Cards stay borderless by
 default. A 1pt gradient hairline (accent → transparent, top-leading →
@@ -249,8 +249,7 @@ glyph during holds.
 
 ## 5. Iteration log
 
-- **v2.1 (2026-07-18, planned): "Game Feel."** Audit + plan; execution
-  phased below. Audit found People and Money carrying most of the
+- **v2.1 (2026-07-18): "Game Feel."** Shipped same day; audit below. Audit found People and Money carrying most of the
   clutter (People: ~7 competing elements per pool card — meters,
   warning banner, wage stepper, ad row, roster with per-person Fire,
   applicant rows; Money: six full cards, wrapping balance-sheet tiles,
@@ -272,8 +271,12 @@ glyph during holds.
   border; milestone completion banner (UI diffs completedMilestones);
   quarter report card on quarter close; delivery transition on fleet
   insert; one-shot accent flash on the weekly profit ticker.
-  **Phase 4 — verify:** renders per screen at default + XXL type;
-  changelog + this log updated with what shipped.
+  **Phase 4 — verify:** renders per screen; changelog + this log updated.
+  **Shipped:** all four phases. Notes: applicants now open a per-role
+  HiringSheet (clock held); TickerText readouts scale down instead of
+  wrapping; Fleet's action row fades at its trailing edge; the fleet
+  list animates deliveries in and sales out; the hero's border blinks
+  profit-green for ~1s on weekly settle. Deferred: nothing.
 
 - **v2.0 (2026-07-18): "Flight Deck."** Aerospace/mechanical direction,
   pure UI system — no gimmicks, no graphics. Typography split into

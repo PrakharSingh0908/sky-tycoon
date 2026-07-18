@@ -10,7 +10,7 @@ import SwiftUI
 
 struct PeopleView: View {
     @Environment(GameEngine.self) private var engine
-    @State private var negotiating: JobApplicant?
+    @State private var hiringRole: StaffRole?
     private let accent = Theme.violet
 
     var body: some View {
@@ -18,11 +18,11 @@ struct PeopleView: View {
             ForEach(StaffRole.allCases) { role in
                 if let pool = engine.state.staff[role] {
                     StaffPoolCard(role: role, pool: pool, accent: accent,
-                                  onNegotiate: { negotiating = $0 })
+                                  onHiring: { hiringRole = $0 })
                 }
             }
         }
-        .sheet(item: $negotiating) { NegotiationSheet(applicant: $0) }
+        .sheet(item: $hiringRole) { HiringSheet(role: $0) }
     }
 }
 
@@ -36,8 +36,8 @@ private struct StaffPoolCard: View {
     let role: StaffRole
     let pool: StaffPool
     let accent: Color
-    let onNegotiate: (JobApplicant) -> Void
-    @State private var rosterExpanded = true
+    let onHiring: (StaffRole) -> Void
+    @State private var rosterExpanded = false
 
     private var roleApplicants: [JobApplicant] {
         engine.state.applicants.filter { $0.role == role }
@@ -103,38 +103,18 @@ private struct StaffPoolCard: View {
                 .tint(Theme.textSecondary)
             }
 
-            ForEach(roleApplicants) { applicant in
-                applicantRow(applicant)
-            }
-        }
-    }
-
-    private func applicantRow(_ applicant: JobApplicant) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(applicant.name).font(.game(.subheadline, weight: .semibold))
-                        .foregroundStyle(Theme.textPrimary)
-                    HStack(spacing: 4) {
-                        StarRating(rating: applicant.skill, size: 8)
-                        Text("asks \(applicant.askingWage.money)/wk · waits \(applicant.weeksRemaining) wk")
-                            .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
-                    }
+            // Applicants live in the Hiring sheet — one button, not N rows.
+            if !roleApplicants.isEmpty {
+                Button {
+                    onHiring(role)
+                } label: {
+                    Label("Applicants waiting (\(roleApplicants.count))",
+                          systemImage: "person.crop.circle.badge.clock")
+                        .frame(maxWidth: .infinity)
                 }
-                Spacer()
-                Button("Negotiate") { onNegotiate(applicant) }
-                    .buttonStyle(GameButtonStyle(color: accent))
-                Button("Hire") { engine.hireApplicant(applicantID: applicant.id) }
-                    .buttonStyle(GameButtonStyle(color: accent, prominent: true))
-            }
-            if applicant.irritation > 0 {
-                MeterRow(label: "Patience", value: 1 - applicant.irritation / 100,
-                         display: "\(Int(100 - applicant.irritation))%",
-                         color: Theme.health(1 - applicant.irritation / 100))
+                .buttonStyle(GameButtonStyle(color: accent, prominent: true))
             }
         }
-        .padding(10)
-        .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 12))
     }
 
     private func memberRow(_ member: StaffMember) -> some View {
@@ -190,6 +170,76 @@ private struct StaffPoolCard: View {
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(color.opacity(0.10), in: RoundedRectangle(cornerRadius: 10))
+    }
+}
+
+// ── The hiring desk: applicants for one role, out of the pool card ───────
+
+private struct HiringSheet: View {
+    @Environment(GameEngine.self) private var engine
+    @Environment(\.dismiss) private var dismiss
+    let role: StaffRole
+    @State private var negotiating: JobApplicant?
+    private let accent = Theme.violet
+
+    private var applicants: [JobApplicant] {
+        engine.state.applicants.filter { $0.role == role }
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Hiring · \(role.displayName)")
+                    .font(.game(.title2, weight: .bold)).foregroundStyle(Theme.textPrimary)
+                    .padding(.top, 20)
+                if applicants.isEmpty {
+                    Text("Nobody at the desk. Applicants arrive while a job ad runs.")
+                        .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+                }
+                ForEach(applicants) { applicant in
+                    applicantRow(applicant)
+                }
+                Button("Done") { dismiss() }
+                    .buttonStyle(GameButtonStyle(color: accent))
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 6)
+            }
+            .padding(.horizontal, 20)
+        }
+        .background(Theme.bgElevated)
+        .presentationDetents([.medium, .large])
+        .presentationBackground(Theme.bgElevated)
+        .preferredColorScheme(.dark)
+        .holdsSimClock()   // patience doesn't drain while you're deciding
+        .sheet(item: $negotiating) { NegotiationSheet(applicant: $0) }
+    }
+
+    private func applicantRow(_ applicant: JobApplicant) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(applicant.name).font(.game(.subheadline, weight: .semibold))
+                        .foregroundStyle(Theme.textPrimary)
+                    HStack(spacing: 4) {
+                        StarRating(rating: applicant.skill, size: 8)
+                        Text("asks \(applicant.askingWage.money)/wk · waits \(applicant.weeksRemaining) wk")
+                            .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                    }
+                }
+                Spacer()
+                Button("Negotiate") { negotiating = applicant }
+                    .buttonStyle(GameButtonStyle(color: accent))
+                Button("Hire") { engine.hireApplicant(applicantID: applicant.id) }
+                    .buttonStyle(GameButtonStyle(color: accent, prominent: true))
+            }
+            if applicant.irritation > 0 {
+                MeterRow(label: "Patience", value: 1 - applicant.irritation / 100,
+                         display: "\(Int(100 - applicant.irritation))%",
+                         color: Theme.health(1 - applicant.irritation / 100))
+            }
+        }
+        .padding(10)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.corner))
     }
 }
 

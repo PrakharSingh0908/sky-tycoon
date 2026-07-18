@@ -11,6 +11,7 @@ import SwiftUI
 struct DashboardView: View {
     @Environment(GameEngine.self) private var engine
     @State private var trendMetric: TrendMetric = .netWorth
+    @State private var settleFlash = false
     private let accent = Theme.sky
 
     enum TrendMetric: String, CaseIterable, Identifiable {
@@ -26,6 +27,17 @@ struct DashboardView: View {
             trendsCard
             if let report = engine.latestReport { lastWeekCard(report) }
             milestonesCard
+        }
+        // One-shot settle flash: the hero border blinks profit-green when a
+        // week's numbers land, then eases back. Nothing moves while reading.
+        .onChange(of: engine.latestReport?.id) { old, _ in
+            guard old != nil else { return }   // skip initial appearance
+            withAnimation(.snappy) { settleFlash = true }
+        }
+        .task(id: settleFlash) {
+            guard settleFlash else { return }
+            try? await Task.sleep(for: .seconds(0.9))
+            withAnimation(.easeOut(duration: 0.7)) { settleFlash = false }
         }
     }
 
@@ -102,9 +114,11 @@ struct DashboardView: View {
     }
 
     // ── Hero: the numbers that matter, always rolling ────────────────────
+    // The one standing gradient border (v2.1: borders are hierarchy, and
+    // the score IS the hierarchy). Flashes profit-green on weekly settle.
 
     private var heroCard: some View {
-        GameCard {
+        GameCard(highlight: settleFlash ? Theme.profit : accent) {
             HStack(alignment: .top) {
                 StatTile(label: "Net worth", value: engine.netWorth.money,
                          color: engine.netWorth >= 0 ? Theme.textPrimary : Theme.loss,

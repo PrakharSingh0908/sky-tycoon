@@ -22,6 +22,11 @@ struct RootView: View {
         }
     }()
 
+    // v2.1 win moments: diffed from state, so the sim stays untouched.
+    @State private var celebration: MilestoneDef?
+    @State private var seenMilestones: Set<String>?
+    @State private var quarterReport: QuarterlyLetter?
+
     enum GameTab: Hashable {
         case dashboard, fleet, routes, people, money
         var accent: Color {
@@ -72,6 +77,42 @@ struct RootView: View {
         // The hard fail state (GDD §3.2): full-screen, no way around it.
         .overlay {
             if engine.state.isBankrupt { bankruptcyOverlay }
+        }
+        // ── Milestone celebration: a win, announced, then gone ────────────
+        .overlay(alignment: .top) {
+            if let celebration {
+                CelebrationBanner(title: "Milestone: \(celebration.title)",
+                                  subtitle: "Reward \(celebration.reward.money) banked",
+                                  accent: Theme.profit, icon: "flag.checkered")
+                    .padding(.top, 4)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .onAppear { seenMilestones = engine.state.completedMilestones }
+        .onChange(of: engine.state.completedMilestones) { _, new in
+            guard let seen = seenMilestones else { seenMilestones = new; return }
+            if let fresh = Balance.milestones.first(where: {
+                new.contains($0.id) && !seen.contains($0.id)
+            }) {
+                withAnimation(.snappy) { celebration = fresh }
+            }
+            seenMilestones = new
+        }
+        .task(id: celebration?.id) {
+            guard celebration != nil else { return }
+            try? await Task.sleep(for: .seconds(3.5))
+            withAnimation(.easeOut(duration: 0.5)) { celebration = nil }
+        }
+        // ── Quarter close: the report card moment ─────────────────────────
+        .onChange(of: engine.state.letters.count) { old, new in
+            guard new > old, let latest = engine.state.letters.last else { return }
+            quarterReport = latest
+        }
+        .sheet(item: $quarterReport) { letter in
+            QuarterReportCard(letter: letter,
+                              quarterProfit: letter.quarterProfit,
+                              streak: engine.state.consecutiveProfitableQuarters,
+                              reputation: engine.state.reputation)
         }
     }
 

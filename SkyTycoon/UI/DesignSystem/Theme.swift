@@ -40,6 +40,13 @@ enum Theme {
     static let gutter: CGFloat = 16
     static let cardSpacing: CGFloat = 12
 
+    /// v2.1 highlight gradient: accent burning out toward bottom-trailing.
+    /// Used ONLY on surfaces that deserve attention (border = "look here").
+    static func accentGradient(_ color: Color) -> LinearGradient {
+        LinearGradient(colors: [color.opacity(0.9), color.opacity(0.12)],
+                       startPoint: .topLeading, endPoint: .bottomTrailing)
+    }
+
     /// Meter color by health fraction (1 = good): green → amber → red.
     static func health(_ fraction: Double) -> Color {
         switch fraction {
