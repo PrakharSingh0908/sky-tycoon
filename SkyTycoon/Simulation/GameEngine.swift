@@ -18,15 +18,10 @@ final class GameEngine {
 
     enum SimSpeed: Double, CaseIterable {
         case paused = 0, x1 = 1, x2 = 2, x4 = 4
-        var label: String {
-            switch self {
-            case .paused: "⏸"; case .x1: "1x"; case .x2: "2x"; case .x4: "4x"
-            }
-        }
     }
 
     /// Real seconds of accumulated time per weekly tick at 1x.
-    private let secondsPerWeek: Double = 8
+    private let secondsPerWeek: Double = 16
     private var accumulator: Double = 0
     private var timer: Timer?
 

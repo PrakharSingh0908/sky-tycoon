@@ -57,9 +57,7 @@ struct SpeedControl: View {
                 Button {
                     engine.speed = speed
                 } label: {
-                    Text(speed.label)
-                        .font(.system(size: 11, weight: .bold, design: .rounded))
-                        .monospacedDigit()
+                    glyph(for: speed)
                         .frame(width: 28, height: 26)
                         .background(
                             engine.speed == speed ? AnyShapeStyle(Theme.sky) : AnyShapeStyle(.clear),
@@ -74,5 +72,27 @@ struct SpeedControl: View {
         .background(Color.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 9))
         .sensoryFeedback(.selection, trigger: engine.speed)
         .animation(.snappy(duration: 0.2), value: engine.speed)
+    }
+
+    /// Pause glyph, then one/two/three chevrons for the running speeds.
+    @ViewBuilder private func glyph(for speed: GameEngine.SimSpeed) -> some View {
+        if speed == .paused {
+            Image(systemName: "pause.fill")
+                .font(.system(size: 10, weight: .bold))
+        } else {
+            let chevrons = switch speed {
+            case .paused: 0
+            case .x1: 1
+            case .x2: 2
+            case .x4: 3
+            }
+            HStack(spacing: -2.5) {
+                ForEach(0..<chevrons, id: \.self) { _ in
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 9, weight: .heavy))
+                }
+            }
+            .accessibilityLabel("Speed \(chevrons)")
+        }
     }
 }

@@ -9,6 +9,19 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Chevron speed control; whole sim clock 2x slower
+
+**Changed**
+- The speed control now reads pause / › / ›› / ››› instead of 1x/2x/4x
+  text, switchable exactly as before (with an accessibility label per
+  speed). *Why:* user direction; arrows read as speed at a glance
+  without parsing numbers, matching tycoon-game convention.
+- One week now takes 16 real seconds at base speed (was 8), halving
+  every speed uniformly via the single secondsPerWeek constant. *Why:*
+  weeks flew past too fast to react to route P&L between ticks.
+- SimSpeed.label left the sim layer; glyph choice is UI-side now.
+
+
 ### 2026-07-18 — Unstaffed routes draw dashed on the globe
 
 **Changed**
