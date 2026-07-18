@@ -58,22 +58,36 @@ struct NewGameView: View {
                     }
                 }
 
-                Button {
-                    onStart(airlineName.trimmingCharacters(in: .whitespaces), .india)
-                } label: {
-                    Text("Found the airline").frame(maxWidth: .infinity)
-                }
-                .buttonStyle(GameButtonStyle(color: Theme.sky, prominent: true))
-                .disabled(airlineName.trimmingCharacters(in: .whitespaces).isEmpty)
-                .opacity(airlineName.trimmingCharacters(in: .whitespaces).isEmpty ? 0.4 : 1)
             }
             .padding(.horizontal, Theme.gutter)
-            .padding(.bottom, 32)
+            .padding(.bottom, 16)
         }
         .background(Theme.bg)
         .scrollIndicators(.hidden)
+        .safeAreaInset(edge: .bottom) { foundButton }
         .preferredColorScheme(.dark)
         .onAppear { nameFocused = true }
+    }
+
+    /// Docked above the safe area (and the keyboard); scroll content fades
+    /// out underneath it instead of carrying the button away.
+    private var foundButton: some View {
+        Button {
+            onStart(airlineName.trimmingCharacters(in: .whitespaces), .india)
+        } label: {
+            Text("Found the airline").frame(maxWidth: .infinity)
+        }
+        .buttonStyle(GameButtonStyle(color: Theme.sky, prominent: true))
+        .disabled(airlineName.trimmingCharacters(in: .whitespaces).isEmpty)
+        .opacity(airlineName.trimmingCharacters(in: .whitespaces).isEmpty ? 0.4 : 1)
+        .padding(.horizontal, Theme.gutter)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
+        .background(
+            LinearGradient(colors: [Theme.bg.opacity(0), Theme.bg, Theme.bg],
+                           startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea(edges: .bottom)
+        )
     }
 
     private func countryRow(_ country: Country) -> some View {

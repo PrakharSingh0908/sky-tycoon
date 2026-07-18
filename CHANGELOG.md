@@ -9,6 +9,25 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Sticky founding CTA; hot-reload wiring for UI work
+
+**Changed**
+- "Found the airline" is now docked above the bottom safe area via
+  safeAreaInset, with a fade so scroll content slips underneath. It
+  also rides above the keyboard while naming the airline. *Why:* the
+  CTA lived at the end of the scroll content, so on smaller screens
+  you had to scroll past five countries to found the airline.
+
+**Added**
+- DEBUG-only InjectionIII hot reload: the app loads the injection
+  bundle at launch (no-op if the InjectionIII mac app isn't running)
+  and an InjectionReloader modifier re-renders the whole hierarchy on
+  each injection. Sim state lives in GameEngine, so redraws lose
+  nothing. Requires the free InjectionIII app; see commit message.
+  *Why:* UI iteration currently costs a full rebuild + relaunch;
+  injection turns a body tweak into a ~1s live swap in the simulator.
+
+
 ### 2026-07-18 — Airline-name field keeps the keyboard Latin-script
 
 **Fixed**
