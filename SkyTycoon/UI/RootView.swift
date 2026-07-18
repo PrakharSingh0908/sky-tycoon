@@ -81,7 +81,7 @@ struct RootView: View {
                 .font(.system(size: 52)).foregroundStyle(Theme.loss)
             Text("Grounded")
                 .font(.game(.largeTitle, weight: .bold)).foregroundStyle(Theme.textPrimary)
-            Text("Eight weeks insolvent with nothing left to sell. \(engine.state.airlineName) survived \(engine.state.date.description) — the banks have called time.")
+            Text("Eight weeks insolvent with nothing left to sell. \(engine.state.airlineName) survived \(engine.state.date.description). The banks have called time.")
                 .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)

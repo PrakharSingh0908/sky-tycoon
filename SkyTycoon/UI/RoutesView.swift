@@ -227,7 +227,7 @@ struct RouteDetailView: View {
         if let route = engine.state.routes.first(where: { $0.id == routeID }) {
             GameScreen(title: "\(route.originID) ⇄ \(route.destinationID)", accent: accent) {
                 GameCard {
-                    SectionHeader(title: "Load factor — 26 weeks", icon: "chart.xyaxis.line", accent: accent)
+                    SectionHeader(title: "Load factor · 26 weeks", icon: "chart.xyaxis.line", accent: accent)
                     LoadFactorSparkline(history: route.loadFactorHistory)
                 }
                 GameCard {
@@ -349,7 +349,7 @@ struct RouteDetailView: View {
             if !hasCandidate {
                 Text(engine.state.fleet.isEmpty
                      ? "No aircraft in the fleet yet."
-                     : "Nothing in the fleet can fly this route — check range and runway class.")
+                     : "Nothing in the fleet can fly this route. Check range and runway class.")
                     .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
                 NavigationLink {
                     ShowroomView(fittingRoute: route)

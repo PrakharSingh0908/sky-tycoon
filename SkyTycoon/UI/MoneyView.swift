@@ -21,7 +21,7 @@ struct MoneyView: View {
             marketingCard
             GameCard {
                 SectionHeader(title: "52-week P&L", icon: "chart.bar.fill", accent: accent)
-                Text("Profit bars · revenue line — tap any statement line below for its formula")
+                Text("Profit bars · revenue line. Tap any statement line below for its formula.")
                     .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
                 ProfitChart(reports: engine.state.reports)
             }
@@ -99,11 +99,11 @@ struct MoneyView: View {
                 }
                 .animation(.snappy, value: engine.state.consecutiveProfitableQuarters)
             case .succeeded:
-                Label("Aunt's Approval — the fund converted to a gift. The airline is yours, properly.",
+                Label("Aunt's Approval: the fund converted to a gift. The airline is yours, properly.",
                       systemImage: "checkmark.seal.fill")
                     .font(.game(.caption, weight: .semibold)).foregroundStyle(Theme.profit)
             case .failed:
-                Label("The fund was withdrawn — hard mode. Everything from here is yours alone.",
+                Label("The fund was withdrawn (hard mode). Everything from here is yours alone.",
                       systemImage: "xmark.seal.fill")
                     .font(.game(.caption, weight: .semibold)).foregroundStyle(Theme.loss)
             }
@@ -145,7 +145,7 @@ struct MoneyView: View {
                 .font(.system(.subheadline, design: .serif))
                 .italic()
                 .foregroundStyle(Theme.textPrimary.opacity(0.9))
-            Text("— Aunt Meera")
+            Text("Aunt Meera")
                 .font(.system(.caption, design: .serif).italic())
                 .foregroundStyle(Theme.warn)
                 .frame(maxWidth: .infinity, alignment: .trailing)
@@ -158,7 +158,7 @@ struct MoneyView: View {
 
     private func statementCard(_ r: WeeklyReport) -> some View {
         GameCard {
-            SectionHeader(title: "Last week — \(r.date.description)",
+            SectionHeader(title: "Last week · \(r.date.description)",
                           icon: "doc.text.fill", accent: accent)
             statementRow("Revenue", r.revenue, positive: true) { revenueExplanation(r) }
             Divider().overlay(Theme.hairline)
@@ -271,7 +271,7 @@ struct MoneyView: View {
             .filter { $0.acquisition == .leased }
             .map { ($0.nickname, $0.weeklyLeaseCost.money) }
         rows.append(("Total", r.leaseCost.money))
-        return Explanation(title: "Lease payments", subtitle: "They never end — that's the deal",
+        return Explanation(title: "Lease payments", subtitle: "They never end. That's the deal",
                            rows: rows,
                            formula: "lease = new price × \(String(format: "%.2f", Balance.leaseRatePerWeek * 100))% / week")
     }

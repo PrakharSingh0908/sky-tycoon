@@ -9,6 +9,23 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Word-caps airline names; em dashes swept from UI copy
+
+**Fixed**
+- The airline-name field now auto-capitalizes every word
+  (.textInputAutocapitalization(.words)) and no longer autocorrects,
+  so names like "Sky Bharat" type naturally. *Why:* the default
+  sentence-casing keyboard only shifts the first word, which fought
+  the most common airline-name shape (two capitalized words).
+
+**Changed**
+- Removed em dashes from every user-visible string (warnings, section
+  headers, country blurbs, showroom copy, Aunt Meera's letters, event
+  bodies), replacing each with a colon, comma, period, or the middot
+  the design system already uses. *Why:* user direction; the copy now
+  has one consistent separator style instead of three.
+
+
 ### 2026-07-18 — Assign list shows where a plane is already flying
 
 **Changed**

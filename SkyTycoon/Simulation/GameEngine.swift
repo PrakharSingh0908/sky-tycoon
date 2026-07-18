@@ -579,7 +579,7 @@ final class GameEngine {
                 id: UUID(), cardID: "trustFundSuccess", category: .story,
                 isNegative: false,
                 title: "Aunt's Approval",
-                body: "Four consecutive profitable quarters. The trust fund converts to a gift — with a bonus from a very proud aunt. Her letter is on the Money tab.",
+                body: "Four consecutive profitable quarters. The trust fund converts to a gift, with a bonus from a very proud aunt. Her letter is on the Money tab.",
                 options: [EventOption(label: "Accept the gift (+\(Balance.trustFundSuccessGift.money))",
                                       effects: [.cash(Balance.trustFundSuccessGift),
                                                 .reputation(Balance.trustFundSuccessReputationBonus)])],

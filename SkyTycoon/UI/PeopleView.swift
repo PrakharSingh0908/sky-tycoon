@@ -166,10 +166,10 @@ private struct StaffPoolCard: View {
 
     @ViewBuilder private var warningView: some View {
         if pool.headcount > 0 && pool.happiness < Balance.strikeRiskHappinessThreshold {
-            warningLabel("Morale critical — strike risk. Raise pay or cut workload now.",
+            warningLabel("Morale critical: strike risk. Raise pay or cut workload now.",
                          icon: "exclamationmark.octagon.fill", color: Theme.loss)
         } else if pool.headcount > 0 && pool.happiness < Balance.attritionHappinessThreshold {
-            warningLabel("Unhappy — people are quitting each week.",
+            warningLabel("Unhappy. People are quitting each week.",
                          icon: "person.fill.xmark", color: Theme.warn)
         } else if pool.lastUtilization > 1.0 {
             warningLabel(overworkText, icon: "exclamationmark.triangle.fill", color: Theme.warn)
@@ -178,9 +178,9 @@ private struct StaffPoolCard: View {
 
     private var overworkText: String {
         if pool.headcount == 0 {
-            return "Nobody hired — contractors cover \(role.displayName.lowercased()) at 1.5× rates, and it shows in delays."
+            return "Nobody hired. Contractors cover \(role.displayName.lowercased()) at 1.5× rates, and it shows in delays."
         }
-        return "Your \(role.displayName.lowercased()) are working \(Int((pool.lastUtilization - 1) * 100))% over roster — expect delays and overtime pay."
+        return "Your \(role.displayName.lowercased()) are working \(Int((pool.lastUtilization - 1) * 100))% over roster. Expect delays and overtime pay."
     }
 
     private func warningLabel(_ text: String, icon: String, color: Color) -> some View {

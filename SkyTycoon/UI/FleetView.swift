@@ -126,7 +126,7 @@ private struct AircraftCard: View {
 
     private func deliveryProgress(spec: AircraftSpec) -> some View {
         let total = Double(Balance.deliveryWeeks[plane.type] ?? 1)
-        return MeterRow(label: "On order — arrives in \(plane.deliveryWeeksRemaining) wk",
+        return MeterRow(label: "On order · arrives in \(plane.deliveryWeeksRemaining) wk",
                         value: 1 - Double(plane.deliveryWeeksRemaining) / max(total, 1),
                         display: "\(plane.deliveryWeeksRemaining) wk",
                         color: accent)
@@ -193,7 +193,7 @@ private struct AircraftCard: View {
         let spec = Balance.specs[plane.type]!
         return Menu {
             if engine.state.routes.isEmpty {
-                Text("No routes yet — open one on the Routes tab.")
+                Text("No routes yet. Open one on the Routes tab.")
             }
             ForEach(engine.state.routes) { route in
                 let flyable = engine.canOperate(aircraftID: plane.id, routeID: route.id)
@@ -238,12 +238,12 @@ private struct AircraftCard: View {
         if plane.effectiveRangeKm(spec: spec) < route.distanceKm {
             // A lighter cabin might stretch it — tell the player.
             return spec.rangeKm * 1.10 >= route.distanceKm
-                ? base + " — beyond range (an airier cabin could reach)"
-                : base + " — beyond range"
+                ? base + " · beyond range (an airier cabin could reach)"
+                : base + " · beyond range"
         }
         if !engine.canOperate(aircraftID: plane.id, routeID: route.id),
            plane.status != .onOrder {
-            return base + " — runway too short"
+            return base + " · runway too short"
         }
         return base
     }

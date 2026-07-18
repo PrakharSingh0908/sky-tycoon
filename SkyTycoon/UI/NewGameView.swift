@@ -15,11 +15,11 @@ struct NewGameView: View {
     @FocusState private var nameFocused: Bool
 
     private static let fantasies: [Country: (flag: String, blurb: String)] = [
-        .india: ("🇮🇳", "The volume game — 1.4B people, cheap fares, ferocious growth."),
-        .us: ("🇺🇸", "The efficiency game — strong majors, union power."),
-        .uk: ("🇬🇧", "The premium hub game — slots are the real currency."),
-        .china: ("🇨🇳", "The patience game — licenses, guanxi, long horizons."),
-        .australia: ("🇦🇺", "The optimization game — long thin routes, right plane or bust."),
+        .india: ("🇮🇳", "The volume game: 1.4B people, cheap fares, ferocious growth."),
+        .us: ("🇺🇸", "The efficiency game: strong majors, union power."),
+        .uk: ("🇬🇧", "The premium hub game: slots are the real currency."),
+        .china: ("🇨🇳", "The patience game: licenses, guanxi, long horizons."),
+        .australia: ("🇦🇺", "The optimization game: long thin routes, right plane or bust."),
     ]
 
     var body: some View {
@@ -42,6 +42,8 @@ struct NewGameView: View {
                     TextField("Airline name", text: $airlineName)
                         .font(.game(.title3, weight: .bold))
                         .foregroundStyle(Theme.textPrimary)
+                        .textInputAutocapitalization(.words)
+                        .autocorrectionDisabled()
                         .focused($nameFocused)
                         .submitLabel(.done)
                         .padding(12)

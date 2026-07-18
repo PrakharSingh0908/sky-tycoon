@@ -33,7 +33,7 @@ struct DashboardView: View {
 
     private var reputationCollapseBanner: some View {
         GameCard {
-            Label("Reputation collapse — demand is cratering. Fix punctuality, comfort, and service before the spiral locks in.",
+            Label("Reputation collapse: demand is cratering. Fix punctuality, comfort, and service before the spiral locks in.",
                   systemImage: "exclamationmark.octagon.fill")
                 .font(.game(.caption, weight: .semibold))
                 .foregroundStyle(Theme.loss)
@@ -158,7 +158,7 @@ struct DashboardView: View {
 
     private func lastWeekCard(_ report: WeeklyReport) -> some View {
         GameCard {
-            SectionHeader(title: "Last week — \(report.date.description)",
+            SectionHeader(title: "Last week · \(report.date.description)",
                           icon: "clock.arrow.circlepath", accent: accent)
             HStack(spacing: 20) {
                 StatTile(label: "Revenue", value: report.revenue.money)

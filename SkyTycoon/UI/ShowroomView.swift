@@ -77,7 +77,7 @@ struct ShowroomView: View {
     // ── New: full price, delivery wait ───────────────────────────────────
 
     @ViewBuilder private var newCards: some View {
-        Text("Cash up front — delivered in 8–24 weeks.")
+        Text("Cash up front, delivered in 8 to 24 weeks.")
             .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
         ForEach(AircraftType.allCases) { type in
             let spec = Balance.specs[type]!
@@ -148,7 +148,7 @@ struct ShowroomView: View {
     // ── Lease: instant, no capital, forever ──────────────────────────────
 
     @ViewBuilder private var leaseCards: some View {
-        Text("Instant, no capital outlay — payments never end.")
+        Text("Instant, no capital outlay. Payments never end.")
             .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
         ForEach(AircraftType.allCases) { type in
             let spec = Balance.specs[type]!

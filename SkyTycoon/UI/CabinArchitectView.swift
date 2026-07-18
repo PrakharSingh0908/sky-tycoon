@@ -108,7 +108,7 @@ struct CabinArchitectView: View {
                     .font(.caption2.weight(.bold)).foregroundStyle(Theme.teal)
                 TickerText(text: "\(Int(spec.rangeKm * draft.rangeFactor(spec: spec))) km effective range",
                            font: .game(.caption, weight: .semibold), color: Theme.teal)
-                Text("(brochure \(Int(spec.rangeKm)) km — payload changes it)")
+                Text("(brochure \(Int(spec.rangeKm)) km, payload changes it)")
                     .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
                 Spacer()
             }
@@ -184,7 +184,7 @@ struct CabinArchitectView: View {
             if let routeID = plane.assignedRouteID,
                let route = engine.state.routes.first(where: { $0.id == routeID }),
                spec.rangeKm * draft.rangeFactor(spec: spec) < route.distanceKm {
-                Label("Too heavy for \(route.originID) ⇄ \(route.destinationID) (\(Int(route.distanceKm)) km) — refitting will unassign this aircraft.",
+                Label("Too heavy for \(route.originID) ⇄ \(route.destinationID) (\(Int(route.distanceKm)) km). Refitting will unassign this aircraft.",
                       systemImage: "exclamationmark.triangle.fill")
                     .font(.game(.caption, weight: .medium))
                     .foregroundStyle(Theme.warn)
