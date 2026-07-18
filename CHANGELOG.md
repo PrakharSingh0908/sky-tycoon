@@ -9,6 +9,21 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Ticket punches finished; dropdown shows LF not condition
+
+**Fixed**
+- The boarding-pass punch notches showed a dark ring: the card's own
+  drop shadow bled through the punched holes. Each punch is now capped
+  with a screen-background disc, and the perforation dashes extend to
+  meet the notches (padding 16→13). *Why:* the punch is the ticket's
+  signature detail; a smudged hole reads as a rendering bug.
+
+**Changed**
+- Aircraft dropdown rows on the pass show the route's load factor
+  instead of the plane's condition (condition stays on Fleet cards,
+  where the maintenance decision lives).
+
+
 ### 2026-07-18 — Boarding-pass stub: full-width load factor
 
 **Changed**

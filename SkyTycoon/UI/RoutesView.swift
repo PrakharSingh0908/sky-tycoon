@@ -142,7 +142,7 @@ private struct BoardingPassCard: View {
             // stub is fixed-height (the ticket notches depend on it).
             aircraftDropdown
 
-            PerforationLine().padding(.horizontal, 16)
+            PerforationLine().padding(.horizontal, 13)   // meets the punches
 
             // ── The stub ─────────────────────────────────────────────────
             VStack(spacing: 10) {
@@ -190,6 +190,18 @@ private struct BoardingPassCard: View {
                 .fill(Theme.card, style: FillStyle(eoFill: true))
         )
         .shadow(color: .black.opacity(0.25), radius: 10, y: 5)
+        // The card's own shadow bleeds through the punched holes as a dark
+        // ring; cap each punch with a clean screen-background disc.
+        .overlay {
+            GeometryReader { geo in
+                let y = geo.size.height - stubHeight
+                Circle().fill(Theme.bg).frame(width: 20, height: 20)
+                    .position(x: 0, y: y)
+                Circle().fill(Theme.bg).frame(width: 20, height: 20)
+                    .position(x: geo.size.width, y: y)
+            }
+            .allowsHitTesting(false)
+        }
     }
 
     /// The aircraft actively serving this route, collapsible.
@@ -226,9 +238,9 @@ private struct BoardingPassCard: View {
             if plane.groundedWeeksRemaining > 0 {
                 StatusBadge(text: "In shop · \(plane.groundedWeeksRemaining) wk", color: Theme.warn)
             } else {
-                TickerText(text: "cond \(Int(plane.condition))%",
+                TickerText(text: "LF \(Int(route.lastLoadFactor * 100))%",
                            font: .game(.caption2, weight: .semibold),
-                           color: Theme.health(plane.condition / 100))
+                           color: Theme.health(route.lastLoadFactor))
             }
         }
     }
