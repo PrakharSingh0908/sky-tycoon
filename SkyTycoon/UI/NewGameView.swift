@@ -42,6 +42,7 @@ struct NewGameView: View {
                     TextField("Airline name", text: $airlineName)
                         .font(.game(.title3, weight: .bold))
                         .foregroundStyle(Theme.textPrimary)
+                        .keyboardType(.asciiCapable)
                         .textInputAutocapitalization(.words)
                         .autocorrectionDisabled()
                         .focused($nameFocused)

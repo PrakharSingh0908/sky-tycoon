@@ -9,6 +9,17 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Airline-name field keeps the keyboard Latin-script
+
+**Fixed**
+- The airline-name field now requests an ASCII-capable keyboard
+  (.keyboardType(.asciiCapable)), so devices with Hindi or other
+  transliteration keyboards enabled no longer surface Devanagari
+  suggestions while naming the airline. *Why:* the field accepted any
+  system keyboard; on an India-configured device that meant Hindi
+  predictive input in a field that expects a Latin brand name.
+
+
 ### 2026-07-18 — Word-caps airline names; em dashes swept from UI copy
 
 **Fixed**
