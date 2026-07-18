@@ -9,6 +9,41 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — M8: new-game flow, app icon, playtest sign-off — the MVP is feature-complete
+
+**Added**
+- **New-game screen** (verified live in the simulator): airline name
+  entry, the aunt's hook line, and the five-country list — India
+  playable, the other four showing their one-line fantasies behind
+  "Coming soon" badges, per the GDD's v1.0 setup. The app now boots to
+  it when no save exists; a save skips straight to the game.
+- **App icon**: custom-drawn 1024² mark (ops-navy globe, dotted teal
+  great-circle, white airliner silhouette) — drawn as vector paths, no
+  SF Symbols (their license excludes icon use). Installed for light and
+  dark appearances; launch screen remains Xcode-generated.
+
+**Decided**
+- Tick driver stays a 30 Hz `Timer`; GDD §9 amended with the reasoning —
+  with 8-second weekly ticks, `CADisplayLink` precision buys nothing but
+  battery drain, and determinism never depended on the driver.
+
+**Playtest (the M8 archetype runs, 160 weeks each, sim-driven)**
+- *Negligent* (no staff, no checks, gouging fares): bankrupt, 2.2★,
+  1/10 milestones. *Cautious* (leased propliner, market fares, checks):
+  survives solvent, +$1.19M, 7/10 milestones, arc failed — safe doesn't
+  win the fund. *Aggressive* (used propliner on credit, yield
+  management, marketing, expansion): most net worth (+$1.81M, two
+  aircraft) while flirting with insolvency; the arc remains
+  wire-crossing hard but provably winnable (M6 verification run).
+  Outcomes rank correctly and no Balance constants needed changing.
+- Bonus finding, kept as design: a lone small turboprop cannot cover HQ
+  overhead — feeders only pay inside a network; the viable first plane
+  is a propliner. The P&L explainers (M7) make this discoverable.
+
+**Remaining for TestFlight (user actions)**: create the App Store
+Connect record and upload; add the `SkyTycoonTests` target in Xcode
+(55 tests authored, never yet executed).
+
 ### 2026-07-18 — M5 marketing + M7 money depth, unit economics, and honest formulas
 
 **Added — M5 marketing**

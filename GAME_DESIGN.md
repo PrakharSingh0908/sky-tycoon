@@ -282,6 +282,6 @@ All 5 countries and special rules, international routes, 3-class cabin editor, h
 - **SwiftUI** for all UI; `@Observable` engine as the single source of truth; views are dumb renderers of engine state.
 - **Value-type models** (structs) with identity via stable UUIDs; the engine (class) owns all mutation.
 - **Seeded RNG** (`SeededRandomNumberGenerator`) — never `Int.random()` in the sim, so replays and tests are reproducible.
-- **Fixed-timestep tick loop** driven by a display-linked timer that accumulates real time and fires whole weekly ticks; UI speed settings only change accumulation rate.
+- **Fixed-timestep tick loop** driven by a timer that accumulates real time and fires whole weekly ticks; UI speed settings only change accumulation rate. *(Amended July 2026: a 30 Hz `Timer` ships instead of `CADisplayLink` — with 8-second weekly ticks, frame-perfect timing buys nothing but battery drain, and the sim's determinism never depended on the driver.)*
 - **Codable snapshot saves**: the entire `GameState` serializes to one JSON blob; autosave every tick; versioned for future migration.
 - **Balance data as data**: aircraft stats, country coefficients, and event cards live in plain Swift constant tables now, designed to move to bundled JSON later so balancing never requires touching sim code.

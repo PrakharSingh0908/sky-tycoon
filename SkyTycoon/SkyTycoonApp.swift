@@ -11,14 +11,22 @@ import SwiftUI
 
 @main
 struct SkyTycoonApp: App {
-    @State private var engine: GameEngine = GameEngine.load()
-        ?? GameEngine.newGame(airlineName: "Aunt Air", country: .india)
+    /// nil until a save exists or the player founds an airline (M8).
+    @State private var engine: GameEngine? = GameEngine.load()
 
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .environment(engine)
-                .onAppear { engine.startClock() }
+            if let engine {
+                RootView()
+                    .environment(engine)
+                    .onAppear { engine.startClock() }
+            } else {
+                NewGameView { name, country in
+                    let newEngine = GameEngine.newGame(airlineName: name, country: country)
+                    newEngine.save()
+                    engine = newEngine
+                }
+            }
         }
     }
 }
