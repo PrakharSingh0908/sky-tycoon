@@ -32,3 +32,10 @@ BEFORE it ships.
 
 *(History: v1.4 briefly bundled three CC-BY 3.0 low-poly models from
 poly.pizza — removed 2026-07-16 when the photography replaced them.)*
+
+## Satellite imagery
+
+- **NASA Blue Marble: Next Generation** (December 2004, topography +
+  bathymetry, 5400×2700) — the Routes map base layer
+  (`bluemarble_world.jpg`). NASA Visible Earth imagery is in the
+  **public domain**; credit: NASA Earth Observatory / Reto Stöckli.

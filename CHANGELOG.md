@@ -9,6 +9,21 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Satellite map replaces the vector globe
+
+**Changed**
+- The Routes map now drapes routes over NASA Blue Marble satellite
+  imagery (public domain, 2.4MB bundled, fully offline — no tile
+  servers, no keys), dimmed with a multiply scrim to sit in the ops
+  theme. Flat equirectangular camera replaces the orthographic globe:
+  drag pans, pinch zooms (1.2-12x), focus-framing on route detail
+  unchanged. City dots gained halos for legibility on bright terrain.
+  Natural Earth geojson + the globe renderer removed. *Why:* user
+  direction (satellite overlay look); a flat projection makes real
+  imagery drapeable in a single draw call, and at domestic zoom the
+  globe's curvature was invisible anyway.
+
+
 ### 2026-07-18 — Pending starts visible on the collapsed roster row
 
 **Changed**

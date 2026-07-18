@@ -172,12 +172,13 @@ in the Dashboard hero (and the Money tab), not in chrome.
   wear/condition meters (wear fills toward red, condition drains toward red),
   check/sell/return actions. On-order planes show a delivery progress meter.
   Showroom is a pushed screen with New/Used/Lease chips and offer cards.
-- **Routes (teal):** the tab opens on the **network globe** — our own
-  orthographic world drawn from public-domain Natural Earth data:
-  ops-dark continents, faint graticule, atmosphere rim, glowing
-  great-circle arcs (thickness = frequency, color = profitability,
-  neutral while unstaffed), city code chips (served = teal dot). Drag
-  rotates, pinch zooms; fully offline. Below it, each route is a
+- **Routes (teal):** the tab opens on the **satellite network map** —
+  NASA Blue Marble imagery (public domain, bundled, fully offline)
+  under an ops-dark multiply scrim, flat equirect camera (drag pans,
+  pinch zooms), glowing route bows on top (thickness = frequency,
+  color = profitability, dashed while unstaffed), haloed city dots.
+  Replaced the vector globe 2026-07-18: real terrain reads as a
+  flight-ops display; at domestic zoom flat vs globe is invisible. Below it, each route is a
   **boarding pass** — big origin/dest
   codes with city names, a plane traveling a dotted path between them,
   punched notches + dashed perforation, and a stub carrying the load-factor
