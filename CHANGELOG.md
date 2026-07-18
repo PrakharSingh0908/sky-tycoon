@@ -9,6 +9,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased — design-system branch]
 
+### 2026-07-19 — Portraits displayed open, not cropped
+
+**Changed**
+- PersonAvatar no longer clips portraits into circles: the character
+  busts render whole (caps and uniforms intact), sitting open on the
+  surface. Only the monogram fallback keeps its quiet disc, since
+  bare initials need a container.
+
+
 ### 2026-07-19 — Portraits backfilled into existing saves
 
 **Fixed**

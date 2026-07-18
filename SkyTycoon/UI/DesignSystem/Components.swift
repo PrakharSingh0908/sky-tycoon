@@ -241,20 +241,20 @@ struct PersonAvatar: View {
     }
 
     var body: some View {
-        Group {
-            if let avatar, let image = UIImage(named: avatar) {
-                Image(uiImage: image).resizable().scaledToFill()
-            } else {
-                Text(initials)
-                    .font(.data(.caption2, weight: .medium))
-                    .foregroundStyle(Theme.textSecondary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Theme.bg)
-            }
+        // Portraits sit open on the surface — no clipping, no ring. Only
+        // the monogram fallback keeps a quiet disc (bare initials float).
+        if let avatar, let image = UIImage(named: avatar) {
+            Image(uiImage: image)
+                .resizable().scaledToFit()
+                .frame(width: size, height: size)
+        } else {
+            Text(initials)
+                .font(.data(.caption2, weight: .medium))
+                .foregroundStyle(Theme.textSecondary)
+                .frame(width: size, height: size)
+                .background(Theme.bg, in: Circle())
+                .overlay(Circle().strokeBorder(Theme.hairline, lineWidth: 1))
         }
-        .frame(width: size, height: size)
-        .clipShape(Circle())
-        .overlay(Circle().strokeBorder(Theme.hairline, lineWidth: 1))
     }
 }
 
