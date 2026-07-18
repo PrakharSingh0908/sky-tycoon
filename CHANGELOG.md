@@ -9,6 +9,18 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Route detail money card cut to three numbers
+
+**Changed**
+- The route detail's "Unit economics" card is now "Last week" with
+  just Revenue, Cost, and Margin. Removed margin/flight, seats/wk,
+  demand/wk, the breakeven load-factor meter, and the "Why these
+  numbers?" formula sheet (plus its now-orphaned Explanation state).
+  *Why:* user direction; the fare card above already carries the
+  tuning levers, and six stats plus a meter buried the only question
+  that matters at a glance — is this route making money.
+
+
 ### 2026-07-18 — Chevron speed control; whole sim clock 2x slower
 
 **Changed**

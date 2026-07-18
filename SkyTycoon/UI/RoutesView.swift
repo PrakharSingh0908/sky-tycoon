@@ -220,7 +220,6 @@ private struct BoardingPassCard: View {
 struct RouteDetailView: View {
     @Environment(GameEngine.self) private var engine
     let routeID: UUID
-    @State private var explanation: Explanation?
     private let accent = Theme.teal
 
     var body: some View {
@@ -258,14 +257,11 @@ struct RouteDetailView: View {
                              display: "\(Int(route.satisfaction))/100",
                              color: Theme.health(route.satisfaction / 100))
                 }
-                if let econ = engine.routeEconomics(routeID: routeID) {
-                    unitEconomicsCard(route, econ)
-                }
+                weeklyMoneyCard(route)
                 assignCard(route)
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Theme.bgElevated, for: .navigationBar)
-            .sheet(item: $explanation) { FormulaSheet(explanation: $0) }
         }
     }
 
@@ -274,69 +270,22 @@ struct RouteDetailView: View {
         return pct == 0 ? "at market" : (pct > 0 ? "\(pct)% over market" : "\(-pct)% under market")
     }
 
-    // ── Unit economics (M7): what one week of this route really earns ────
+    // ── What one week of this route really earns: three numbers, no math ─
 
-    private func unitEconomicsCard(_ route: Route, _ econ: RouteEconomics) -> some View {
-        let flights = max(1, route.weeklyFrequency * 2)
+    private func weeklyMoneyCard(_ route: Route) -> some View {
         let margin = route.lastWeeklyRevenue - route.lastWeeklyFuel
         return GameCard {
-            HStack {
-                SectionHeader(title: "Unit economics", icon: "function", accent: accent)
-                Spacer()
-                Button {
-                    explanation = demandExplanation(route, econ)
-                } label: {
-                    HStack(spacing: 3) {
-                        Image(systemName: "questionmark.circle").font(.caption2)
-                        Text("Why these numbers?").font(.game(.caption, weight: .semibold))
-                    }
-                    .foregroundStyle(accent)
-                }
-                .buttonStyle(.plain)
-            }
+            SectionHeader(title: "Last week", icon: "chart.bar.fill", accent: accent)
             HStack(spacing: 20) {
-                StatTile(label: "Revenue /wk", value: route.lastWeeklyRevenue.money,
+                StatTile(label: "Revenue", value: route.lastWeeklyRevenue.money,
                          color: Theme.profit, font: .game(.subheadline, weight: .bold))
-                StatTile(label: "Fuel /wk", value: route.lastWeeklyFuel.money,
+                StatTile(label: "Cost", value: route.lastWeeklyFuel.money,
                          font: .game(.subheadline, weight: .bold))
-                StatTile(label: "Margin /wk", value: margin.money,
+                StatTile(label: "Margin", value: margin.money,
                          color: margin >= 0 ? Theme.profit : Theme.loss,
                          font: .game(.subheadline, weight: .bold))
             }
-            Divider().overlay(Theme.hairline)
-            HStack(spacing: 20) {
-                StatTile(label: "Margin /flight", value: (margin / Double(flights)).money,
-                         color: margin >= 0 ? Theme.profit : Theme.loss,
-                         font: .game(.subheadline, weight: .bold))
-                StatTile(label: "Seats /wk", value: "\(econ.seatsOffered)",
-                         font: .game(.subheadline, weight: .bold))
-                StatTile(label: "Demand /wk", value: "\(Int(econ.demand))",
-                         font: .game(.subheadline, weight: .bold))
-            }
-            // Breakeven vs actual: the gap IS the business.
-            MeterRow(label: "Breakeven load factor (fuel only)",
-                     value: econ.breakevenLoadFactor,
-                     display: "\(Int(econ.breakevenLoadFactor * 100))% vs \(Int(route.lastLoadFactor * 100))% flown",
-                     color: route.lastLoadFactor > econ.breakevenLoadFactor ? Theme.profit : Theme.loss)
         }
-    }
-
-    private func demandExplanation(_ route: Route, _ econ: RouteEconomics) -> Explanation {
-        Explanation(
-            title: "\(route.originID) ⇄ \(route.destinationID) demand",
-            subtitle: "Every factor in this week's \(Int(econ.demand)) passengers",
-            rows: [
-                ("Gravity (city sizes ÷ distance)", String(format: "%.0f", econ.gravity)),
-                ("Market growth", String(format: "×%.2f", econ.growth)),
-                ("Season", String(format: "×%.2f", econ.season)),
-                ("Brand (reputation × awareness)", String(format: "×%.2f", econ.brand)),
-                ("Price response (fare \(fairnessLabel(econ)))", String(format: "×%.2f", econ.priceResponse)),
-                ("Events", String(format: "×%.2f", econ.eventDemand)),
-                ("= Demand", String(format: "%.0f pax", econ.demand)),
-                ("Seats offered", "\(econ.seatsOffered)"),
-                ("Passengers flown", String(format: "%.0f", econ.pax)),
-            ],
-            formula: "demand = k×(popA×popB)^0.55 / dist^0.35\n × growth × season × brand × fare^−elasticity\npax = min(demand, seats)")
     }
 
     private func assignCard(_ route: Route) -> some View {
