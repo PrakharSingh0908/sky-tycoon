@@ -9,6 +9,20 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased — design-system branch]
 
+### 2026-07-18 — Finances card, honest chart windows, industry card redesign
+
+**Changed**
+- "Trends" is now "Finances" and sits above Industry Standing.
+- TrendChart/LoadFactorSparkline take a fixed window (52/26 wk) and
+  left-pad flat at the first value — no invented slope across weeks
+  that never happened; young games read as a flat line into real data.
+- Industry Standing redesigned: the rank is the hero (#10 large, "of
+  10" beside), market cap and share as right-aligned instruments, a
+  10-segment ladder strip with beaten rivals faintly lit and your
+  position in cornflower, and a NEXT line with a progress bar toward
+  the next rival's cap ("24% of $8.00M").
+
+
 ### 2026-07-18 — Speed control back to one tap
 
 **Changed**

@@ -25,8 +25,8 @@ struct DashboardView: View {
             heroCard
             if engine.state.reputation < 2.0 { reputationCollapseBanner }
             if !engine.state.activeEffects.isEmpty { opsConditionsCard }
-            industryCard
             trendsCard
+            industryCard
             if let report = engine.latestReport { lastWeekCard(report) }
             milestonesCard
         }
@@ -158,21 +158,59 @@ struct DashboardView: View {
                 HStack {
                     SectionHeader(title: "Industry standing", icon: "chart.bar.xaxis", accent: accent)
                     Image(systemName: "chevron.right")
-                        .font(.caption2.weight(.bold)).foregroundStyle(Theme.textSecondary)
+                        .font(.caption2.weight(.semibold)).foregroundStyle(Theme.textSecondary)
                 }
-                HStack(spacing: 20) {
-                    StatTile(label: "Rank", value: "#\(rank) of \(total)",
-                             color: rank <= 3 ? Theme.profit : Theme.textPrimary)
-                    StatTile(label: "Market cap", value: engine.marketCap.money)
-                    StatTile(label: "Market share",
-                             value: String(format: "%.1f%%", engine.marketShare * 100))
+                // The rank IS the story: big, with cap and share reading
+                // as its supporting instruments.
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    TickerText(text: "#\(rank)",
+                               font: .display(.largeTitle),
+                               color: rank <= 3 ? Theme.profit : Theme.textPrimary)
+                    Text("of \(total)")
+                        .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 2) {
+                        TickerText(text: engine.marketCap.money,
+                                   font: .game(.headline, weight: .semibold))
+                        Text("Market cap")
+                            .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                    }
+                    VStack(alignment: .trailing, spacing: 2) {
+                        TickerText(text: String(format: "%.1f%%", engine.marketShare * 100),
+                                   font: .game(.headline, weight: .semibold))
+                        Text("Share")
+                            .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                    }
+                    .padding(.leading, 12)
+                }
+                // The ladder itself: one segment per carrier, bottom → top.
+                // Beaten rivals glow faint; your position is the accent.
+                HStack(spacing: 4) {
+                    ForEach(0..<total, id: \.self) { i in
+                        RoundedRectangle(cornerRadius: 1.5)
+                            .fill(i == total - rank ? Theme.cornflower
+                                  : i < total - rank ? Color.white.opacity(0.30)
+                                  : Color.white.opacity(0.08))
+                            .frame(height: 4)
+                    }
                 }
                 if let next = engine.nextRival {
-                    Text("Next up: \(next.name) · \(next.marketCap.money) market cap")
-                        .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                    let progress = min(1, engine.marketCap / next.marketCap)
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text("NEXT · \(next.name.uppercased())")
+                                .font(.data(.caption2)).tracking(0.85)
+                                .foregroundStyle(Theme.textSecondary)
+                            Spacer()
+                            TickerText(text: "\(Int(progress * 100))% of \(next.marketCap.money)",
+                                       font: .game(.caption2, weight: .medium),
+                                       color: Theme.textSecondary)
+                        }
+                        MeterBar(value: progress, color: Theme.cornflower, height: 4)
+                    }
                 } else {
                     Text("India's largest carrier. The sky is yours.")
-                        .font(.game(.caption2, weight: .semibold)).foregroundStyle(Theme.profit)
+                        .font(.game(.caption2, weight: .medium)).foregroundStyle(Theme.profit)
                 }
             }
         }
@@ -184,7 +222,7 @@ struct DashboardView: View {
 
     private var trendsCard: some View {
         GameCard {
-            SectionHeader(title: "Trends", icon: "chart.xyaxis.line", accent: accent)
+            SectionHeader(title: "Finances", icon: "chart.xyaxis.line", accent: accent)
             HStack(spacing: 8) {
                 ForEach(TrendMetric.allCases) { metric in
                     Button(metric.rawValue) { trendMetric = metric }

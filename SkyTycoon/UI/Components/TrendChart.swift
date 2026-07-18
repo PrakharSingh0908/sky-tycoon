@@ -14,10 +14,20 @@ import Charts
 struct TrendChart: View {
     let values: [Double]
     var color: Color = .blue
+    /// Fixed x-window: history shorter than this pads LEFT with the first
+    /// value, so the line is honestly flat over weeks that never happened
+    /// instead of stretching young data across the axis.
+    var window: Int = 52
     /// Formats a y-axis value ("$1.2M", "4.1★", "82%").
     var format: (Double) -> String = { $0.money }
 
+    private var padded: [Double] {
+        guard let first = values.first, values.count < window else { return values }
+        return Array(repeating: first, count: window - values.count) + values
+    }
+
     var body: some View {
+        let values = padded
         if values.count < 2 {
             Text("Charts appear after a couple of weeks of play.")
                 .font(.caption).foregroundStyle(.secondary)
@@ -106,8 +116,16 @@ struct ProfitChart: View {
 /// Compact 0–100% sparkline for a route's recent load factors.
 struct LoadFactorSparkline: View {
     let history: [Double]
+    var window: Int = 26
+
+    /// Flat-padded like TrendChart: no invented slope before the route existed.
+    private var padded: [Double] {
+        guard let first = history.first, history.count < window else { return history }
+        return Array(repeating: first, count: window - history.count) + history
+    }
 
     var body: some View {
+        let history = padded
         if history.count < 2 {
             Text("Fly this route a few weeks to see its load-factor trend.")
                 .font(.caption).foregroundStyle(.secondary)
