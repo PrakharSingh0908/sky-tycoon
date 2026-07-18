@@ -11,12 +11,21 @@ import SwiftUI
 struct DashboardView: View {
     @Environment(GameEngine.self) private var engine
     @State private var trendMetric: TrendMetric = .netWorth
+    @State private var financeRange: FinanceRange = .weekly
     @State private var settleFlash = false
     @State private var showingIndustry = false
     private let accent = Theme.sky
 
     enum TrendMetric: String, CaseIterable, Identifiable {
         case netWorth = "Net worth", cash = "Cash", reputation = "Reputation"
+        var id: String { rawValue }
+    }
+
+    /// Weekly = 13 week points; Monthly = 12 four-week buckets; Yearly =
+    /// quarter buckets over the whole 5-year history. Buckets keep each
+    /// period's LAST value (these are level series, not flows).
+    enum FinanceRange: String, CaseIterable, Identifiable {
+        case weekly = "W", monthly = "M", yearly = "Y"
         var id: String { rawValue }
     }
 
@@ -209,23 +218,134 @@ struct DashboardView: View {
 
     private var trendsCard: some View {
         GameCard {
-            SectionHeader(title: "Finances", icon: "chart.xyaxis.line", accent: accent)
-            HStack(spacing: 8) {
+            HStack {
+                SectionHeader(title: "Finances", icon: "chart.xyaxis.line", accent: accent)
+                rangePicker
+            }
+            // Quiet text tabs: the chart is the hero, not the switcher.
+            HStack(spacing: 16) {
                 ForEach(TrendMetric.allCases) { metric in
-                    Button(metric.rawValue) { trendMetric = metric }
-                        .buttonStyle(GameButtonStyle(color: accent, prominent: trendMetric == metric))
+                    Button {
+                        trendMetric = metric
+                    } label: {
+                        VStack(spacing: 4) {
+                            Text(metric.rawValue)
+                                .font(.game(.subheadline,
+                                            weight: trendMetric == metric ? .medium : .regular))
+                                .foregroundStyle(trendMetric == metric
+                                                 ? Theme.textPrimary : Theme.textSecondary)
+                            Capsule()
+                                .fill(trendMetric == metric ? Theme.cornflower : .clear)
+                                .frame(width: 16, height: 2)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+                Spacer()
+            }
+            .sensoryFeedback(.selection, trigger: trendMetric)
+
+            // How much, which way — before any axis reading.
+            let series = currentSeries
+            if let first = series.first, let last = series.last {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    TickerText(text: formatMetric(last),
+                               font: .game(.title2, weight: .semibold))
+                    if first != 0 || trendMetric == .reputation {
+                        deltaBadge(first: first, last: last)
+                    }
+                    Spacer()
                 }
             }
-            switch trendMetric {
-            case .netWorth:
-                TrendChart(values: engine.state.netWorthHistory, color: Theme.cornflower)
-            case .cash:
-                TrendChart(values: engine.state.cashHistory, color: Theme.profit)
-            case .reputation:
-                TrendChart(values: engine.state.reputationHistory, color: Theme.warn,
-                           format: { String(format: "%.1f★", $0) })
+            let (window, unit) = rangeShape
+            TrendChart(values: series,
+                       color: Theme.cornflower, window: window, unit: unit,
+                       format: trendMetric == .reputation
+                           ? { String(format: "%.1f★", $0) } : { $0.money })
+        }
+    }
+
+    private var currentSeries: [Double] {
+        switch trendMetric {
+        case .netWorth: rangeSeries(engine.state.netWorthHistory)
+        case .cash: rangeSeries(engine.state.cashHistory)
+        case .reputation: rangeSeries(engine.state.reputationHistory)
+        }
+    }
+
+    private func formatMetric(_ v: Double) -> String {
+        trendMetric == .reputation ? String(format: "%.1f★", v) : v.money
+    }
+
+    /// Range delta: ▲/▼ with the change over the visible window.
+    private func deltaBadge(first: Double, last: Double) -> some View {
+        let delta = last - first
+        let text: String
+        if trendMetric == .reputation {
+            text = String(format: "%@%.1f", delta >= 0 ? "▲" : "▼", abs(delta))
+        } else if first != 0 {
+            text = String(format: "%@%.0f%%", delta >= 0 ? "▲" : "▼",
+                          abs(delta / abs(first)) * 100)
+        } else {
+            text = delta >= 0 ? "▲" : "▼"
+        }
+        return TickerText(text: text,
+                          font: .game(.caption, weight: .medium),
+                          color: delta >= 0 ? Theme.profit : Theme.loss)
+    }
+
+    /// W / M / Y — mono tags, white-filled when active (speed-segment style).
+    private var rangePicker: some View {
+        HStack(spacing: 2) {
+            ForEach(FinanceRange.allCases) { range in
+                Button {
+                    financeRange = range
+                } label: {
+                    Text(range.rawValue)
+                        .font(.data(.caption2, weight: .medium))
+                        .frame(width: 24, height: 20)
+                        .background(financeRange == range ? AnyShapeStyle(Color.white)
+                                    : AnyShapeStyle(.clear),
+                                    in: RoundedRectangle(cornerRadius: 5))
+                        .foregroundStyle(financeRange == range ? Theme.bg : Theme.textSecondary)
+                }
+                .buttonStyle(.plain)
             }
         }
+        .padding(2)
+        .background(Theme.bg, in: RoundedRectangle(cornerRadius: Theme.corner))
+        .sensoryFeedback(.selection, trigger: financeRange)
+    }
+
+    private var rangeShape: (window: Int, unit: String) {
+        switch financeRange {
+        case .weekly: (13, "w")
+        case .monthly: (12, "mo")
+        case .yearly: (20, "q")
+        }
+    }
+
+    /// Downsample a weekly level series into the selected range's buckets
+    /// (last value per bucket, aligned to now).
+    private func rangeSeries(_ raw: [Double]) -> [Double] {
+        switch financeRange {
+        case .weekly:
+            return Array(raw.suffix(13))
+        case .monthly:
+            return bucketLast(raw, size: 4, keep: 12)
+        case .yearly:
+            return bucketLast(raw, size: 13, keep: 20)
+        }
+    }
+
+    private func bucketLast(_ raw: [Double], size: Int, keep: Int) -> [Double] {
+        var out: [Double] = []
+        var i = raw.count
+        while i > 0 && out.count < keep {
+            out.append(raw[i - 1])
+            i -= size
+        }
+        return out.reversed()
     }
 
     // ── Last week ────────────────────────────────────────────────────────

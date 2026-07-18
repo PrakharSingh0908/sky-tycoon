@@ -9,6 +9,22 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased — design-system branch]
 
+### 2026-07-18 — Finances: W/M/Y ranges and a redesigned chart
+
+**Added**
+- Range picker on the Finances card (speed-segment style): Weekly =
+  last 13 weeks, Monthly = 12 four-week buckets, Yearly = quarter
+  buckets across the full 5-year history (level series keep each
+  bucket's last value). Chart x-axis units follow (w / mo / q).
+
+**Changed**
+- The chart itself: heavy metric chips became quiet text tabs with a
+  cornflower underline; a current-value + range-delta header answers
+  "how much, which way" before any axis reading (▲/▼ percent, or ★
+  for reputation); the plot gained a "now" marker dot, a thinner
+  line, softer area fill, and mono tertiary axis labels.
+
+
 ### 2026-07-18 — Industry card: rank only, ladder strip removed
 
 **Changed**

@@ -18,6 +18,8 @@ struct TrendChart: View {
     /// value, so the line is honestly flat over weeks that never happened
     /// instead of stretching young data across the axis.
     var window: Int = 52
+    /// X-axis unit suffix ("w" weeks, "mo" months, "q" quarters).
+    var unit: String = "w"
     /// Formats a y-axis value ("$1.2M", "4.1★", "82%").
     var format: (Double) -> String = { $0.money }
 
@@ -33,22 +35,31 @@ struct TrendChart: View {
                 .font(.caption).foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, minHeight: 120)
         } else {
-            Chart(Array(values.enumerated()), id: \.offset) { index, value in
-                LineMark(
-                    x: .value("Week", index - values.count + 1),
-                    y: .value("Value", value)
-                )
-                .foregroundStyle(color)
-                .interpolationMethod(.monotone)
-                AreaMark(
-                    x: .value("Week", index - values.count + 1),
-                    y: .value("Value", value)
-                )
-                .foregroundStyle(
-                    LinearGradient(colors: [color.opacity(0.3), color.opacity(0.02)],
-                                   startPoint: .top, endPoint: .bottom)
-                )
-                .interpolationMethod(.monotone)
+            Chart {
+                ForEach(Array(values.enumerated()), id: \.offset) { index, value in
+                    LineMark(
+                        x: .value("Week", index - values.count + 1),
+                        y: .value("Value", value)
+                    )
+                    .foregroundStyle(color)
+                    .lineStyle(StrokeStyle(lineWidth: 1.5))
+                    .interpolationMethod(.monotone)
+                    AreaMark(
+                        x: .value("Week", index - values.count + 1),
+                        y: .value("Value", value)
+                    )
+                    .foregroundStyle(
+                        LinearGradient(colors: [color.opacity(0.22), color.opacity(0.01)],
+                                       startPoint: .top, endPoint: .bottom)
+                    )
+                    .interpolationMethod(.monotone)
+                }
+                // The "now" marker: where the line meets the present.
+                if let last = values.last {
+                    PointMark(x: .value("Week", 0), y: .value("Value", last))
+                        .foregroundStyle(color)
+                        .symbolSize(28)
+                }
             }
             // Pin the plot to the data span: Charts otherwise rounds the
             // axis outward (-51 → -60w), leaving a gap and a cliff at the
@@ -59,7 +70,9 @@ struct TrendChart: View {
                     AxisGridLine()
                     AxisValueLabel {
                         if let v = axisValue.as(Double.self) {
-                            Text(format(v)).font(.caption2)
+                            Text(format(v))
+                                .font(.system(.caption2, design: .monospaced))
+                                .foregroundStyle(Theme.textTertiary)
                         }
                     }
                 }
@@ -68,7 +81,9 @@ struct TrendChart: View {
                 AxisMarks { axisValue in
                     AxisValueLabel {
                         if let v = axisValue.as(Int.self) {
-                            Text(v == 0 ? "now" : "\(v)w").font(.caption2)
+                            Text(v == 0 ? "now" : "\(v)\(unit)")
+                                .font(.system(.caption2, design: .monospaced))
+                                .foregroundStyle(Theme.textTertiary)
                         }
                     }
                 }
