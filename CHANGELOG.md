@@ -9,6 +9,17 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — New hires say when they start
+
+**Added**
+- Roster members hired during the current (unsettled) week show an
+  "On duty next wk" badge, and the pool header shows "+N joining"
+  next to the staff count until their first week closes. *Why:* the
+  immediacy rule's one staffing lag — a fresh hire only counts toward
+  crew hours at the next settle — was invisible, so overwork warnings
+  seemed to ignore the hire you just made.
+
+
 ### 2026-07-18 — The Immediacy Rule: changes act now, money settles weekly
 
 **Changed**

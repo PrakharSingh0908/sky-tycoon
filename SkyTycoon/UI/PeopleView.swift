@@ -55,6 +55,10 @@ private struct StaffPoolCard: View {
                     }
                 }
                 Spacer()
+                let joining = pool.members.filter { $0.hiredOn == engine.state.date }.count
+                if joining > 0 {
+                    StatusBadge(text: "+\(joining) joining", color: Theme.teal)
+                }
                 StatusBadge(text: "\(pool.headcount) staff", color: accent)
             }
 
@@ -118,7 +122,10 @@ private struct StaffPoolCard: View {
     }
 
     private func memberRow(_ member: StaffMember) -> some View {
-        HStack(spacing: 8) {
+        // Hired mid-week: on the roster now, on the job from the next
+        // settle — say so instead of leaving the lag unexplained.
+        let justJoined = member.hiredOn == engine.state.date
+        return HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(member.name)
                     .font(.game(.subheadline, weight: .semibold))
@@ -130,6 +137,9 @@ private struct StaffPoolCard: View {
                 }
             }
             Spacer()
+            if justJoined {
+                StatusBadge(text: "On duty next wk", color: Theme.teal)
+            }
             Button("Fire") { engine.fireStaff(role: role, memberID: member.id) }
                 .buttonStyle(GameButtonStyle(color: Theme.loss))
         }
