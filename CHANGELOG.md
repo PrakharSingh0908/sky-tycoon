@@ -9,6 +9,23 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Cabin Architect polish pass
+
+**Changed**
+- Readouts consolidated into one instrument card on a single type
+  scale: Seats/Refit/Upkeep tiles aligned, comfort as a full-width
+  gauge (22/100 readout), effective-range row with the brochure figure
+  right-aligned instead of a wrapping parenthetical.
+- Controls grouped into one card with hairline sections: pitch/width
+  rulers (aligned mono values), seat-tier swatches evenly distributed
+  across the width, full-row galley stepper, wifi toggle with its
+  service cost as a sublabel (moved out of the CTA block).
+- Refit warning boxed in the standard warn treatment; close button
+  machined (was still a circle); header breathing room. *Why:* the
+  screen mixed three type scales and free-floating rows; the card
+  rhythm every other screen uses was missing.
+
+
 ### 2026-07-18 — Game Feel v2.1 shipped: hierarchy borders, de-clutter, win moments
 
 **Added**

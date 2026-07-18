@@ -42,9 +42,8 @@ struct CabinArchitectView: View {
                         .clipShape(RoundedRectangle(cornerRadius: Theme.corner))
                         .animation(.snappy, value: draft)
 
-                    readoutStrip(spec, current: plane.cabin)
-                    rulers(spec)
-                    materialAndUnits(spec)
+                    readoutCard(spec, current: plane.cabin)
+                    controlsCard(spec)
                     applyButton(plane, spec)
                 } else {
                     Text("This aircraft has left the fleet.")
@@ -52,7 +51,7 @@ struct CabinArchitectView: View {
                 }
             }
             .padding(.horizontal, Theme.gutter)
-            .padding(.bottom, 24)
+            .padding(.bottom, 28)
         }
         .background(Theme.bg)
         .scrollIndicators(.hidden)
@@ -77,110 +76,122 @@ struct CabinArchitectView: View {
                 Image(systemName: "xmark")
                     .font(.system(size: 13, weight: .bold))
                     .frame(width: 30, height: 30)
-                    .background(Color.white.opacity(0.08), in: Circle())
+                    .background(Color.white.opacity(0.08),
+                                in: RoundedRectangle(cornerRadius: Theme.controlCorner))
                     .foregroundStyle(Theme.textSecondary)
             }
             .buttonStyle(.plain)
         }
-        .padding(.top, 6)
+        .padding(.top, 14)
     }
 
-    private func readoutStrip(_ spec: AircraftSpec, current: CabinLayout) -> some View {
-        VStack(spacing: 8) {
-            HStack(spacing: 16) {
-                StatTile(label: "seats · limit \(spec.maxSeats)",
-                         value: "\(draft.seats(spec: spec))",
-                         font: .game(.title3, weight: .bold))
-                VStack(alignment: .leading, spacing: 3) {
-                    MeterBar(value: draft.comfort, color: Theme.health(0.35 + draft.comfort * 0.65))
-                    Text("comfort").font(.game(.caption)).foregroundStyle(Theme.textSecondary)
-                }
-                .frame(maxWidth: .infinity)
-                StatTile(label: "refit", value: draft.refitCost(spec: spec).money,
-                         color: draft == current ? Theme.textSecondary : Theme.warn,
-                         font: .game(.subheadline, weight: .bold))
-                StatTile(label: "upkeep/wk", value: draft.weeklyUpkeep(spec: spec).money,
-                         font: .game(.subheadline, weight: .bold))
+    // ── Readouts: one instrument card, one type scale ─────────────────────
+
+    private func readoutCard(_ spec: AircraftSpec, current: CabinLayout) -> some View {
+        GameCard {
+            HStack(spacing: 20) {
+                StatTile(label: "Seats · limit \(spec.maxSeats)",
+                         value: "\(draft.seats(spec: spec))")
+                StatTile(label: "Refit", value: draft.refitCost(spec: spec).money,
+                         color: draft == current ? Theme.textSecondary : Theme.warn)
+                StatTile(label: "Upkeep /wk", value: draft.weeklyUpkeep(spec: spec).money)
             }
+            MeterRow(label: "Comfort", value: draft.comfort,
+                     display: "\(Int(draft.comfort * 100))/100",
+                     color: Theme.health(0.35 + draft.comfort * 0.65))
+            Divider().overlay(Theme.hairline)
             // Payload-range: heavier cabins fly shorter, airy ones further.
-            HStack(spacing: 4) {
+            HStack(spacing: 6) {
                 Image(systemName: "point.topleft.down.to.point.bottomright.curvepath")
                     .font(.caption2.weight(.bold)).foregroundStyle(Theme.teal)
-                TickerText(text: "\(Int(spec.rangeKm * draft.rangeFactor(spec: spec))) km effective range",
-                           font: .game(.caption, weight: .semibold), color: Theme.teal)
-                Text("(brochure \(Int(spec.rangeKm)) km, payload changes it)")
-                    .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                TickerText(text: "\(Int(spec.rangeKm * draft.rangeFactor(spec: spec))) km",
+                           font: .game(.caption, weight: .bold), color: Theme.teal)
+                Text("effective range")
+                    .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
                 Spacer()
+                Text("brochure \(Int(spec.rangeKm)) km")
+                    .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
             }
         }
     }
 
-    private func rulers(_ spec: AircraftSpec) -> some View {
-        VStack(spacing: 10) {
+    // ── Controls: dimensions, seat tier, galley, wifi — one card ─────────
+
+    private func controlsCard(_ spec: AircraftSpec) -> some View {
+        GameCard {
             ruler(label: "Seat pitch", value: $draft.seatPitchInches,
                   range: 28...36, unit: "\u{2033}")
             ruler(label: "Seat width", value: $draft.seatWidthInches,
                   range: 16...20, unit: "\u{2033}")
+            Divider().overlay(Theme.hairline)
+            // Seat tiers — the render assets themselves are the swatches,
+            // evenly distributed, and the floorplan colors follow.
+            HStack(spacing: 0) {
+                ForEach(CabinMaterial.allCases) { material in
+                    Button {
+                        draft.material = material
+                    } label: {
+                        VStack(spacing: 4) {
+                            Group {
+                                if let seat = UIImage(named: "seat_\(material.rawValue)") {
+                                    Image(uiImage: seat).resizable().scaledToFit()
+                                } else {
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .fill(CabinFloorplan.seatColor(for: material))
+                                }
+                            }
+                            .frame(width: 48, height: 48)
+                            .padding(4)
+                            .background(
+                                RoundedRectangle(cornerRadius: Theme.corner - 2)
+                                    .fill(draft.material == material
+                                          ? accent.opacity(0.18) : Color.white.opacity(0.04))
+                            )
+                            .overlay(RoundedRectangle(cornerRadius: Theme.corner - 2)
+                                .strokeBorder(draft.material == material ? accent : .clear,
+                                              lineWidth: 1.5))
+                            Text(material.displayName)
+                                .font(.game(.caption2,
+                                            weight: draft.material == material ? .bold : .regular))
+                                .foregroundStyle(draft.material == material
+                                                 ? accent : Theme.textSecondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.plain)
+                    .sensoryFeedback(.selection, trigger: draft.material)
+                }
+            }
+            Divider().overlay(Theme.hairline)
+            PillStepper(label: "Galley ovens", value: "\(draft.galleyUnits)", accent: accent,
+                onDecrement: { draft.galleyUnits = max(0, draft.galleyUnits - 1) },
+                onIncrement: { draft.galleyUnits = min(3, draft.galleyUnits + 1) })
+            Toggle(isOn: $draft.hasWifi) {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Cabin wifi")
+                        .font(.game(.subheadline)).foregroundStyle(Theme.textPrimary)
+                    Text("\((12 * Double(spec.maxSeats)).money)/wk service")
+                        .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                }
+            }
+            .tint(accent)
         }
     }
 
     private func ruler(label: String, value: Binding<Double>,
                        range: ClosedRange<Double>, unit: String) -> some View {
-        HStack(spacing: 10) {
-            Text(label).font(.game(.caption)).foregroundStyle(Theme.textSecondary)
-                .frame(width: 70, alignment: .leading)
+        HStack(spacing: 12) {
+            Text(label).font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
+                .frame(width: 82, alignment: .leading)
             Slider(value: value, in: range, step: 0.5).tint(accent)
             TickerText(text: String(format: "%.1f%@", value.wrappedValue, unit),
                        font: .game(.caption, weight: .bold))
-                .frame(width: 44, alignment: .trailing)
-        }
-    }
-
-    private func materialAndUnits(_ spec: AircraftSpec) -> some View {
-        HStack(spacing: 10) {
-            // Seat tiers — the render assets themselves are the swatches,
-            // and the floorplan seat colors follow.
-            ForEach(CabinMaterial.allCases) { material in
-                Button {
-                    draft.material = material
-                } label: {
-                    VStack(spacing: 2) {
-                        Group {
-                            if let seat = UIImage(named: "seat_\(material.rawValue)") {
-                                Image(uiImage: seat).resizable().scaledToFit()
-                            } else {
-                                RoundedRectangle(cornerRadius: 6)
-                                    .fill(CabinFloorplan.seatColor(for: material))
-                            }
-                        }
-                        .frame(width: 46, height: 46)
-                        .padding(3)
-                        .background(
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(draft.material == material
-                                      ? accent.opacity(0.18) : Color.white.opacity(0.04))
-                        )
-                        .overlay(RoundedRectangle(cornerRadius: 10)
-                            .strokeBorder(draft.material == material ? accent : .clear, lineWidth: 2))
-                        Text(material.displayName)
-                            .font(.game(.caption2, weight: draft.material == material ? .bold : .regular))
-                            .foregroundStyle(draft.material == material ? accent : Theme.textSecondary)
-                    }
-                }
-                .buttonStyle(.plain)
-                .sensoryFeedback(.selection, trigger: draft.material)
-            }
-            Spacer()
-            // Galley ovens and wifi.
-            PillStepper(label: "Ovens", value: "\(draft.galleyUnits)", accent: accent,
-                onDecrement: { draft.galleyUnits = max(0, draft.galleyUnits - 1) },
-                onIncrement: { draft.galleyUnits = min(3, draft.galleyUnits + 1) })
-                .frame(width: 195)
+                .frame(width: 52, alignment: .trailing)
         }
     }
 
     private func applyButton(_ plane: Aircraft, _ spec: AircraftSpec) -> some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 10) {
             if let routeID = plane.assignedRouteID,
                let route = engine.state.routes.first(where: { $0.id == routeID }),
                spec.rangeKm * draft.rangeFactor(spec: spec) < route.distanceKm {
@@ -188,14 +199,11 @@ struct CabinArchitectView: View {
                       systemImage: "exclamationmark.triangle.fill")
                     .font(.game(.caption, weight: .medium))
                     .foregroundStyle(Theme.warn)
+                    .padding(10)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Theme.warn.opacity(0.10),
+                                in: RoundedRectangle(cornerRadius: Theme.corner))
             }
-            Toggle(isOn: $draft.hasWifi) {
-                Text("Cabin wifi · \((12 * Double(spec.maxSeats)).money)/wk service")
-                    .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
-            }
-            .tint(accent)
-
             Button(draft == plane.cabin
                    ? "No changes"
                    : "Refit · \(draft.refitCost(spec: spec).money) · grounded \(Balance.cabinRefitWeeks) wk") {
