@@ -59,10 +59,13 @@ final class GameEngine {
                                     weeklyWage: wage,
                                     happiness: 70, skill: 2.0, lastUtilization: 0,
                                     members: (0..<count).map { _ in
-                                        StaffMember(id: UUID(),
-                                                    name: Self.generateName(rng: &rng),
+                                        { () -> StaffMember in
+                                            let p = Self.generatePerson(role: role, rng: &rng)
+                                            return StaffMember(id: UUID(), name: p.name,
                                                     skill: 2.0, weeklyWage: wage,
-                                                    hiredOn: GameDate(week: 1, year: 1))
+                                                    hiredOn: GameDate(week: 1, year: 1),
+                                                    avatar: p.avatar)
+                                        }()
                                     })
         }
         let initialMarket = Self.generateUsedListings(rng: &rng)
@@ -97,6 +100,20 @@ final class GameEngine {
 
     private static func generateName(rng: inout SeededRandomNumberGenerator) -> String {
         "\(Balance.applicantFirstNames.randomElement(using: &rng)!) \(Balance.applicantLastNames.randomElement(using: &rng)!)"
+    }
+
+    /// Gender-coherent identity: name and avatar agree (2026-07-19).
+    private static func generatePerson(role: StaffRole,
+                                       rng: inout SeededRandomNumberGenerator)
+        -> (name: String, avatar: String) {
+        let male = Bool.random(using: &rng)
+        let first = (male ? Balance.firstNamesMale : Balance.firstNamesFemale)
+            .randomElement(using: &rng)!
+        let last = Balance.applicantLastNames.randomElement(using: &rng)!
+        let variant = Int.random(in: 1...Balance.avatarVariants(role: role, male: male),
+                                 using: &rng)
+        return ("\(first) \(last)",
+                Balance.avatarName(role: role, male: male, variant: variant))
     }
 
     /// Recomputes a pool's aggregate wage/skill from its members (the sim
@@ -1042,12 +1059,12 @@ final class GameEngine {
         let profile = Balance.countryProfiles[state.country]!
         let skill = 1.0 + pow(Double.random(in: 0...1, using: &state.seedRNG), 1.3) * 3.5
         let noise = Double.random(in: -0.08...0.08, using: &state.seedRNG)
-        let first = Balance.applicantFirstNames.randomElement(using: &state.seedRNG)!
-        let last = Balance.applicantLastNames.randomElement(using: &state.seedRNG)!
+        let person = Self.generatePerson(role: role, rng: &state.seedRNG)
         return JobApplicant(
             id: UUID(),
             role: role,
-            name: "\(first) \(last)",
+            name: person.name,
+            avatar: person.avatar,
             skill: skill,
             askingWage: Balance.askingWage(marketRate: role.marketWage * profile.laborCost,
                                            skill: skill, noise: noise),
@@ -1133,7 +1150,8 @@ final class GameEngine {
         guard var pool = state.staff[applicant.role] else { return }
         pool.members.append(StaffMember(id: UUID(), name: applicant.name,
                                         skill: applicant.skill, weeklyWage: wage,
-                                        hiredOn: state.date))
+                                        hiredOn: state.date,
+                                        avatar: applicant.avatar))
         pool.happiness = max(0, pool.happiness - applicant.irritation / 25)
         pool.headcount += 1
         recomputeAggregates(&pool)
@@ -1162,10 +1180,12 @@ final class GameEngine {
         let target = max(0, count)
         while pool.members.count > target { pool.members.removeLast() }
         while pool.members.count < target {
+            let person = Self.generatePerson(role: role, rng: &state.seedRNG)
             pool.members.append(StaffMember(id: UUID(),
-                                            name: Self.generateName(rng: &state.seedRNG),
+                                            name: person.name,
                                             skill: pool.skill, weeklyWage: pool.weeklyWage,
-                                            hiredOn: state.date))
+                                            hiredOn: state.date,
+                                            avatar: person.avatar))
         }
         pool.headcount = target
         state.staff[role] = pool

@@ -341,6 +341,7 @@ struct JobApplicant: Codable, Identifiable {
     let id: UUID
     var role: StaffRole
     var name: String
+    var avatar: String? = nil
     var skill: Double          // 1...5
     var askingWage: Double     // weekly
     /// 0...1 hidden willingness to meet a counter-offer in the middle.
@@ -359,6 +360,9 @@ struct StaffMember: Codable, Identifiable {
     var skill: Double             // 1...5
     var weeklyWage: Double
     var hiredOn: GameDate
+    /// Asset name in Resources/StaffAvatars (nil in pre-avatar saves →
+    /// UI falls back to a monogram).
+    var avatar: String? = nil
 }
 
 struct StaffPool: Codable {

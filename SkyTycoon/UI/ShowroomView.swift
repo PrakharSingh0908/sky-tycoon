@@ -84,30 +84,42 @@ struct ShowroomView: View {
             let discount = engine.loyaltyDiscount(seller: spec.seller)
             let price = engine.discountedPrice(for: type)
             GameCard {
-                offerHeader(type: type,
-                            detail: "\(spec.windowCount) windows · \(spec.maxSeats) seats · \(Int(spec.rangeKm)) km · arrives in \(Balance.deliveryWeeks[type]!) wk")
-                HStack(spacing: 6) {
-                    Text("Sold by \(spec.seller)")
-                        .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
-                    if discount > 0 {
-                        StatusBadge(text: "loyalty −\(Int(discount * 100))%", color: Theme.profit)
-                        Text(spec.purchasePrice.money)
-                            .font(.game(.caption2)).strikethrough()
-                            .foregroundStyle(Theme.textSecondary)
+                offerHeader(type: type, specs: [
+                    ("Seats", "\(spec.maxSeats)"),
+                    ("Range", "\(Int(spec.rangeKm)) km"),
+                    ("Cruise", "\(Int(spec.cruiseKmh)) km/h"),
+                    ("Delivery", "\(Balance.deliveryWeeks[type]!) wk"),
+                ])
+                HStack(alignment: .firstTextBaseline) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        TickerText(text: price.money,
+                                   font: .game(.title3, weight: .semibold))
+                        HStack(spacing: 6) {
+                            if discount > 0 {
+                                Text(spec.purchasePrice.money)
+                                    .font(.game(.caption2)).strikethrough()
+                                    .foregroundStyle(Theme.textTertiary)
+                                Text("loyalty −\(Int(discount * 100))%")
+                                    .font(.game(.caption2)).foregroundStyle(Theme.profit)
+                            } else {
+                                Text("Cash up front")
+                                    .font(.game(.caption2)).foregroundStyle(Theme.textTertiary)
+                            }
+                        }
                     }
                     Spacer()
-                }
-                Button("Order · \(price.money)") {
-                    let nickname = nextNickname()
-                    if engine.orderNewAircraft(type: type, nickname: nickname) {
-                        receipt = AcquisitionReceipt(kind: .ordered, type: type,
-                            nickname: nickname, amount: price,
-                            deliveryWeeks: Balance.deliveryWeeks[type]!)
+                    Button("Order") {
+                        let nickname = nextNickname()
+                        if engine.orderNewAircraft(type: type, nickname: nickname) {
+                            receipt = AcquisitionReceipt(kind: .ordered, type: type,
+                                nickname: nickname, amount: price,
+                                deliveryWeeks: Balance.deliveryWeeks[type]!)
+                        }
                     }
+                    .buttonStyle(GameButtonStyle(color: accent, prominent: true))
+                    .disabled(engine.state.cash < price)
+                    .opacity(engine.state.cash < price ? 0.4 : 1)
                 }
-                .buttonStyle(GameButtonStyle(color: accent, prominent: true))
-                .disabled(engine.state.cash < price)
-                .opacity(engine.state.cash < price ? 0.4 : 1)
             }
         }
     }
@@ -126,21 +138,34 @@ struct ShowroomView: View {
         ForEach(engine.state.usedMarket) { listing in
             let spec = Balance.specs[listing.type]!
             GameCard {
-                offerHeader(type: listing.type,
-                            detail: "Age \(String(format: "%.1f", listing.ageYears))y · \(spec.maxSeats) seats")
+                offerHeader(type: listing.type, specs: [
+                    ("Seats", "\(spec.maxSeats)"),
+                    ("Range", "\(Int(spec.rangeKm)) km"),
+                    ("Age", String(format: "%.1fy", listing.ageYears)),
+                    ("Delivery", "Now"),
+                ])
                 MeterRow(label: "Condition", value: listing.condition / 100,
                          display: "\(Int(listing.condition))/100",
                          color: Theme.health(listing.condition / 100))
-                Button("Buy · \(listing.price.money)") {
-                    let nickname = nextNickname()
-                    if engine.buyUsedAircraft(listingID: listing.id, nickname: nickname) {
-                        receipt = AcquisitionReceipt(kind: .bought, type: listing.type,
-                            nickname: nickname, amount: listing.price, deliveryWeeks: nil)
+                HStack(alignment: .firstTextBaseline) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        TickerText(text: listing.price.money,
+                                   font: .game(.title3, weight: .semibold))
+                        Text("As-is, where-is")
+                            .font(.game(.caption2)).foregroundStyle(Theme.textTertiary)
                     }
+                    Spacer()
+                    Button("Buy") {
+                        let nickname = nextNickname()
+                        if engine.buyUsedAircraft(listingID: listing.id, nickname: nickname) {
+                            receipt = AcquisitionReceipt(kind: .bought, type: listing.type,
+                                nickname: nickname, amount: listing.price, deliveryWeeks: nil)
+                        }
+                    }
+                    .buttonStyle(GameButtonStyle(color: accent, prominent: true))
+                    .disabled(engine.state.cash < listing.price)
+                    .opacity(engine.state.cash < listing.price ? 0.4 : 1)
                 }
-                .buttonStyle(GameButtonStyle(color: accent, prominent: true))
-                .disabled(engine.state.cash < listing.price)
-                .opacity(engine.state.cash < listing.price ? 0.4 : 1)
             }
         }
     }
@@ -154,28 +179,46 @@ struct ShowroomView: View {
             let spec = Balance.specs[type]!
             let weekly = spec.purchasePrice * Balance.leaseRatePerWeek
             GameCard {
-                offerHeader(type: type,
-                            detail: "\(spec.maxSeats) seats · \(Int(spec.rangeKm)) km range · return fee \((weekly * Balance.leaseTerminationWeeks).money)")
-                Button("Lease · \(weekly.money)/wk") {
-                    let nickname = nextNickname()
-                    if engine.leaseAircraft(type: type, nickname: nickname) {
-                        receipt = AcquisitionReceipt(kind: .leased, type: type,
-                            nickname: nickname, amount: weekly, deliveryWeeks: nil)
+                offerHeader(type: type, specs: [
+                    ("Seats", "\(spec.maxSeats)"),
+                    ("Range", "\(Int(spec.rangeKm)) km"),
+                    ("Return fee", (weekly * Balance.leaseTerminationWeeks).money),
+                    ("Delivery", "Now"),
+                ])
+                HStack(alignment: .firstTextBaseline) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        TickerText(text: "\(weekly.money)/wk",
+                                   font: .game(.title3, weight: .semibold))
+                        Text("Payments never end")
+                            .font(.game(.caption2)).foregroundStyle(Theme.textTertiary)
                     }
+                    Spacer()
+                    Button("Lease") {
+                        let nickname = nextNickname()
+                        if engine.leaseAircraft(type: type, nickname: nickname) {
+                            receipt = AcquisitionReceipt(kind: .leased, type: type,
+                                nickname: nickname, amount: weekly, deliveryWeeks: nil)
+                        }
+                    }
+                    .buttonStyle(GameButtonStyle(color: accent, prominent: true))
                 }
-                .buttonStyle(GameButtonStyle(color: accent, prominent: true))
             }
         }
     }
 
-    private func offerHeader(type: AircraftType, detail: String) -> some View {
+    /// Spec-sheet header: photo hero, name + fit verdict, then a mono
+    /// spec strip — the numbers a buyer compares, not a sentence.
+    private func offerHeader(type: AircraftType, specs: [(String, String)]) -> some View {
         let spec = Balance.specs[type]!
-        return VStack(alignment: .leading, spacing: 8) {
+        return VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Image(systemName: "airplane").font(.title3).foregroundStyle(accent)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(spec.displayName).font(.game(.headline, weight: .bold))
-                    Text(detail).font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+                    Text(spec.displayName)
+                        .font(.game(.headline, weight: .semibold))
+                        .foregroundStyle(Theme.textPrimary)
+                    Text("SOLD BY \(spec.seller.uppercased())")
+                        .font(.data(.caption2)).tracking(0.85)
+                        .foregroundStyle(Theme.textTertiary)
                 }
                 Spacer()
                 if let fit = fitBadge(for: type) {
@@ -185,8 +228,20 @@ struct ShowroomView: View {
             // Showroom planes wear factory paint — yours get the livery
             // once they join the fleet.
             AircraftPhotoView(type: type)
-                .frame(height: 78)
+                .frame(height: 96)
                 .frame(maxWidth: .infinity)
+            HStack(spacing: 0) {
+                ForEach(specs, id: \.0) { item in
+                    VStack(alignment: .leading, spacing: 2) {
+                        TickerText(text: item.1,
+                                   font: .game(.subheadline, weight: .medium))
+                        Text(item.0)
+                            .font(.game(.caption2)).foregroundStyle(Theme.textTertiary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            Divider().overlay(Theme.hairline)
         }
     }
 

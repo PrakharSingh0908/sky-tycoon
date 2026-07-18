@@ -573,11 +573,42 @@ enum Balance {
         marketRate * (0.70 + 0.16 * skill + noise)   // noise ±0.08
     }
 
-    static let applicantFirstNames = [
-        "Arjun", "Priya", "Rohan", "Ananya", "Vikram", "Meera", "Kabir",
-        "Isha", "Dev", "Naina", "Farhan", "Zara", "Aditya", "Sana",
-        "Rahul", "Divya", "Imran", "Lakshmi", "Nikhil", "Tara",
+    // Gendered pools so names match the staff avatars (2026-07-19).
+    static let firstNamesMale = [
+        "Arjun", "Rohan", "Vikram", "Kabir", "Dev", "Farhan", "Aditya",
+        "Rahul", "Imran", "Nikhil", "Sam", "Jake", "Marcus", "Diego", "Leo",
     ]
+    static let firstNamesFemale = [
+        "Priya", "Ananya", "Meera", "Isha", "Naina", "Zara", "Sana",
+        "Divya", "Lakshmi", "Tara", "Emma", "Sofia", "Maya", "Grace", "Ava",
+    ]
+    static let applicantFirstNames = firstNamesMale + firstNamesFemale
+
+    /// Avatar variants available per role/gender (Resources/StaffAvatars,
+    /// avatar_<role>_<m|f>_<nn>.png).
+    static func avatarVariants(role: StaffRole, male: Bool) -> Int {
+        switch (role, male) {
+        case (.pilots, true): 7
+        case (.pilots, false): 7
+        case (.cabinCrew, true): 6
+        case (.cabinCrew, false): 7
+        case (.ground, true): 6
+        case (.ground, false): 5
+        case (.hq, true): 6
+        case (.hq, false): 6
+        }
+    }
+
+    static func avatarName(role: StaffRole, male: Bool, variant: Int) -> String {
+        let key: String
+        switch role {
+        case .pilots: key = "pilot"
+        case .cabinCrew: key = "crew"
+        case .ground: key = "ground"
+        case .hq: key = "hq"
+        }
+        return String(format: "avatar_%@_%@_%02d", key, male ? "m" : "f", variant)
+    }
     static let applicantLastNames = [
         "Sharma", "Patel", "Singh", "Nair", "Khan", "Iyer", "Das",
         "Mehta", "Reddy", "Kapoor", "Bose", "Menon", "Joshi", "Rao",

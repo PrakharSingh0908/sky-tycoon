@@ -227,6 +227,37 @@ struct MeterRow: View {
     }
 }
 
+// ── PersonAvatar — the face on the roster ────────────────────────────────
+
+/// Staff/applicant portrait from Resources/StaffAvatars; monogram fallback
+/// for pre-avatar saves.
+struct PersonAvatar: View {
+    let avatar: String?
+    let name: String
+    var size: CGFloat = 36
+
+    private var initials: String {
+        name.split(separator: " ").prefix(2).compactMap { $0.first.map(String.init) }.joined()
+    }
+
+    var body: some View {
+        Group {
+            if let avatar, let image = UIImage(named: avatar) {
+                Image(uiImage: image).resizable().scaledToFill()
+            } else {
+                Text(initials)
+                    .font(.data(.caption2, weight: .medium))
+                    .foregroundStyle(Theme.textSecondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Theme.bg)
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(Circle())
+        .overlay(Circle().strokeBorder(Theme.hairline, lineWidth: 1))
+    }
+}
+
 // ── StarRating ───────────────────────────────────────────────────────────
 
 struct StarRating: View {

@@ -9,6 +9,26 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased — design-system branch]
 
+### 2026-07-19 — Staff portraits + showroom spec-sheet cards
+
+**Added**
+- 50 owner-provided staff portraits (Resources/StaffAvatars): pilots,
+  cabin crew, ground & maintenance, and HQ (HR set), each in male and
+  female variants. StaffMember and JobApplicant carry an avatar
+  (optional — old saves fall back to a monogram), assigned at
+  generation from the seeded RNG with gender-matched names (name
+  pools split male/female, with some international additions for the
+  US market). PersonAvatar component renders portraits on roster
+  rows, hiring-sheet applicants, and the negotiation table.
+
+**Changed**
+- Showroom cards rebuilt as spec sheets: aircraft name + mono seller
+  eyebrow + fit badge, photo hero, a four-column mono spec strip
+  (seats / range / cruise-or-age / delivery), condition meter (used),
+  then a price readout with sub-caption and a verb-only CTA — the
+  numbers a buyer compares, not a sentence.
+
+
 ### 2026-07-18 — US market (new default) + three save slots
 
 **Added**

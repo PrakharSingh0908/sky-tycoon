@@ -135,6 +135,7 @@ private struct StaffPoolCard: View {
         // settle — say so instead of leaving the lag unexplained.
         let justJoined = member.hiredOn == engine.state.date
         return HStack(spacing: 8) {
+            PersonAvatar(avatar: member.avatar, name: member.name, size: 34)
             VStack(alignment: .leading, spacing: 2) {
                 Text(member.name)
                     .font(.game(.subheadline, weight: .semibold))
@@ -236,6 +237,7 @@ private struct HiringSheet: View {
     private func applicantRow(_ applicant: JobApplicant) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
+                PersonAvatar(avatar: applicant.avatar, name: applicant.name, size: 40)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(applicant.name).font(.game(.subheadline, weight: .semibold))
                         .foregroundStyle(Theme.textPrimary)
@@ -279,7 +281,8 @@ private struct NegotiationSheet: View {
     var body: some View {
         VStack(spacing: 16) {
             if let person = current {
-                VStack(spacing: 4) {
+                VStack(spacing: 8) {
+                    PersonAvatar(avatar: person.avatar, name: person.name, size: 72)
                     Text(person.name).font(.display(.title2))
                         .foregroundStyle(Theme.textPrimary)
                     HStack(spacing: 6) {
