@@ -60,7 +60,7 @@ private struct GlobeCamera: Equatable {
     var centerLat: Double
     var zoom: Double        // globe radius = min(w,h)/2 × zoom
 
-    static let india = GlobeCamera(centerLon: 78.5, centerLat: 21.0, zoom: 2.6)
+    static let india = GlobeCamera(centerLon: 77.5, centerLat: 20.5, zoom: 3.6)
 }
 
 struct RouteMapView: View {
@@ -169,14 +169,28 @@ struct RouteMapView: View {
         globe.fill(land, with: .color(Color(red: 0.13, green: 0.19, blue: 0.28)))
         globe.stroke(land, with: .color(.white.opacity(0.10)), lineWidth: 0.8)
 
-        // Route arcs (great circles, glow + core).
+        // Route arcs: flight-map bows (a quadratic curve lifted from the
+        // chord) — at domestic zoom, true geodesics read as straight lines,
+        // and straight lines read as train tracks, not flights.
         for route in engine.state.routes {
             guard let origin = engine.city(route.originID),
-                  let dest = engine.city(route.destinationID) else { continue }
+                  let dest = engine.city(route.destinationID),
+                  let p1 = project(origin.longitude * .pi / 180, origin.latitude * .pi / 180,
+                                   size: size, radius: radius),
+                  let p2 = project(dest.longitude * .pi / 180, dest.latitude * .pi / 180,
+                                   size: size, radius: radius) else { continue }
+            let mid = CGPoint(x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2)
+            let dx = p2.x - p1.x, dy = p2.y - p1.y
+            let chord = max(hypot(dx, dy), 1)
+            // Perpendicular offset, always bowing toward the top of the map.
+            var normal = CGPoint(x: -dy / chord, y: dx / chord)
+            if normal.y > 0 { normal = CGPoint(x: -normal.x, y: -normal.y) }
+            let control = CGPoint(x: mid.x + normal.x * chord * 0.22,
+                                  y: mid.y + normal.y * chord * 0.22)
             var arc = Path()
-            addPolyline(to: &arc,
-                        points: greatCircle(from: origin, to: dest, samples: 48),
-                        size: size, radius: radius)
+            arc.move(to: p1)
+            arc.addQuadCurve(to: p2, control: control)
+
             let color = color(for: route)
             let coreWidth = 1.5 + CGFloat(route.weeklyFrequency) / 28.0 * 3.0
             globe.stroke(arc, with: .color(color.opacity(0.30)),
@@ -216,26 +230,6 @@ struct RouteMapView: View {
             } else {
                 previousVisible = false
             }
-        }
-    }
-
-    /// Great-circle samples between two cities (slerp on the unit sphere).
-    private func greatCircle(from a: City, to b: City, samples: Int) -> [(Double, Double)] {
-        func vec(_ lonDeg: Double, _ latDeg: Double) -> SIMD3<Double> {
-            let lon = lonDeg * .pi / 180, lat = latDeg * .pi / 180
-            return SIMD3(cos(lat) * cos(lon), cos(lat) * sin(lon), sin(lat))
-        }
-        let v1 = vec(a.longitude, a.latitude), v2 = vec(b.longitude, b.latitude)
-        let dot = max(-1, min(1, (v1 * v2).sum()))
-        let angle = acos(dot)
-        guard angle > 0.0001 else { return [] }
-        return (0...samples).map { i in
-            let t = Double(i) / Double(samples)
-            let s = (sin((1 - t) * angle) / sin(angle))
-            let e = (sin(t * angle) / sin(angle))
-            let v = v1 * s + v2 * e
-            let norm = v / sqrt((v * v).sum())
-            return (atan2(norm.y, norm.x), asin(norm.z))
         }
     }
 

@@ -34,7 +34,7 @@ struct SimClockPill: View {
                 Image(systemName: "pause.circle.fill")
                     .font(.system(size: 12)).foregroundStyle(Theme.warn)
             }
-            TickerText(text: engine.state.date.description,
+            TickerText(text: "\(engine.state.date.description) · \(engine.simDayName)",
                        font: .game(.caption, weight: .bold),
                        color: engine.speed == .paused || engine.clockIsHeld
                             ? Theme.textSecondary : Theme.textPrimary)

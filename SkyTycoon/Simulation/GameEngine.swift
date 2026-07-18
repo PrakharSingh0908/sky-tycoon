@@ -30,6 +30,14 @@ final class GameEngine {
     private var accumulator: Double = 0
     private var timer: Timer?
 
+    /// Presentation only: how far through the current week the clock has
+    /// accrued (the sim itself advances in whole weeks).
+    var weekProgress: Double { min(accumulator / secondsPerWeek, 0.999) }
+    /// The day name shown on the sim clock, derived from week progress.
+    var simDayName: String {
+        ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][min(6, Int(weekProgress * 7))]
+    }
+
     /// Transient UI hold: while decision UI is open (negotiation, purchase
     /// receipts, confirmations), the clock doesn't advance — the player's
     /// chosen speed resumes when the last one closes. Counted so nested

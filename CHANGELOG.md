@@ -9,6 +9,21 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Polish: arced routes, zoomed map, days on the clock, route P&L up front
+
+**Changed**
+- Route map camera zooms to India (globe zoom 2.6 → 3.6) so the network
+  fills the card, and routes draw as **flight-map bows** (quadratic arcs
+  lifted from the chord, always bowing north) instead of near-straight
+  geodesics — at domestic zoom a true great circle reads as a train
+  track, not a flight. The unused slerp helper was removed.
+- The sim clock pill shows the day ("Y1 W31 · Thu"), derived from the
+  tick accumulator's progress through the week — presentation only, the
+  sim still advances in whole weeks.
+- Dashboard's Last Week card lists **per-route P&L** (route margin +
+  load factor, best first) under the headline numbers, so the network's
+  winners and losers are visible without leaving the first screen.
+
 ### 2026-07-18 — M8: new-game flow, app icon, playtest sign-off — the MVP is feature-complete
 
 **Added**

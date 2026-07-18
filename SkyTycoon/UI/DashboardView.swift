@@ -167,6 +167,23 @@ struct DashboardView: View {
                 StatTile(label: "Profit", value: report.profit.money,
                          color: report.profit >= 0 ? Theme.profit : Theme.loss)
             }
+            // Per-route P&L (route margin: revenue − fuel), best first.
+            if !engine.state.routes.isEmpty {
+                Divider().overlay(Theme.hairline)
+                ForEach(engine.state.routes.sorted { $0.lastWeeklyProfit > $1.lastWeeklyProfit }) { route in
+                    HStack {
+                        Text("\(route.originID) ⇄ \(route.destinationID)")
+                            .font(.game(.subheadline, weight: .semibold))
+                            .foregroundStyle(Theme.textPrimary)
+                        Text("LF \(Int(route.lastLoadFactor * 100))%")
+                            .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                        Spacer()
+                        TickerText(text: route.lastWeeklyProfit.money + "/wk",
+                                   font: .game(.subheadline, weight: .semibold),
+                                   color: route.lastWeeklyProfit >= 0 ? Theme.profit : Theme.loss)
+                    }
+                }
+            }
         }
     }
 }
