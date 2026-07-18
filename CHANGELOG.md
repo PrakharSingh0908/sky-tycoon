@@ -9,6 +9,45 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Milestone 6: the objectives layer
+
+The narrative spine (GDD §3.1 + §6): letters, resolution, milestones,
+fail states.
+
+**Added**
+- **Letters from Aunt Meera**: one per quarter close, tone keyed to
+  performance (proud / encouraging / worried / stern, plus triumphant and
+  heartbroken arc finales), written in-voice with the quarter's numbers
+  substituted. Archive on the Money tab, serif stationery styling,
+  capped at 16.
+- **Trust-fund resolution, both ways**: 4 consecutive P&L-positive
+  quarters → the fund converts (story event: +$500K gift, +0.25★) —
+  "Aunt's Approval". Deadline passes → the remaining fund (up to the
+  original $2M) is clawed back and hard mode begins. Both fire as
+  pausing `.story` events (never drawn from the deck).
+- **10 Layer-1 milestones** with cash rewards ($15–75K), checked every
+  tick, paid once, never blocking; Dashboard tracker shows the last
+  completed + next three.
+- **Fail states**: bankruptcy (8 consecutive insolvent weeks with no
+  sellable assets) freezes the sim behind a full-screen "Grounded"
+  overlay with restart; reputation-collapse warning banner below 2.0★.
+- `GameEngine.restart()` — fresh airline, same name.
+- 5 tests: milestones pay once, quarterly letters + tones, success
+  conversion, deadline withdrawal, bankruptcy spiral + restart.
+
+**Changed — balance (the sims spoke, again)**
+- 160-week arc simulations showed the trust-fund arc was UNREACHABLE:
+  wear accrued so fast a plane needed a check every ~3 weeks, used-plane
+  maintenance ran up to 2×, and thin margins couldn't survive seasonal
+  troughs. Tuned: wear rate ÷5 (heavy-check territory in ~6 months),
+  used-condition maintenance multiplier 2.0 → 1.6 max, demandK 450 → 520.
+  *Verified: a disciplined single-plane airline using yield management
+  (raising fares on a full plane, $76 → $116) now converts the fund at
+  the final quarter — tense but winnable, and the winning skill is
+  exactly the one the game wants to teach. Lazy play still fails; a
+  reckless jet lease still ends in bankruptcy in ~12 weeks.*
+- Save format: objectives fields added (dev saves reset).
+
 ### 2026-07-18 — Milestone 3: the event deck
 
 Replaces the single placeholder fuel card with the real system (GDD §4.7).

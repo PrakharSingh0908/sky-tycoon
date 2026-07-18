@@ -69,6 +69,27 @@ struct RootView: View {
         )) { event in
             EventCardView(event: event).interactiveDismissDisabled()
         }
+        // The hard fail state (GDD §3.2): full-screen, no way around it.
+        .overlay {
+            if engine.state.isBankrupt { bankruptcyOverlay }
+        }
+    }
+
+    private var bankruptcyOverlay: some View {
+        VStack(spacing: 18) {
+            Image(systemName: "airplane.arrival")
+                .font(.system(size: 52)).foregroundStyle(Theme.loss)
+            Text("Grounded")
+                .font(.game(.largeTitle, weight: .bold)).foregroundStyle(Theme.textPrimary)
+            Text("Eight weeks insolvent with nothing left to sell. \(engine.state.airlineName) survived \(engine.state.date.description) — the banks have called time.")
+                .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+            Button("Start a new airline") { engine.restart() }
+                .buttonStyle(GameButtonStyle(color: Theme.sky, prominent: true))
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Theme.bg.opacity(0.97))
     }
 }
 

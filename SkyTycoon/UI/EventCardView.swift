@@ -21,6 +21,7 @@ struct EventCardView: View {
         case .opportunity: "sparkles"
         case .regulatory: "checkmark.shield.fill"
         case .pr: "megaphone.fill"
+        case .story: "envelope.open.fill"   // Aunt Meera's beats
         }
     }
 

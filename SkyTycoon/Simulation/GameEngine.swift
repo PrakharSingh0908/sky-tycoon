@@ -62,8 +62,11 @@ final class GameEngine {
             livery: .launch,
             trustFundActive: true,
             trustFundDeadline: GameDate(week: 52, year: 3),
+            trustFundResolution: .pending,
             consecutiveProfitableQuarters: 0,
             reputation: 3.0,
+            letters: [], completedMilestones: [],
+            weeksInsolvent: 0, isBankrupt: false,
             cities: Balance.indiaCities,          // MVP: India city set for all, swap per-country later
             fleet: [], routes: [], staff: staff, loans: [],
             usedMarket: initialMarket,
@@ -102,7 +105,8 @@ final class GameEngine {
     func stopClock() { timer?.invalidate(); timer = nil }
 
     private func clockFired(delta: Double) {
-        guard speed != .paused, state.pendingEvent == nil, interactionHolds == 0 else { return }
+        guard speed != .paused, state.pendingEvent == nil, interactionHolds == 0,
+              !state.isBankrupt else { return }
         accumulator += delta * speed.rawValue
         while accumulator >= secondsPerWeek {
             accumulator -= secondsPerWeek
@@ -115,6 +119,7 @@ final class GameEngine {
     // Order matters and is fixed: operate → settle → drift → events → bookkeeping.
 
     func advanceWeek() {
+        guard !state.isBankrupt else { return }
         let profile = Balance.countryProfiles[state.country]!
         var report = WeeklyReport(date: state.date, revenue: 0, fuelCost: 0,
                                   wageCost: 0, maintenanceCost: 0, loanCost: 0,
@@ -260,13 +265,17 @@ final class GameEngine {
             state.routes[r].lastWeeklyProfit = revenue - fuel   // route-level, pre-overhead
             appendLoadFactor(loadFactor, routeIndex: r)
 
-            // Wear accumulates with flight hours; worse condition wears faster.
+            // Wear accumulates with flight hours; worse condition wears
+            // faster. Calibrated so a hard-flown airframe (≈65 block
+            // hours/week) reaches heavy-check territory in ~6 months —
+            // the old ×0.25 rate demanded a check every 3 weeks, which
+            // made maintenance costs unsurvivable.
             for plane in activePlanes {
                 if let idx = state.fleet.firstIndex(where: { $0.id == plane.id }) {
                     let spec = Balance.specs[plane.type]!
                     let hours = route.distanceKm / spec.cruiseKmh * Double(route.weeklyFrequency) * 2
                     state.fleet[idx].wear = min(100, state.fleet[idx].wear
-                        + hours * 0.25 * (1.5 - state.fleet[idx].condition / 200))
+                        + hours * 0.05 * (1.5 - state.fleet[idx].condition / 200))
                 }
             }
 
@@ -333,10 +342,13 @@ final class GameEngine {
         }
 
         // 5. MAINTENANCE base costs (grounded or not, planes cost money).
+        // Condition multiplier 1.0 (mint) … 1.6 (wreck): the old ×2 curve
+        // made every used airframe a money pit and the trust-fund arc
+        // unreachable.
         for plane in state.fleet where plane.status != .onOrder {
             let spec = Balance.specs[plane.type]!
             report.maintenanceCost += spec.baseMaintPerWeek
-                * (1 + plane.wear / 200) * (2 - plane.condition / 100)
+                * (1 + plane.wear / 200) * (1.6 - 0.6 * plane.condition / 100)
         }
 
         // 5b. LEASE PAYMENTS — their own P&L line, forever (GDD §4.1).
@@ -412,6 +424,24 @@ final class GameEngine {
         appendHistory(\.cashHistory, state.cash)
         appendHistory(\.reputationHistory, state.reputation)
 
+        // Milestones (Layer 1): contextual nudges, paid once, never blocking.
+        for milestone in Balance.milestones
+        where !state.completedMilestones.contains(milestone.id) && milestone.isComplete(state) {
+            state.completedMilestones.insert(milestone.id)
+            state.cash += milestone.reward
+        }
+
+        // Fail states (GDD §3.2): 8 straight insolvent weeks with nothing
+        // left to sell is the end of the line.
+        state.weeksInsolvent = state.cash < 0 ? state.weeksInsolvent + 1 : 0
+        let hasSellableAssets = state.fleet.contains {
+            $0.acquisition != .leased && $0.status != .onOrder
+        }
+        if state.weeksInsolvent >= 8 && !hasSellableAssets {
+            state.isBankrupt = true
+            speed = .paused
+        }
+
         if state.date.week % 13 == 0 { closeQuarter() }
         state.date.advance()
 
@@ -435,18 +465,78 @@ final class GameEngine {
     }
 
     private func closeQuarter() {
-        let quarterReports = state.reports.suffix(13)
-        let quarterProfit = quarterReports.map(\.profit).reduce(0, +)
-        if quarterProfit > 0 {
-            state.consecutiveProfitableQuarters += 1
-        } else {
-            state.consecutiveProfitableQuarters = 0
-        }
-        if state.trustFundActive && state.date > state.trustFundDeadline
-            && state.consecutiveProfitableQuarters < 4 {
+        let quarterProfit = state.reports.suffix(13).map(\.profit).reduce(0, +)
+        applyQuarterResult(quarterProfit: quarterProfit)
+    }
+
+    /// Quarter bookkeeping + the trust-fund arc (GDD §3.1/§6). Internal so
+    /// tests can drive quarters deterministically.
+    func applyQuarterResult(quarterProfit: Double) {
+        state.consecutiveProfitableQuarters =
+            quarterProfit > 0 ? state.consecutiveProfitableQuarters + 1 : 0
+
+        guard state.trustFundResolution == .pending else { return }
+
+        let quartersLeft = max(0, (state.trustFundDeadline.totalWeeks - state.date.totalWeeks) / 13)
+        let streak = state.consecutiveProfitableQuarters
+
+        if streak >= 4 {
+            // ── Success: the fund converts to a gift ─────────────────────
+            state.trustFundResolution = .succeeded
             state.trustFundActive = false
-            // TODO: fire the "Aunt withdraws the fund" story event here. (M6)
+            appendLetter(tone: .triumphant, quarterProfit: quarterProfit, quartersLeft: 0)
+            state.pendingEvent = GameEvent(
+                id: UUID(), cardID: "trustFundSuccess", category: .story,
+                isNegative: false,
+                title: "Aunt's Approval",
+                body: "Four consecutive profitable quarters. The trust fund converts to a gift — with a bonus from a very proud aunt. Her letter is on the Money tab.",
+                options: [EventOption(label: "Accept the gift (+\(Balance.trustFundSuccessGift.money))",
+                                      effects: [.cash(Balance.trustFundSuccessGift),
+                                                .reputation(Balance.trustFundSuccessReputationBonus)])],
+                firedOn: state.date)
+        } else if state.date >= state.trustFundDeadline {
+            // ── Failure: the remaining fund is withdrawn — hard mode ─────
+            state.trustFundResolution = .failed
+            state.trustFundActive = false
+            let profile = Balance.countryProfiles[state.country]!
+            let withdrawal = min(max(state.cash, 0), profile.startingTrustFund)
+            appendLetter(tone: .heartbroken, quarterProfit: quarterProfit, quartersLeft: 0)
+            state.pendingEvent = GameEvent(
+                id: UUID(), cardID: "trustFundWithdrawn", category: .story,
+                isNegative: true,
+                title: "The Fund Is Withdrawn",
+                body: "The deadline passed without four consecutive profitable quarters. The accountants have recalled what remained of the trust fund. What you build from here is yours alone.",
+                options: [EventOption(label: "Carry on (−\(withdrawal.money))",
+                                      effects: [.cash(-withdrawal)])],
+                firedOn: state.date)
+            state.lastNegativeEventTotalWeek = state.date.totalWeeks
+        } else {
+            // ── An ordinary quarter: a letter keyed to performance ───────
+            let tone: QuarterlyLetter.Tone =
+                quarterProfit > 0
+                    ? (streak >= 2 ? .proud : .encouraging)
+                    : (state.cash > 500_000 ? .worried : .stern)
+            appendLetter(tone: tone, quarterProfit: quarterProfit, quartersLeft: quartersLeft)
         }
+    }
+
+    private func appendLetter(tone: QuarterlyLetter.Tone, quarterProfit: Double,
+                              quartersLeft: Int) {
+        state.letters.append(QuarterlyLetter(
+            id: UUID(), date: state.date, tone: tone, quarterProfit: quarterProfit,
+            body: Balance.auntLetter(tone: tone, quarterProfit: quarterProfit,
+                                     streak: state.consecutiveProfitableQuarters,
+                                     quartersLeft: quartersLeft)))
+        if state.letters.count > Balance.lettersKept { state.letters.removeFirst() }
+    }
+
+    /// Bankruptcy is the hard fail (GDD §3.2): start over, same airline name.
+    func restart() {
+        let name = state.airlineName
+        let country = state.country
+        state = GameEngine.newGame(airlineName: name, country: country).state
+        speed = .paused
+        save()
     }
 
     // ── The event deck (GDD §4.7) ────────────────────────────────────────
@@ -486,6 +576,8 @@ final class GameEngine {
             weight *= 1.0 + Double(strikeRiskPools.count) * 2.0 + Double(lowMorale) * 0.5
         case .market, .weather, .opportunity, .regulatory, .pr:
             break
+        case .story:
+            weight = 0   // story beats are fired by the arc, never drawn
         }
         return weight
     }

@@ -14,7 +14,8 @@ struct MoneyView: View {
 
     var body: some View {
         GameScreen(title: "Money", accent: accent) {
-            if engine.state.trustFundActive { trustFundCard }
+            trustFundCard
+            if !engine.state.letters.isEmpty { lettersCard }
             GameCard {
                 SectionHeader(title: "52-week P&L", icon: "chart.bar.fill", accent: accent)
                 Text("Profit bars · revenue line")
@@ -28,28 +29,83 @@ struct MoneyView: View {
 
     // ── Trust fund: the tutorial arc as a progress instrument ────────────
 
-    private var trustFundCard: some View {
+    @ViewBuilder private var trustFundCard: some View {
         GameCard {
             SectionHeader(title: "Aunt's Trust Fund", icon: "envelope.fill", accent: Theme.warn)
-            Text("Reach 4 consecutive profitable quarters by \(engine.state.trustFundDeadline.description).")
-                .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
-            HStack(spacing: 10) {
-                ForEach(0..<4, id: \.self) { i in
-                    Circle()
-                        .fill(i < engine.state.consecutiveProfitableQuarters
-                              ? Theme.profit : Color.white.opacity(0.10))
-                        .frame(width: 16, height: 16)
-                        .overlay(
-                            Circle().strokeBorder(Color.white.opacity(0.15), lineWidth: 1)
-                        )
+            switch engine.state.trustFundResolution {
+            case .pending:
+                Text("Reach 4 consecutive profitable quarters by \(engine.state.trustFundDeadline.description).")
+                    .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+                HStack(spacing: 10) {
+                    ForEach(0..<4, id: \.self) { i in
+                        Circle()
+                            .fill(i < engine.state.consecutiveProfitableQuarters
+                                  ? Theme.profit : Color.white.opacity(0.10))
+                            .frame(width: 16, height: 16)
+                            .overlay(
+                                Circle().strokeBorder(Color.white.opacity(0.15), lineWidth: 1)
+                            )
+                    }
+                    Text("\(engine.state.consecutiveProfitableQuarters)/4 profitable quarters")
+                        .font(.game(.caption, weight: .semibold))
+                        .foregroundStyle(Theme.textSecondary)
+                    Spacer()
                 }
-                Text("\(engine.state.consecutiveProfitableQuarters)/4 profitable quarters")
-                    .font(.game(.caption, weight: .semibold))
-                    .foregroundStyle(Theme.textSecondary)
-                Spacer()
+                .animation(.snappy, value: engine.state.consecutiveProfitableQuarters)
+            case .succeeded:
+                Label("Aunt's Approval — the fund converted to a gift. The airline is yours, properly.",
+                      systemImage: "checkmark.seal.fill")
+                    .font(.game(.caption, weight: .semibold)).foregroundStyle(Theme.profit)
+            case .failed:
+                Label("The fund was withdrawn — hard mode. Everything from here is yours alone.",
+                      systemImage: "xmark.seal.fill")
+                    .font(.game(.caption, weight: .semibold)).foregroundStyle(Theme.loss)
             }
-            .animation(.snappy, value: engine.state.consecutiveProfitableQuarters)
         }
+    }
+
+    // ── Letters from Aunt Meera — the arc's voice ────────────────────────
+
+    private var lettersCard: some View {
+        let letters = engine.state.letters.reversed()
+        return GameCard {
+            SectionHeader(title: "Letters from Aunt Meera", icon: "envelope.open.fill",
+                          accent: Theme.warn)
+            if let latest = letters.first {
+                letterView(latest)
+            }
+            if letters.count > 1 {
+                DisclosureGroup {
+                    ForEach(Array(letters.dropFirst())) { letter in
+                        letterView(letter)
+                        Divider().overlay(Theme.hairline)
+                    }
+                } label: {
+                    Text("Older letters (\(letters.count - 1))")
+                        .font(.game(.caption, weight: .semibold))
+                        .foregroundStyle(Theme.textSecondary)
+                }
+                .tint(Theme.textSecondary)
+            }
+        }
+    }
+
+    private func letterView(_ letter: QuarterlyLetter) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(letter.date.description)
+                .font(.game(.caption2, weight: .bold)).tracking(1)
+                .foregroundStyle(Theme.textSecondary)
+            Text(letter.body)
+                .font(.system(.subheadline, design: .serif))
+                .italic()
+                .foregroundStyle(Theme.textPrimary.opacity(0.9))
+            Text("— Aunt Meera")
+                .font(.system(.caption, design: .serif).italic())
+                .foregroundStyle(Theme.warn)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+        }
+        .padding(10)
+        .background(Theme.warn.opacity(0.05), in: RoundedRectangle(cornerRadius: 10))
     }
 
     // ── The weekly statement ─────────────────────────────────────────────

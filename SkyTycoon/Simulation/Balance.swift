@@ -156,12 +156,14 @@ enum Balance {
     //
     // demandK calibration (first-hour viability): DEL–BOM gravity term is
     // (32×24)^0.55 / 1150^0.35 ≈ 3.27, so weekly base demand = k × 3.27
-    // ≈ 1,470 at k = 450 (≈1,700 with 3.0★ brand). That fills a J-28
-    // (79 offered seats × 14 round trips × 2 directions ≈ 2,212 seats) to
-    // ~77%, and caps out the smaller props — so upgrading capacity on trunk
-    // routes stays the growth lever. At the original k = 90 every possible
-    // opening move lost money. Tune further in the M8 playtest pass.
-    static let demandK = 450.0
+    // ≈ 1,700 at k = 520 (≈1,960 with 3.0★ brand). That fills a 30
+    // Propeller (84 seats × 14 round trips × 2 directions ≈ 2,350 seats)
+    // to ~84%, and caps out the smaller props — so upgrading capacity on
+    // trunk routes stays the growth lever. At the original k = 90 every
+    // possible opening move lost money; at 450 the trust-fund arc (four
+    // P&L-positive quarters) was unreachable even for a well-run airline
+    // (verified by 160-week sims). Tune further in the M8 playtest pass.
+    static let demandK = 520.0
     static let fuelPricePerUnit = 1.0
     static let hqOverheadPerWeek = 15_000.0
     static let referenceFarePerKm = 0.11    // pre country fareLevel multiplier
@@ -204,6 +206,63 @@ enum Balance {
     static let strikeRiskHappinessThreshold = 25.0
     /// Weekly attrition rate at happiness 0 (scales linearly up to the threshold).
     static let attritionMaxRatePerWeek = 0.03
+
+    // ── The objectives layer (GDD §3.1 + §6, M6) ─────────────────────────
+
+    /// Success: the fund converts to a gift on top of what you kept.
+    static let trustFundSuccessGift = 500_000.0
+    static let trustFundSuccessReputationBonus = 0.25
+    static let lettersKept = 16
+
+    static func auntLetter(tone: QuarterlyLetter.Tone, quarterProfit: Double,
+                           streak: Int, quartersLeft: Int) -> String {
+        let profit = abs(quarterProfit)
+        switch tone {
+        case .proud:
+            return "My dear, \(streak) profitable quarters in a row — I read the numbers twice to be sure. Your grandfather haggled over rickshaw fares his whole life; you're out here running an airline in the black. Keep the streak alive. Only \(max(0, 4 - streak)) more and the fund is yours properly."
+        case .encouraging:
+            return "A profit of \(profit.money) this quarter! I won't pretend I understood every line of the report you sent, but I understood the color green. Don't get cocky — one good quarter is weather, four is climate. \(quartersLeft) quarters left before my accountants get twitchy."
+        case .worried:
+            return "I saw the quarter's numbers — \(profit.money) in the red. I'm not angry, I'm worried. Planes on the ground don't pay for themselves, beta. Look at your fares, look at your crews, and for goodness' sake do the maintenance BEFORE things break. \(quartersLeft) quarters remain."
+        case .stern:
+            return "We need to speak plainly. Another loss — \(profit.money) — and the streak reset to nothing. The fund was not a wedding present; it came with conditions and a deadline, and both are approaching faster than you seem to believe. Show me four consecutive profitable quarters. \(quartersLeft) remain. Do not make me write the next letter."
+        case .triumphant:
+            return "Four profitable quarters. FOUR. I have already called the lawyers — the fund is yours, converted to a gift, with a little extra from me because I am, despite appearances, sentimental. Your grandfather would have pretended not to cry. I will not pretend. Fly far, my dear. You've earned every kilometer."
+        case .heartbroken:
+            return "The deadline passed this week. You know what that means and so do I — the accountants have withdrawn what remained of the fund. I want you to hear this from me and not from them: I am not disappointed in you, I am disappointed for you. What you build from here is truly yours alone. Prove the old woman wrong. I would love nothing more."
+        }
+    }
+
+    /// Layer-1 milestones: ~10 contextual nudges, small cash rewards,
+    /// never blocking (GDD §6). Checked every tick, paid once.
+    static let milestones: [MilestoneDef] = [
+        MilestoneDef(id: "wings", title: "Field your first aircraft", reward: 15_000,
+                     isComplete: { !$0.fleet.isEmpty }),
+        MilestoneDef(id: "openForBusiness", title: "Open your first route", reward: 15_000,
+                     isComplete: { !$0.routes.isEmpty }),
+        MilestoneDef(id: "crewedUp", title: "Build a crew of 8", reward: 20_000,
+                     isComplete: { state in
+                         StaffRole.allCases.filter { $0 != .hq }
+                             .reduce(0) { $0 + (state.staff[$1]?.headcount ?? 0) } >= 8
+                     }),
+        MilestoneDef(id: "inTheBlack", title: "Post a profitable week", reward: 20_000,
+                     isComplete: { ($0.reports.last?.profit ?? 0) > 0 }),
+        MilestoneDef(id: "networkEffect", title: "Run 3 routes at once", reward: 30_000,
+                     isComplete: { $0.routes.count >= 3 }),
+        MilestoneDef(id: "packedHouse", title: "Hit 80% load factor on a route", reward: 30_000,
+                     isComplete: { $0.routes.contains { $0.lastLoadFactor >= 0.8 } }),
+        MilestoneDef(id: "growingFleet", title: "Operate 3 aircraft", reward: 40_000,
+                     isComplete: { $0.fleet.count >= 3 }),
+        MilestoneDef(id: "bigWeek", title: "Bank $50K profit in one week", reward: 50_000,
+                     isComplete: { ($0.reports.last?.profit ?? 0) >= 50_000 }),
+        MilestoneDef(id: "wellRegarded", title: "Reach a 4.0★ reputation", reward: 60_000,
+                     isComplete: { $0.reputation >= 4.0 }),
+        MilestoneDef(id: "flagCarrier", title: "Connect 6 of India's cities", reward: 75_000,
+                     isComplete: { state in
+                         let touched = Set(state.routes.flatMap { [$0.originID, $0.destinationID] })
+                         return touched.count >= 6
+                     }),
+    ]
 
     // ── The event deck (GDD §4.7, M3) ────────────────────────────────────
 

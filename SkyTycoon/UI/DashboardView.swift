@@ -21,9 +21,63 @@ struct DashboardView: View {
     var body: some View {
         GameScreen(title: "Dashboard", accent: accent) {
             heroCard
+            if engine.state.reputation < 2.0 { reputationCollapseBanner }
             if !engine.state.activeEffects.isEmpty { opsConditionsCard }
+            milestonesCard
             trendsCard
             if let report = engine.latestReport { lastWeekCard(report) }
+        }
+    }
+
+    // ── Reputation collapse: the soft-fail spiral warning (GDD §4.5) ────
+
+    private var reputationCollapseBanner: some View {
+        GameCard {
+            Label("Reputation collapse — demand is cratering. Fix punctuality, comfort, and service before the spiral locks in.",
+                  systemImage: "exclamationmark.octagon.fill")
+                .font(.game(.caption, weight: .semibold))
+                .foregroundStyle(Theme.loss)
+        }
+    }
+
+    // ── Milestones (Layer 1): always know what to do next ───────────────
+
+    private var milestonesCard: some View {
+        let done = engine.state.completedMilestones
+        let next = Balance.milestones.filter { !done.contains($0.id) }.prefix(3)
+        let lastDone = Balance.milestones.last { done.contains($0.id) }
+        return GameCard {
+            HStack {
+                SectionHeader(title: "Milestones", icon: "flag.checkered", accent: accent)
+                Spacer()
+                Text("\(done.count)/\(Balance.milestones.count)")
+                    .font(.game(.caption, weight: .bold)).foregroundStyle(Theme.textSecondary)
+            }
+            if let lastDone {
+                milestoneRow(lastDone, done: true)
+            }
+            ForEach(Array(next)) { milestone in
+                milestoneRow(milestone, done: false)
+            }
+            if next.isEmpty {
+                Text("All milestones complete. The sandbox is yours.")
+                    .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+            }
+        }
+    }
+
+    private func milestoneRow(_ milestone: MilestoneDef, done: Bool) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: done ? "checkmark.circle.fill" : "circle")
+                .foregroundStyle(done ? Theme.profit : Theme.textSecondary)
+            Text(milestone.title)
+                .font(.game(.subheadline))
+                .foregroundStyle(done ? Theme.textSecondary : Theme.textPrimary)
+                .strikethrough(done)
+            Spacer()
+            Text("+\(milestone.reward.money)")
+                .font(.game(.caption, weight: .semibold))
+                .foregroundStyle(done ? Theme.textSecondary : Theme.profit)
         }
     }
 
@@ -115,4 +169,9 @@ struct DashboardView: View {
             }
         }
     }
+}
+
+#Preview {
+    DashboardView().environment(GameEngine.previewGame())
+        .preferredColorScheme(.dark)
 }

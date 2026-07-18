@@ -367,6 +367,7 @@ struct Loan: Codable, Identifiable {
 
 enum EventCategory: String, Codable, CaseIterable {
     case market, weather, labor, technical, opportunity, regulatory, pr
+    case story   // trust-fund arc beats — never drawn from the deck
 }
 
 /// One concrete consequence of choosing an event option.
@@ -448,6 +449,37 @@ struct WeeklyReport: Codable, Identifiable {
     var profit: Double { revenue - fuelCost - wageCost - maintenanceCost - loanCost - leaseCost - cabinCost - overheadCost }
 }
 
+// ── The objectives layer (GDD §3.1 + §6, M6) ─────────────────────────────
+
+enum TrustFundResolution: String, Codable {
+    case pending, succeeded, failed
+}
+
+/// A quarterly letter from Aunt Meera — the tutorial voice of years 1–3.
+struct QuarterlyLetter: Codable, Identifiable {
+    let id: UUID
+    var date: GameDate
+    var tone: Tone
+    var quarterProfit: Double
+    var body: String
+
+    enum Tone: String, Codable {
+        case proud, encouraging, worried, stern
+        case triumphant     // the fund converts — arc complete
+        case heartbroken    // the fund is withdrawn — hard mode
+    }
+}
+
+/// A Layer-1 milestone definition (lives in Balance; completion ids
+/// persist in the save). Contextual nudges with small cash rewards —
+/// they never block anything.
+struct MilestoneDef: Identifiable {
+    let id: String
+    let title: String
+    let reward: Double
+    let isComplete: (GameState) -> Bool
+}
+
 /// THE save file. Everything lives here; the engine mutates only this.
 struct GameState: Codable {
     var saveVersion: Int = 1
@@ -460,8 +492,16 @@ struct GameState: Codable {
     var livery: Livery
     var trustFundActive: Bool
     var trustFundDeadline: GameDate
+    var trustFundResolution: TrustFundResolution
     var consecutiveProfitableQuarters: Int
     var reputation: Double            // 1...5 stars
+
+    /// The objectives layer (M6).
+    var letters: [QuarterlyLetter]            // newest last, capped
+    var completedMilestones: Set<String>
+    /// Consecutive weeks with negative cash; 8 with no sellable assets = bankrupt.
+    var weeksInsolvent: Int
+    var isBankrupt: Bool
 
     var cities: [City]
     var fleet: [Aircraft]
