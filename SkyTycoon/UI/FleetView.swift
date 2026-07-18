@@ -142,15 +142,15 @@ private struct AircraftCard: View {
             if plane.groundedWeeksRemaining > 0 {
                 StatusBadge(text: "In shop · \(plane.groundedWeeksRemaining) wk", color: Theme.warn)
             } else if let route = currentRoute {
-                StatusBadge(text: "Flying \(route.originID) ⇄ \(route.destinationID)", color: Theme.profit)
+                StatusBadge(text: "\(route.originID) ⇄ \(route.destinationID)", color: Theme.profit)
             } else {
                 StatusBadge(text: "Idle", color: Theme.textSecondary)
             }
+            Spacer()
             if plane.acquisition == .leased {
                 Text("\(plane.weeklyLeaseCost.money)/wk lease")
                     .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
             }
-            Spacer()
         }
     }
 

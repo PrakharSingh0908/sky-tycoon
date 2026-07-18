@@ -9,6 +9,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Fleet status line: tighter badge, full-width spread
+
+**Changed**
+- The fleet card's route badge drops the word "Flying" ("DEL ⇄ BOM"
+  says it), and the status row distributes across the card: badge on
+  the left, weekly lease cost pushed to the right edge.
+
+
 ### 2026-07-18 — Ticket punches finished; dropdown shows LF not condition
 
 **Fixed**
