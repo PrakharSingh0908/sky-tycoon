@@ -9,6 +9,16 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Assigned planes can be tapped off a route
+
+**Fixed**
+- In the route detail's Assign Aircraft card, tapping a plane that is
+  already on this route now unassigns it (engine.unassign existed;
+  the row only ever called assign). *Why:* the checkmark rows read as
+  toggles, but there was no way to pull a plane off a route from the
+  UI at all — the sim supported it, the surface never exposed it.
+
+
 ### 2026-07-18 — Receipt icon no longer overflows its disc
 
 **Fixed**

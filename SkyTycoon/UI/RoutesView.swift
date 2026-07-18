@@ -318,7 +318,12 @@ struct RouteDetailView: View {
                         : engine.state.routes.first { $0.id == otherID }
                 }
                 Button {
-                    engine.assign(aircraftID: plane.id, to: routeID)
+                    // Tapping an assigned plane takes it off the route.
+                    if assigned {
+                        engine.unassign(aircraftID: plane.id)
+                    } else {
+                        engine.assign(aircraftID: plane.id, to: routeID)
+                    }
                 } label: {
                     HStack {
                         Image(systemName: assigned ? "checkmark.circle.fill" : "circle")
