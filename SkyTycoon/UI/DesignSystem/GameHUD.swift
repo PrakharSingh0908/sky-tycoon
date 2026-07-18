@@ -25,27 +25,127 @@ extension View {
     func holdsSimClock() -> some View { modifier(ClockHoldModifier()) }
 }
 
+/// The time console: a glanceable pill (state · date · week progress)
+/// that expands on tap into the full instrument — labeled day strip,
+/// speed control, and a one-week step for deliberate play.
 struct SimClockPill: View {
     @Environment(GameEngine.self) private var engine
+    @State private var expanded = false
+
+    private var stateIcon: String {
+        if engine.clockIsHeld { return "pause.circle.fill" }
+        return engine.speed == .paused ? "pause.fill" : "play.fill"
+    }
 
     var body: some View {
-        HStack(spacing: 10) {
-            if engine.clockIsHeld {
-                Image(systemName: "pause.circle.fill")
-                    .font(.system(size: 12)).foregroundStyle(Theme.warn)
+        VStack(alignment: .trailing, spacing: 0) {
+            if expanded {
+                console
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else {
+                compactPill
+                    .transition(.opacity)
             }
-            TickerText(text: "\(engine.state.date.description) · \(engine.simDayName)",
-                       font: .game(.caption, weight: .bold),
-                       color: engine.speed == .paused || engine.clockIsHeld
-                            ? Theme.textSecondary : Theme.textPrimary)
-            SpeedControl()
         }
-        .padding(.leading, 14)
-        .padding(.trailing, 5)
-        .padding(.vertical, 5)
+        .animation(.snappy(duration: 0.25), value: expanded)
+        .sensoryFeedback(.selection, trigger: expanded)
+    }
+
+    // ── Glanceable: state, date, and the week filling up ─────────────────
+
+    private var compactPill: some View {
+        Button {
+            expanded = true
+        } label: {
+            VStack(alignment: .leading, spacing: 5) {
+                HStack(spacing: 8) {
+                    Image(systemName: stateIcon)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(engine.clockIsHeld ? Theme.warn
+                                         : engine.speed == .paused ? Theme.textSecondary
+                                         : Theme.cornflower)
+                    TickerText(text: "\(engine.state.date.description) · \(engine.simDayName)",
+                               font: .game(.caption, weight: .semibold),
+                               color: Theme.textPrimary)
+                }
+                weekStrip(height: 3, labeled: false)
+                    .frame(width: 128)
+            }
+            .fixedSize()
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.corner))
+            .overlay(RoundedRectangle(cornerRadius: Theme.corner)
+                .strokeBorder(Theme.hairline, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+    }
+
+    // ── Expanded: the full time console ──────────────────────────────────
+
+    private var console: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("\(engine.state.date.description) · \(engine.simDayName)".uppercased())
+                    .font(.data(.caption2)).tracking(0.85)
+                    .foregroundStyle(Theme.textSecondary)
+                Spacer()
+                Button {
+                    expanded = false
+                } label: {
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Theme.textSecondary)
+                        .frame(width: 24, height: 24)
+                }
+                .buttonStyle(.plain)
+            }
+            weekStrip(height: 5, labeled: true)
+            HStack(spacing: 8) {
+                SpeedControl()
+                Button {
+                    engine.stepOneWeek()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "forward.frame.fill").font(.system(size: 9))
+                        Text("Step wk").font(.game(.caption, weight: .medium))
+                    }
+                }
+                .buttonStyle(GameButtonStyle(color: Theme.sky, prominent: true))
+                .disabled(engine.clockIsHeld)
+            }
+        }
+        .padding(12)
+        .frame(width: 268)
         .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.corner))
         .overlay(RoundedRectangle(cornerRadius: Theme.corner)
             .strokeBorder(Theme.hairline, lineWidth: 1))
+    }
+
+    /// Seven segments, one per day: filled = elapsed, cornflower = today.
+    /// The week filling toward the settle is the sim's heartbeat — shown,
+    /// not implied.
+    private func weekStrip(height: CGFloat, labeled: Bool) -> some View {
+        let dayIndex = min(6, Int(engine.weekProgress * 7))
+        let days = ["M", "T", "W", "T", "F", "S", "S"]
+        return HStack(spacing: 3) {
+            ForEach(0..<7, id: \.self) { i in
+                VStack(spacing: 3) {
+                    RoundedRectangle(cornerRadius: 1.5)
+                        .fill(i < dayIndex ? Color.white.opacity(0.45)
+                              : i == dayIndex ? Theme.cornflower
+                              : Color.white.opacity(0.10))
+                        .frame(height: height)
+                    if labeled {
+                        Text(days[i])
+                            .font(.data(.caption2))
+                            .foregroundStyle(i == dayIndex ? Theme.cornflower
+                                             : Theme.textTertiary)
+                    }
+                }
+            }
+        }
+        .animation(.snappy(duration: 0.2), value: dayIndex)
     }
 }
 
@@ -96,4 +196,14 @@ struct SpeedControl: View {
             .accessibilityLabel("Speed \(chevrons)")
         }
     }
+}
+
+#Preview("Time console") {
+    VStack {
+        Spacer()
+        HStack { Spacer(); SimClockPill().padding() }
+    }
+    .background(Theme.bg)
+    .environment(GameEngine.previewGame())
+    .preferredColorScheme(.dark)
 }

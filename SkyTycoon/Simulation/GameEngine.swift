@@ -131,6 +131,17 @@ final class GameEngine {
     }
     func stopClock() { timer?.invalidate(); timer = nil }
 
+    /// Step exactly one week and hold: the deliberate-play loop (adjust
+    /// while paused → step → read the settle). Deterministic — it's the
+    /// same advanceWeek the clock drives.
+    func stepOneWeek() {
+        guard state.pendingEvent == nil, interactionHolds == 0,
+              !state.isBankrupt else { return }
+        speed = .paused
+        accumulator = 0
+        advanceWeek()
+    }
+
     private func clockFired(delta: Double) {
         guard speed != .paused, state.pendingEvent == nil, interactionHolds == 0,
               !state.isBankrupt else { return }

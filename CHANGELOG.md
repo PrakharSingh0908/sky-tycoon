@@ -9,6 +9,23 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased — design-system branch]
 
+### 2026-07-18 — The time console: a crafted clock
+
+**Changed**
+- The sim clock pill is now a two-state instrument. Compact: play
+  state, date, and a 7-segment week strip that fills day by day
+  toward the settle (the heartbeat, shown instead of implied — today
+  in cornflower). Tap to expand into the time console: mono date
+  eyebrow, labeled M-S day strip, the speed control, and a new
+  "Step wk" primary — advance exactly one game week and hold.
+
+**Added**
+- GameEngine.stepOneWeek(): pause + one advanceWeek, enabling the
+  deliberate-play loop (adjust while paused → step → read results).
+  Deterministic; same tick the clock drives. Disabled during clock
+  holds.
+
+
 ### 2026-07-18 — "Blueprint" v3.1 replaces Warm Paper (Dovetail re-theme)
 
 **Changed (everything visual, again)**
