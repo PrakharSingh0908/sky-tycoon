@@ -9,6 +9,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased — design-system branch]
 
+### 2026-07-18 — Industry card: rank only, ladder strip removed
+
+**Changed**
+- The Industry Standing card shows just "#10" (no "of 10") and drops
+  the 10-segment ladder strip — the rank number and the next-rival
+  progress bar carry the story; the strip read as a stepper control.
+
+
 ### 2026-07-18 — Charts pinned to their data span
 
 **Fixed**

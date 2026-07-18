@@ -166,8 +166,6 @@ struct DashboardView: View {
                     TickerText(text: "#\(rank)",
                                font: .display(.largeTitle),
                                color: rank <= 3 ? Theme.profit : Theme.textPrimary)
-                    Text("of \(total)")
-                        .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
                     Spacer()
                     VStack(alignment: .trailing, spacing: 2) {
                         TickerText(text: engine.marketCap.money,
@@ -182,17 +180,6 @@ struct DashboardView: View {
                             .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
                     }
                     .padding(.leading, 12)
-                }
-                // The ladder itself: one segment per carrier, bottom → top.
-                // Beaten rivals glow faint; your position is the accent.
-                HStack(spacing: 4) {
-                    ForEach(0..<total, id: \.self) { i in
-                        RoundedRectangle(cornerRadius: 1.5)
-                            .fill(i == total - rank ? Theme.cornflower
-                                  : i < total - rank ? Color.white.opacity(0.30)
-                                  : Color.white.opacity(0.08))
-                            .frame(height: 4)
-                    }
                 }
                 if let next = engine.nextRival {
                     let progress = min(1, engine.marketCap / next.marketCap)
