@@ -256,12 +256,27 @@ private struct AcquisitionReceiptView: View {
                 .frame(maxWidth: .infinity)
         }
         .padding(20)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        // Scroll container so the receipt can NEVER crop: taller-than-detent
+        // content anchors to the top and scrolls instead of clipping.
+        .frame(maxWidth: .infinity)
+        .modifier(ReceiptScroll())
         .background(Theme.bgElevated)
-        .presentationDetents([.medium])
+        .presentationDetents([.medium, .large])
         .presentationBackground(Theme.bgElevated)
         .preferredColorScheme(.dark)
         .holdsSimClock()
+    }
+
+    /// Hosts the receipt in a top-anchored scroll view; bounce only when
+    /// content actually exceeds the detent.
+    private struct ReceiptScroll: ViewModifier {
+        func body(content: Content) -> some View {
+            ScrollView {
+                content
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
+        }
     }
 
     private var title: String {

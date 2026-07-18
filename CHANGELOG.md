@@ -9,6 +9,17 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Receipt sheet no longer crops at the top
+
+**Fixed**
+- The acquisition receipt's content is taller than the .medium sheet
+  detent on smaller screens, and the overflow clipped at the TOP
+  (cutting the signature disc in half). The receipt now lives in a
+  top-anchored ScrollView (bounce only when content exceeds the
+  detent) and the sheet can expand to .large. Nothing can crop; at
+  worst it scrolls.
+
+
 ### 2026-07-18 — Cabin Architect polish pass
 
 **Changed**
