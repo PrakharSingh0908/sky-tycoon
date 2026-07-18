@@ -273,7 +273,7 @@ private struct AcquisitionReceiptView: View {
         // over. Nothing crops in either case.
         .presentationDetents([.height(contentHeight + 34)])
         .presentationBackground(Theme.bgElevated)
-        .preferredColorScheme(.light)
+        .preferredColorScheme(.dark)
         .holdsSimClock()
     }
 
@@ -336,7 +336,7 @@ private struct AcquisitionReceiptView: View {
         ShowroomView(fittingRoute: route)
     }
     .environment(engine)
-    .preferredColorScheme(.light)
+    .preferredColorScheme(.dark)
 }
 
 #Preview("Receipt") {
@@ -359,5 +359,5 @@ private struct AcquisitionReceiptView: View {
                 deliveryWeeks: nil))
         }
         .environment(GameEngine.previewGame())
-        .preferredColorScheme(.light)
+        .preferredColorScheme(.dark)
 }

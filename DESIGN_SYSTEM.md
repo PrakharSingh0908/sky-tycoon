@@ -1,5 +1,5 @@
 # SkyTycoon — UI Design System
-### "Warm Paper" (v3.0, design-system branch) — evolved from "Flight Deck" v2.x
+### "Blueprint" (v3.1, design-system branch) — dark command center (Dovetail reference)
 
 Companion to [GAME_DESIGN.md](GAME_DESIGN.md) §7. This is the living contract
 for how SkyTycoon looks, moves, and feels. Every screen and component follows
@@ -8,32 +8,33 @@ Implemented in `SkyTycoon/UI/DesignSystem/`.
 
 ---
 
-## 0. v3.0 "Warm Paper" — the Steep translation (2026-07-18)
+## 0. v3.1 "Blueprint" — the Dovetail translation (2026-07-18)
 
-Adopted from the Steep style reference ("serif analytics on warm
-paper"), translated from web to the game:
+Adopted from the Dovetail reference ("blueprint control room at
+midnight"), translated from web to the game. Supersedes the same-day
+Warm Paper experiment (v3.0, rejected on sight).
 
-- **Canvas:** light. Paper white pages, mist-gray cards (flat, no
-  shadow, 24pt radius), fog-white alternates, hairline #ececec.
-- **Type:** serif REGULAR (New York via .serif design) for titles and
-  headline moments — never bold; SF for body/UI with weight capped at
-  medium (500), enforced centrally in Font.game. Values keep
-  monospaced DIGITS (no jitter) but drop the full-mono readout voice.
-- **Color is rationed:** near-monochrome ink/slate/ash on white. ONE
-  chromatic accent: blush peach (#fbe1d1) surfaces with sienna brown
-  (#5d2a1a) ink — the hero card, Aunt Meera's letters, celebrations.
-  Functional exception (game necessity): muted profit green, loss
-  red, warn amber survive for P&L/health semantics only.
-- **Shape:** cards 24pt, small controls 16pt, buttons are PILLS
-  (filled ink / ghost ink pair). The v2.0 machined radii are retired.
-- **Elevation:** content cards are flat; only floating artifacts earn
-  the soft 8-10% shadow — the satellite map, boarding passes, the sim
-  clock pill, sheets.
-- **Instruments soften:** meters become quiet rounded tracks (no
-  graduations/needles); charts stay gestural. Tab accents collapse to
-  ink — identity comes from serif + layout, not hue.
-- The dark satellite map remains dark: it is a floating artifact
-  (product imagery), not a surface.
+- **Surfaces:** tone-stacked, never elevated — ink #0A0A0A canvas,
+  coal #141414 insets/sheets, carbon #1E1E1E cards, steel #313131
+  hairlines, graphite #454545 outlined controls. ZERO shadows and
+  ZERO gradients anywhere; separation is tone + 1px hairline.
+- **Type:** SF (Inter-equivalent) everywhere — 400 body, 500 labels,
+  600 headings; nothing heavier (capped centrally in Font.game).
+  Screen titles take tight negative tracking (engineered, not
+  editorial). MONO is the instrument voice: section eyebrows, tags,
+  and formula/data codes, with POSITIVE 0.85pt tracking.
+- **One accent:** cornflower #6798FF for icons, active states, the
+  hero's highlight stroke, and data strokes — NEVER a button fill.
+  Buttons: primary = WHITE filled 8px rect with ink text; secondary =
+  graphite outline; destructive keeps its functional red on the
+  outline variant. Muted functional green/red/amber survive for
+  P&L/health semantics only.
+- **Shape:** 8px on everything (4px tags). Pills are gone.
+- **Data:** chart strokes cornflower; slices/bars use a blue ramp
+  into grays (one chromatic family). Tags/badges are mono hairline
+  outlines, not filled chips.
+- The satellite map keeps its own imagery palette and sits behind a
+  steel hairline like a product-preview card.
 
 ## 1. Creative direction
 
@@ -278,6 +279,16 @@ and their chosen speed resumes on dismissal. The clock pill shows a pause
 glyph during holds.
 
 ## 5. Iteration log
+
+- **v3.1 (2026-07-18, design-system branch): "Blueprint."** Dovetail
+  re-theme, same day as (and replacing) v3.0 Warm Paper — the light
+  editorial direction was rejected on sight. See §0 for the contract.
+  Mechanics: tokens swapped to the ink/coal/carbon/steel stack; all
+  shadows deleted; pills → 8px rects with white-filled primaries;
+  SectionHeader became a mono eyebrow with cornflower icons;
+  StatusBadge became a mono hairline tag; serif retired; charts and
+  slices moved to the cornflower ramp. Verified by renders:
+  Dashboard, Routes, Money, People, New Game.
 
 - **v3.0 (2026-07-18, design-system branch): "Warm Paper."** Full
   re-theme to the Steep reference (§0). Shipped: light token layer

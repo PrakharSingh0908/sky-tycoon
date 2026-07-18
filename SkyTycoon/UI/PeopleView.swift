@@ -28,7 +28,7 @@ struct PeopleView: View {
 
 #Preview {
     PeopleView().environment(GameEngine.previewGame())
-        .preferredColorScheme(.light)
+        .preferredColorScheme(.dark)
 }
 
 private struct StaffPoolCard: View {
@@ -228,7 +228,7 @@ private struct HiringSheet: View {
         .background(Theme.bgElevated)
         .presentationDetents([.medium, .large])
         .presentationBackground(Theme.bgElevated)
-        .preferredColorScheme(.light)
+        .preferredColorScheme(.dark)
         .holdsSimClock()   // patience doesn't drain while you're deciding
         .sheet(item: $negotiating) { NegotiationSheet(applicant: $0) }
     }
@@ -343,7 +343,7 @@ private struct NegotiationSheet: View {
         .background(Theme.bgElevated)
         .presentationDetents([.medium])
         .presentationBackground(Theme.bgElevated)
-        .preferredColorScheme(.light)
+        .preferredColorScheme(.dark)
         .holdsSimClock()   // applicants' patience shouldn't drain mid-haggle
         .onAppear { offer = applicant.askingWage * 0.9 }
     }

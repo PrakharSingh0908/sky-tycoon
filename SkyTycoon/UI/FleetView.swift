@@ -72,7 +72,7 @@ struct FleetView: View {
 
 #Preview {
     FleetView().environment(GameEngine.previewGame())
-        .preferredColorScheme(.light)
+        .preferredColorScheme(.dark)
 }
 
 private struct AircraftCard: View {

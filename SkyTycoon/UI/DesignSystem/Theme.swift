@@ -1,81 +1,77 @@
 //
 //  Theme.swift
-//  SkyTycoon — Design system tokens (DESIGN_SYSTEM.md §0, v3.0)
+//  SkyTycoon — Design system tokens (DESIGN_SYSTEM.md §0, v3.1)
 //
-//  "Warm Paper" — serif analytics on warm paper (Steep translation).
-//  Near-monochrome ink on white; flat mist cards; ONE chromatic accent
-//  (blush peach + sienna ink) reserved for editorial moments; muted
-//  functional colors survive only for P&L/health semantics.
+//  "Blueprint" — a dark command center (Dovetail reference): near-black
+//  canvas, carbon cards, tone-stacked surfaces with hairline borders and
+//  ZERO shadows. One chromatic accent (cornflower #6798FF) for active
+//  states, icons, and data strokes — never a button fill. Muted
+//  functional green/red/amber survive for P&L semantics only.
 //
 
 import SwiftUI
 
 enum Theme {
-    // ── Surfaces (Steep: paper / mist / fog; flat, no card shadows) ──────
-    static let bg = Color.white                                            // paper
-    static let bgElevated = Color.white                                    // sheets/artifacts
-    static let card = Color(red: 0.949, green: 0.949, blue: 0.953)         // #F2F2F3 mist
-    static let fog = Color(red: 0.980, green: 0.980, blue: 0.984)          // #FAFAFB
-    /// Hairline dividers, ticket perforations, artifact rings.
-    static let hairline = Color(red: 0.925, green: 0.925, blue: 0.925)     // #ECECEC
+    // ── Surfaces (tone hierarchy: ink → coal → carbon → steel) ──────────
+    static let bg = Color(red: 0.039, green: 0.039, blue: 0.039)           // #0A0A0A ink
+    static let fog = Color(red: 0.078, green: 0.078, blue: 0.078)          // #141414 coal
+    static let bgElevated = Color(red: 0.078, green: 0.078, blue: 0.078)   // sheets = coal
+    static let card = Color(red: 0.118, green: 0.118, blue: 0.118)         // #1E1E1E carbon
+    /// Hairline borders and dividers (steel); graphite for outlined controls.
+    static let hairline = Color(red: 0.192, green: 0.192, blue: 0.192)     // #313131 steel
+    static let graphite = Color(red: 0.271, green: 0.271, blue: 0.271)     // #454545
 
-    // ── Text (ink / slate / ash / smoke) ─────────────────────────────────
-    static let textPrimary = Color(red: 0.090, green: 0.098, blue: 0.110)  // #17191C ink
-    static let textSecondary = Color(red: 0.467, green: 0.482, blue: 0.525) // #777B86 slate
-    static let textTertiary = Color(red: 0.592, green: 0.592, blue: 0.600) // #979799 ash
-    static let ink = textPrimary
+    // ── Text (snow / ash / fog) ──────────────────────────────────────────
+    static let textPrimary = Color.white                                    // snow
+    static let textSecondary = Color(red: 0.655, green: 0.655, blue: 0.655) // #A7A7A7 ash
+    static let textTertiary = Color(red: 0.486, green: 0.486, blue: 0.486)  // #7C7C7C fog
+    static let ink = textPrimary   // legacy name from v3.0 call sites
 
-    // ── The one chromatic accent (rare, editorial) ───────────────────────
-    static let peach = Color(red: 0.984, green: 0.882, blue: 0.820)        // #FBE1D1 blush
-    static let sienna = Color(red: 0.365, green: 0.165, blue: 0.102)       // #5D2A1A
+    // ── The one chromatic accent ─────────────────────────────────────────
+    static let cornflower = Color(red: 0.404, green: 0.596, blue: 1.0)     // #6798FF
 
-    // ── Functional semantics (game necessity; muted for white paper) ─────
-    static let profit = Color(red: 0.114, green: 0.478, blue: 0.302)       // #1D7A4D
-    static let loss = Color(red: 0.729, green: 0.263, blue: 0.192)         // #BA4331
-    static let warn = Color(red: 0.663, green: 0.416, blue: 0.110)         // #A96A1C
+    // ── Functional semantics (game necessity; quiet on near-black) ───────
+    static let profit = Color(red: 0.36, green: 0.78, blue: 0.53)
+    static let loss = Color(red: 0.91, green: 0.45, blue: 0.40)
+    static let warn = Color(red: 0.89, green: 0.68, blue: 0.34)
 
-    // ── Legacy tab accents: collapsed to ink (v3.0 is monochrome; identity
-    // comes from serif + layout, not hue). Kept as tokens so call sites
-    // survive; all resolve to ink except the functional trio above.
-    static let sky = ink
-    static let orange = ink
-    static let teal = ink
-    static let violet = ink
-    static let mint = ink
+    // ── Legacy accent tokens: all resolve to the single blue accent
+    // (they mark active states, selected fills, and icons — exactly the
+    // accent's Dovetail role).
+    static let sky = cornflower
+    static let orange = cornflower
+    static let teal = cornflower
+    static let violet = cornflower
+    static let mint = cornflower
+    // v3.0 leftovers, remapped so stragglers stay coherent:
+    static let peach = card
+    static let sienna = cornflower
 
-    // ── Editorial chart palette (warm ramp into grays — slices/bars) ─────
+    // ── Data palette: blue ramp into grays (one chromatic family) ───────
     static let chartPalette: [Color] = [
-        sienna,
-        Color(red: 0.60, green: 0.32, blue: 0.19),
-        Color(red: 0.78, green: 0.50, blue: 0.35),
-        Color(red: 0.91, green: 0.70, blue: 0.55),
-        peach,
-        Color(red: 0.35, green: 0.37, blue: 0.41),
+        cornflower,
+        Color(red: 0.29, green: 0.43, blue: 0.74),
+        Color(red: 0.66, green: 0.76, blue: 1.0),
+        Color(red: 0.20, green: 0.28, blue: 0.47),
+        Color.white,
         textSecondary,
         textTertiary,
-        Color(red: 0.80, green: 0.80, blue: 0.81),
+        graphite,
+        hairline,
     ]
 
-    // ── Shape & space (Steep: soft, generous) ────────────────────────────
-    static let corner: CGFloat = 24        // content cards
-    static let controlCorner: CGFloat = 16 // inputs, small cards, chips
-    static let artifactCorner: CGFloat = 20 // floating artifacts (map, passes)
-    static let cardPadding: CGFloat = 18
-    static let gutter: CGFloat = 20
-    static let cardSpacing: CGFloat = 16
+    // ── Shape & space (compact, engineered: 8px system) ─────────────────
+    static let corner: CGFloat = 8          // cards, buttons, inputs
+    static let controlCorner: CGFloat = 8
+    static let tagCorner: CGFloat = 4       // small tags/chips
+    static let artifactCorner: CGFloat = 8
+    static let cardPadding: CGFloat = 16
+    static let gutter: CGFloat = 16
+    static let cardSpacing: CGFloat = 12
 
-    /// v3.0: the "gradient border" era is over; retained for the few
-    /// remaining callers as a flat editorial tint.
+    /// v3.1: no gradients on surfaces. Retained for the map arc glow only.
     static func accentGradient(_ color: Color) -> LinearGradient {
-        LinearGradient(colors: [color.opacity(0.9), color.opacity(0.45)],
-                       startPoint: .topLeading, endPoint: .bottomTrailing)
-    }
-
-    /// The floating-artifact shadow (Steep "subtle-3"): hairline ring is
-    /// applied separately; this is the soft 10% lift.
-    static func artifactShadow<V: View>(_ view: V) -> some View {
-        view.shadow(color: .black.opacity(0.10), radius: 14, y: 10)
-            .shadow(color: .black.opacity(0.06), radius: 5, y: 4)
+        LinearGradient(colors: [color, color], startPoint: .top, endPoint: .bottom)
     }
 
     /// Meter color by health fraction (1 = good): green → amber → red.
@@ -88,27 +84,26 @@ enum Theme {
     }
 }
 
-// ── Fonts (v3.0 "Warm Paper") ────────────────────────────────────────────
-// Serif REGULAR (New York) for titles and headline moments — never bold;
-// SF for body/UI with weight capped at medium (the Steep sans never
-// exceeds 500). Values keep monospaced digits via TickerText.
+// ── Fonts (v3.1 "Blueprint") ─────────────────────────────────────────────
+// Inter-equivalent (SF) everywhere: 400 body, 500 labels, 600 headings
+// with tight tracking at display sizes. Mono is reserved for eyebrows,
+// tags, and data codes with POSITIVE tracking — the instrument voice.
 
 extension Font {
     static func game(_ style: TextStyle, weight: Weight = .regular) -> Font {
-        // Steep's sans tops out at 500: bold requests render medium.
-        let capped: Weight = (weight == .bold || weight == .heavy) ? .medium : weight
+        // Dovetail's stack: nothing heavier than semibold.
+        let capped: Weight = (weight == .bold || weight == .heavy) ? .semibold : weight
         return .system(style, design: .default).weight(capped)
     }
 
-    /// Serif display voice — always regular; the restraint IS the style.
+    /// Headline voice: sans semibold (tracking applied at call sites).
     static func display(_ style: TextStyle) -> Font {
-        .system(style, design: .serif).weight(.regular)
+        .system(style, design: .default).weight(.semibold)
     }
 
-    /// Data values: sans with monospaced digits (applied by TickerText).
+    /// Mono for eyebrows/tags/data codes (positive tracking at call site).
     static func data(_ style: TextStyle, weight: Weight = .regular) -> Font {
-        let capped: Weight = (weight == .bold || weight == .heavy) ? .medium : weight
-        return .system(style, design: .default).weight(capped).monospacedDigit()
+        .system(style, design: .monospaced).weight(weight)
     }
 }
 

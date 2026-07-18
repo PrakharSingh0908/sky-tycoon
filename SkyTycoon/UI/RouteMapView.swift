@@ -314,5 +314,5 @@ struct RouteMapView: View {
         .environment(GameEngine.previewGame())
         .frame(height: 340)
         .background(Color(red: 0.043, green: 0.071, blue: 0.125))
-        .preferredColorScheme(.light)
+        .preferredColorScheme(.dark)
 }

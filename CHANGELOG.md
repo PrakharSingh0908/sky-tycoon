@@ -9,6 +9,24 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased — design-system branch]
 
+### 2026-07-18 — "Blueprint" v3.1 replaces Warm Paper (Dovetail re-theme)
+
+**Changed (everything visual, again)**
+- Dark command center: ink #0A0A0A canvas, carbon cards, steel
+  hairlines — surfaces stack by TONE with zero shadows and zero
+  gradients. 8px radii everywhere (4px tags); pills retired.
+- One chromatic accent: cornflower #6798FF on icons, active states,
+  hero stroke, and data strokes — never button fills. Primary buttons
+  are white-filled rects with ink text; secondary are graphite
+  outlines; functional red/amber/green kept muted for P&L semantics.
+- Type: SF with 600-capped headings and tight display tracking; MONO
+  eyebrows/tags/codes with positive tracking (the instrument voice).
+  Serif retired with the Warm Paper experiment.
+- Charts stroke cornflower; expense turbine and industry bars use a
+  blue-ramp palette. Aunt Meera's letters sit on ink insets with the
+  serif italic kept for her voice only.
+
+
 ### 2026-07-18 — "Warm Paper" v3.0: the Steep re-theme
 
 **Changed (everything visual)**

@@ -20,10 +20,9 @@ struct RoutesView: View {
                 // The network at a glance: satellite globe, geodesic arcs.
                 RouteMapView()
                     .frame(height: 300)
-                    .clipShape(RoundedRectangle(cornerRadius: Theme.artifactCorner))
-                    .overlay(RoundedRectangle(cornerRadius: Theme.artifactCorner)
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.corner))
+                    .overlay(RoundedRectangle(cornerRadius: Theme.corner)
                         .strokeBorder(Theme.hairline, lineWidth: 1))
-                    .shadow(color: .black.opacity(0.10), radius: 14, y: 10)
 
                 ForEach(engine.state.routes) { route in
                     BoardingPassCard(route: route,
@@ -114,7 +113,7 @@ private struct NewRouteSheet: View {
         .background(Theme.bgElevated)
         .presentationDetents([.large])
         .presentationBackground(Theme.bgElevated)
-        .preferredColorScheme(.light)
+        .preferredColorScheme(.dark)
         .holdsSimClock()
     }
 
@@ -164,7 +163,7 @@ private struct NewRouteSheet: View {
         RouteDetailView(routeID: engine.state.routes[1].id)
     }
     .environment(engine)
-    .preferredColorScheme(.light)
+    .preferredColorScheme(.dark)
 }
 
 #Preview("Assign, empty fleet") {
@@ -174,12 +173,12 @@ private struct NewRouteSheet: View {
         RouteDetailView(routeID: route.id)
     }
     .environment(engine)
-    .preferredColorScheme(.light)
+    .preferredColorScheme(.dark)
 }
 
 #Preview {
     RoutesView().environment(GameEngine.previewGame())
-        .preferredColorScheme(.light)
+        .preferredColorScheme(.dark)
 }
 
 #Preview("Route detail") {
@@ -188,7 +187,7 @@ private struct NewRouteSheet: View {
         RouteDetailView(routeID: engine.state.routes[0].id)
     }
     .environment(engine)
-    .preferredColorScheme(.light)
+    .preferredColorScheme(.dark)
 }
 
 /// A route rendered as a flight ticket (DESIGN_SYSTEM.md v1.1): big airport
@@ -270,14 +269,12 @@ private struct BoardingPassCard: View {
         }
         .background(
             TicketShape(notchFromBottom: stubHeight)
-                .fill(.white, style: FillStyle(eoFill: true))
+                .fill(Theme.card, style: FillStyle(eoFill: true))
         )
         .overlay(
             TicketShape(notchFromBottom: stubHeight)
                 .stroke(Theme.hairline, style: StrokeStyle(lineWidth: 1))
         )
-        .shadow(color: .black.opacity(0.08), radius: 14, y: 10)
-        .shadow(color: .black.opacity(0.05), radius: 4, y: 3)
         // The card's own shadow bleeds through the punched holes as a dark
         // ring; cap each punch with a clean screen-background disc.
         .overlay {
@@ -338,7 +335,8 @@ private struct BoardingPassCard: View {
     private func codeBlock(code: String, city: String, alignment: HorizontalAlignment) -> some View {
         VStack(alignment: alignment, spacing: 1) {
             Text(code)
-                .font(.system(size: 32, weight: .regular, design: .serif))
+                .font(.system(size: 30, weight: .semibold))
+                .tracking(-1.0)
                 .foregroundStyle(Theme.textPrimary)
             Text(city)
                 .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
@@ -517,5 +515,5 @@ struct RouteDetailView: View {
 #Preview("New route desk") {
     NewRouteSheet()
         .environment(GameEngine.previewGame())
-        .preferredColorScheme(.light)
+        .preferredColorScheme(.dark)
 }

@@ -123,7 +123,7 @@ struct DashboardView: View {
         GameCard(highlight: settleFlash ? Theme.profit : accent) {
             HStack(alignment: .top) {
                 StatTile(label: "Net worth", value: engine.netWorth.money,
-                         color: engine.netWorth >= 0 ? Theme.sienna : Theme.loss,
+                         color: engine.netWorth >= 0 ? Theme.textPrimary : Theme.loss,
                          font: .display(.largeTitle))
                 Spacer()
                 VStack(alignment: .trailing, spacing: 6) {
@@ -193,7 +193,7 @@ struct DashboardView: View {
             }
             switch trendMetric {
             case .netWorth:
-                TrendChart(values: engine.state.netWorthHistory, color: Theme.sienna)
+                TrendChart(values: engine.state.netWorthHistory, color: Theme.cornflower)
             case .cash:
                 TrendChart(values: engine.state.cashHistory, color: Theme.profit)
             case .reputation:
@@ -303,7 +303,7 @@ private struct IndustrySheet: View {
         .background(Theme.bgElevated)
         .presentationDetents([.large])
         .presentationBackground(Theme.bgElevated)
-        .preferredColorScheme(.light)
+        .preferredColorScheme(.dark)
         .holdsSimClock()
     }
 
@@ -347,8 +347,8 @@ private struct IndustrySheet: View {
                 GeometryReader { geo in
                     Capsule()
                         .fill(carrier.isPlayer
-                              ? AnyShapeStyle(Theme.sienna)
-                              : AnyShapeStyle(Color.black.opacity(0.12)))
+                              ? AnyShapeStyle(Theme.cornflower)
+                              : AnyShapeStyle(Color.white.opacity(0.14)))
                         .frame(width: geo.size.width * fraction)
                 }
                 .frame(height: 6)
@@ -359,11 +359,11 @@ private struct IndustrySheet: View {
 
 #Preview {
     DashboardView().environment(GameEngine.previewGame())
-        .preferredColorScheme(.light)
+        .preferredColorScheme(.dark)
 }
 
 #Preview("Industry sheet") {
     IndustrySheet()
         .environment(GameEngine.previewGame())
-        .preferredColorScheme(.light)
+        .preferredColorScheme(.dark)
 }

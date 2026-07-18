@@ -20,19 +20,20 @@ struct CelebrationBanner: View {
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: icon)
-                .font(.title3).foregroundStyle(Theme.sienna)
+                .font(.title3).foregroundStyle(Theme.cornflower)
             VStack(alignment: .leading, spacing: 1) {
                 Text(title)
                     .font(.game(.subheadline, weight: .medium))
-                    .foregroundStyle(Theme.sienna)
+                    .foregroundStyle(Color.white)
                 Text(subtitle)
-                    .font(.game(.caption2)).foregroundStyle(Theme.sienna.opacity(0.75))
+                    .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
             }
             Spacer(minLength: 0)
         }
         .padding(14)
-        .background(Theme.peach, in: RoundedRectangle(cornerRadius: Theme.corner))
-        .shadow(color: .black.opacity(0.10), radius: 14, y: 8)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.corner))
+        .overlay(RoundedRectangle(cornerRadius: Theme.corner)
+            .strokeBorder(Theme.cornflower.opacity(0.8), lineWidth: 1))
         .padding(.horizontal, Theme.gutter)
     }
 }
@@ -89,18 +90,18 @@ struct QuarterReportCard: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("From Aunt Meera · \(letter.date.description)")
-                    .font(.game(.caption2, weight: .medium)).tracking(1)
-                    .foregroundStyle(Theme.sienna)
+                    .font(.data(.caption2)).tracking(0.85)
+                    .foregroundStyle(Theme.textSecondary)
                 Text(letter.body)
                     .font(.system(.caption, design: .serif)).italic()
                     .foregroundStyle(Theme.textPrimary.opacity(0.85))
                     .lineLimit(3)
                 Text("Full letter on the Money tab")
-                    .font(.game(.caption2)).foregroundStyle(Theme.sienna)
+                    .font(.game(.caption2)).foregroundStyle(Theme.cornflower)
             }
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.peach.opacity(0.55), in: RoundedRectangle(cornerRadius: Theme.corner))
+            .background(Theme.bg, in: RoundedRectangle(cornerRadius: Theme.corner))
 
             Button {
                 dismiss()
@@ -114,7 +115,7 @@ struct QuarterReportCard: View {
         .background(Theme.bgElevated)
         .presentationDetents([.medium, .large])
         .presentationBackground(Theme.bgElevated)
-        .preferredColorScheme(.light)
+        .preferredColorScheme(.dark)
         .holdsSimClock()
     }
 
@@ -135,5 +136,5 @@ struct QuarterReportCard: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(Theme.bg)
-    .preferredColorScheme(.light)
+    .preferredColorScheme(.dark)
 }

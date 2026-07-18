@@ -43,10 +43,9 @@ struct SimClockPill: View {
         .padding(.leading, 14)
         .padding(.trailing, 5)
         .padding(.vertical, 5)
-        .background(.white, in: Capsule())
-        .overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: 1))
-        .shadow(color: .black.opacity(0.10), radius: 14, y: 8)
-        .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.corner))
+        .overlay(RoundedRectangle(cornerRadius: Theme.corner)
+            .strokeBorder(Theme.hairline, lineWidth: 1))
     }
 }
 
@@ -62,16 +61,16 @@ struct SpeedControl: View {
                     glyph(for: speed)
                         .frame(width: 28, height: 26)
                         .background(
-                            engine.speed == speed ? AnyShapeStyle(Theme.ink) : AnyShapeStyle(.clear),
-                            in: Capsule()
+                            engine.speed == speed ? AnyShapeStyle(Color.white) : AnyShapeStyle(.clear),
+                            in: RoundedRectangle(cornerRadius: 6)
                         )
-                        .foregroundStyle(engine.speed == speed ? Color.white : Theme.textSecondary)
+                        .foregroundStyle(engine.speed == speed ? Theme.bg : Theme.textSecondary)
                 }
                 .buttonStyle(.plain)
             }
         }
         .padding(3)
-        .background(Color.black.opacity(0.05), in: Capsule())
+        .background(Theme.bg, in: RoundedRectangle(cornerRadius: Theme.corner))
         .sensoryFeedback(.selection, trigger: engine.speed)
         .animation(.snappy(duration: 0.2), value: engine.speed)
     }
