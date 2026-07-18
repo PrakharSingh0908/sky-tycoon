@@ -50,6 +50,10 @@ struct TrendChart: View {
                 )
                 .interpolationMethod(.monotone)
             }
+            // Pin the plot to the data span: Charts otherwise rounds the
+            // axis outward (-51 → -60w), leaving a gap and a cliff at the
+            // left edge of the area.
+            .chartXScale(domain: (1 - values.count)...0)
             .chartYAxis {
                 AxisMarks(position: .trailing) { axisValue in
                     AxisGridLine()
@@ -147,6 +151,7 @@ struct LoadFactorSparkline: View {
                 )
                 .interpolationMethod(.monotone)
             }
+            .chartXScale(domain: (1 - history.count)...0)
             .chartYScale(domain: 0...1)
             .chartYAxis {
                 AxisMarks(position: .trailing, values: [0, 0.5, 1.0]) { axisValue in

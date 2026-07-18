@@ -9,6 +9,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased — design-system branch]
 
+### 2026-07-18 — Charts pinned to their data span
+
+**Fixed**
+- TrendChart and the load-factor sparkline now clamp the x-axis to
+  exactly the (padded) data span via chartXScale. Swift Charts was
+  rounding the axis outward (-51 → -60w), which reintroduced the gap
+  and left-edge cliff the flat padding was meant to remove.
+
+
 ### 2026-07-18 — Finances card, honest chart windows, industry card redesign
 
 **Changed**
