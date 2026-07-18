@@ -43,10 +43,11 @@ struct NewGameView: View {
                         .font(.game(.title3, weight: .bold))
                         .foregroundStyle(Theme.textPrimary)
                         .keyboardType(.asciiCapable)
-                        // .never so the system NEVER rewrites case: brand
-                        // names like "SkyTycoon" or "airGo" must type exactly
-                        // as entered, capitals anywhere via shift.
-                        .textInputAutocapitalization(.never)
+                        // Case bugs here are keyboard-language issues, not
+                        // field config: Hinglish (hi_Latn) is ASCII QWERTY,
+                        // so asciiCapable can't exclude it, and it flattens
+                        // capitals. Needs an English keyboard active.
+                        .textInputAutocapitalization(.words)
                         .autocorrectionDisabled()
                         .focused($nameFocused)
                         .submitLabel(.done)

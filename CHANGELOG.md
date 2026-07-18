@@ -9,6 +9,21 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Case-flattening root-caused: Hinglish keyboard, not the field
+
+**Fixed**
+- The "can't type capitals" bug was never the TextField: the dev
+  simulator (India region) ships with English (India) + Hinglish
+  (hi_Latn) + Hindi-transliteration keyboards, with multilingual
+  prediction on. Hinglish is a caseless Latin QWERTY that looks
+  identical to English and flattens typed capitals, and asciiCapable
+  cannot exclude it. Removed the Hindi keyboards from the simulator
+  (Settings-level, not app code) and restored .words autocapitalization
+  now that the field's input is trustworthy. *Why:* two prior fixes
+  tuned field flags to chase a keyboard-language problem; recording
+  the real mechanism so it isn't re-chased on device reports.
+
+
 ### 2026-07-18 — Airline-name field never rewrites capitalization
 
 **Fixed**
