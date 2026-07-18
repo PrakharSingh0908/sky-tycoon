@@ -45,7 +45,7 @@ struct MoneyView: View {
                 StatTile(label: "Net worth", value: engine.netWorth.money,
                          color: engine.netWorth >= 0 ? Theme.textPrimary : Theme.loss)
             }
-            TrendChart(values: engine.state.netWorthHistory, color: accent)
+            TrendChart(values: engine.state.netWorthHistory, color: Theme.sienna)
         }
     }
 
@@ -86,7 +86,7 @@ struct MoneyView: View {
                     ForEach(0..<4, id: \.self) { i in
                         Circle()
                             .fill(i < engine.state.consecutiveProfitableQuarters
-                                  ? Theme.profit : Color.white.opacity(0.10))
+                                  ? Theme.profit : Color.black.opacity(0.06))
                             .frame(width: 16, height: 16)
                             .overlay(
                                 Circle().strokeBorder(Color.white.opacity(0.15), lineWidth: 1)
@@ -130,8 +130,8 @@ struct MoneyView: View {
                 } label: {
                     HStack(spacing: 6) {
                         Text(latest.date.description)
-                            .font(.data(.caption2, weight: .bold))
-                            .foregroundStyle(Theme.warn)
+                            .font(.data(.caption2, weight: .medium))
+                            .foregroundStyle(Theme.sienna)
                         Text("“\(latest.body.prefix(48))…”")
                             .font(.system(.caption, design: .serif)).italic()
                             .foregroundStyle(Theme.textSecondary)
@@ -158,11 +158,11 @@ struct MoneyView: View {
                 .foregroundStyle(Theme.textPrimary.opacity(0.9))
             Text("Aunt Meera")
                 .font(.system(.caption, design: .serif).italic())
-                .foregroundStyle(Theme.warn)
+                .foregroundStyle(Theme.sienna)
                 .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .padding(10)
-        .background(Theme.warn.opacity(0.05), in: RoundedRectangle(cornerRadius: 10))
+        .background(Theme.peach.opacity(0.6), in: RoundedRectangle(cornerRadius: Theme.controlCorner))
     }
 
     // ── The weekly statement ─────────────────────────────────────────────
@@ -361,5 +361,5 @@ struct MoneyView: View {
 
 #Preview {
     MoneyView().environment(GameEngine.previewGame())
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
 }

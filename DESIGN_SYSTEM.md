@@ -1,5 +1,5 @@
 # SkyTycoon — UI Design System
-### "Flight Deck" (evolved from "The Ops Center") — v2.0, July 2026
+### "Warm Paper" (v3.0, design-system branch) — evolved from "Flight Deck" v2.x
 
 Companion to [GAME_DESIGN.md](GAME_DESIGN.md) §7. This is the living contract
 for how SkyTycoon looks, moves, and feels. Every screen and component follows
@@ -7,6 +7,33 @@ this document; changes to the vibe happen HERE first, then in code.
 Implemented in `SkyTycoon/UI/DesignSystem/`.
 
 ---
+
+## 0. v3.0 "Warm Paper" — the Steep translation (2026-07-18)
+
+Adopted from the Steep style reference ("serif analytics on warm
+paper"), translated from web to the game:
+
+- **Canvas:** light. Paper white pages, mist-gray cards (flat, no
+  shadow, 24pt radius), fog-white alternates, hairline #ececec.
+- **Type:** serif REGULAR (New York via .serif design) for titles and
+  headline moments — never bold; SF for body/UI with weight capped at
+  medium (500), enforced centrally in Font.game. Values keep
+  monospaced DIGITS (no jitter) but drop the full-mono readout voice.
+- **Color is rationed:** near-monochrome ink/slate/ash on white. ONE
+  chromatic accent: blush peach (#fbe1d1) surfaces with sienna brown
+  (#5d2a1a) ink — the hero card, Aunt Meera's letters, celebrations.
+  Functional exception (game necessity): muted profit green, loss
+  red, warn amber survive for P&L/health semantics only.
+- **Shape:** cards 24pt, small controls 16pt, buttons are PILLS
+  (filled ink / ghost ink pair). The v2.0 machined radii are retired.
+- **Elevation:** content cards are flat; only floating artifacts earn
+  the soft 8-10% shadow — the satellite map, boarding passes, the sim
+  clock pill, sheets.
+- **Instruments soften:** meters become quiet rounded tracks (no
+  graduations/needles); charts stay gestural. Tab accents collapse to
+  ink — identity comes from serif + layout, not hue.
+- The dark satellite map remains dark: it is a floating artifact
+  (product imagery), not a surface.
 
 ## 1. Creative direction
 
@@ -251,6 +278,20 @@ and their chosen speed resumes on dismissal. The clock pill shows a pause
 glyph during holds.
 
 ## 5. Iteration log
+
+- **v3.0 (2026-07-18, design-system branch): "Warm Paper."** Full
+  re-theme to the Steep reference (§0). Shipped: light token layer
+  (paper/mist/fog/hairline, ink/slate/ash, peach+sienna accent, muted
+  functional trio); serif regular for every title-level voice
+  (Font.display) with the sans capped at medium inside Font.game;
+  pills (filled ink / ghost) replace machined rects; cards flat at
+  24pt; meters quieted to rounded tracks; TickerText keeps monospaced
+  digits only; boarding passes, the map, and the clock pill became
+  floating artifacts (hairline ring + 10% shadow); hero card and Aunt
+  Meera letters wear the peach/sienna kraft pairing; charts stroke
+  sienna with the editorial warm-ramp palette. The satellite map keeps
+  its own dark palette (it is imagery, not surface). Tab accents
+  collapsed to ink.
 
 - **v2.1 (2026-07-18): "Game Feel."** Shipped same day; audit below. Audit found People and Money carrying most of the
   clutter (People: ~7 competing elements per pool card — meters,

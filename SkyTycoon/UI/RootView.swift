@@ -67,7 +67,7 @@ struct RootView: View {
                 .padding(.bottom, 56)
         }
         .background(Theme.bg)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
         .sheet(item: Binding(
             get: { engine.state.pendingEvent },
             set: { _ in }   // dismissal only via choosing an option
@@ -121,7 +121,7 @@ struct RootView: View {
             Image(systemName: "airplane.arrival")
                 .font(.system(size: 52)).foregroundStyle(Theme.loss)
             Text("Grounded")
-                .font(.game(.largeTitle, weight: .bold)).foregroundStyle(Theme.textPrimary)
+                .font(.display(.largeTitle)).foregroundStyle(Theme.textPrimary)
             Text("Eight weeks insolvent with nothing left to sell. \(engine.state.airlineName) survived \(engine.state.date.description). The banks have called time.")
                 .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)

@@ -41,7 +41,7 @@ struct EventCardView: View {
 
             VStack(spacing: 8) {
                 Text(event.title)
-                    .font(.game(.title2, weight: .bold))
+                    .font(.display(.title2))
                     .foregroundStyle(Theme.textPrimary)
                 Text(event.firedOn.description)
                     .font(.game(.caption2, weight: .semibold)).tracking(1)
@@ -68,6 +68,6 @@ struct EventCardView: View {
         .background(Theme.bgElevated)
         .presentationDetents([.medium])
         .presentationBackground(Theme.bgElevated)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
     }
 }

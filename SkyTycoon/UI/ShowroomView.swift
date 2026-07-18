@@ -224,7 +224,7 @@ private struct AcquisitionReceiptView: View {
             .padding(.top, 12)
 
             VStack(spacing: 4) {
-                Text(title).font(.game(.title2, weight: .bold))
+                Text(title).font(.display(.title2))
                     .foregroundStyle(Theme.textPrimary)
                 Text("\(Balance.specs[receipt.type]!.displayName) · registered \(receipt.nickname)")
                     .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
@@ -273,7 +273,7 @@ private struct AcquisitionReceiptView: View {
         // over. Nothing crops in either case.
         .presentationDetents([.height(contentHeight + 34)])
         .presentationBackground(Theme.bgElevated)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
         .holdsSimClock()
     }
 
@@ -336,7 +336,7 @@ private struct AcquisitionReceiptView: View {
         ShowroomView(fittingRoute: route)
     }
     .environment(engine)
-    .preferredColorScheme(.dark)
+    .preferredColorScheme(.light)
 }
 
 #Preview("Receipt") {
@@ -359,5 +359,5 @@ private struct AcquisitionReceiptView: View {
                 deliveryWeeks: nil))
         }
         .environment(GameEngine.previewGame())
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
 }

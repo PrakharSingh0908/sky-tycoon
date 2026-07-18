@@ -20,14 +20,14 @@ extension WeeklyReport {
     /// Nonzero cost categories, biggest first, themed for the pie.
     var expenseSlices: [ExpenseSlice] {
         [
-            ExpenseSlice(label: "Fuel", amount: fuelCost, color: Theme.orange),
-            ExpenseSlice(label: "Wages", amount: wageCost, color: Theme.violet),
-            ExpenseSlice(label: "Maintenance", amount: maintenanceCost, color: Theme.warn),
-            ExpenseSlice(label: "Loans", amount: loanCost, color: Theme.sky),
-            ExpenseSlice(label: "Leases", amount: leaseCost, color: Theme.teal),
-            ExpenseSlice(label: "Cabin & catering", amount: cabinCost, color: Theme.profit),
-            ExpenseSlice(label: "Marketing", amount: marketingCost, color: Theme.loss),
-            ExpenseSlice(label: "Overhead", amount: overheadCost, color: Theme.textSecondary),
+            ExpenseSlice(label: "Fuel", amount: fuelCost, color: Theme.chartPalette[0]),
+            ExpenseSlice(label: "Wages", amount: wageCost, color: Theme.chartPalette[1]),
+            ExpenseSlice(label: "Maintenance", amount: maintenanceCost, color: Theme.chartPalette[2]),
+            ExpenseSlice(label: "Loans", amount: loanCost, color: Theme.chartPalette[3]),
+            ExpenseSlice(label: "Leases", amount: leaseCost, color: Theme.chartPalette[5]),
+            ExpenseSlice(label: "Cabin & catering", amount: cabinCost, color: Theme.chartPalette[6]),
+            ExpenseSlice(label: "Marketing", amount: marketingCost, color: Theme.chartPalette[7]),
+            ExpenseSlice(label: "Overhead", amount: overheadCost, color: Theme.chartPalette[8]),
         ]
         .filter { $0.amount > 0 }
         .sorted { $0.amount > $1.amount }
@@ -108,19 +108,19 @@ struct ExpensePie: View {
             // Nacelle ring.
             ctx.stroke(Path(ellipseIn: CGRect(x: center.x - R, y: center.y - R,
                                               width: R * 2, height: R * 2)),
-                       with: .color(.white.opacity(0.18)), lineWidth: 1.5)
+                       with: .color(Color.black.opacity(0.12)), lineWidth: 1.5)
             // Spinner hub.
             let rHub = rInner - 3
             ctx.fill(Path(ellipseIn: CGRect(x: center.x - rHub, y: center.y - rHub,
                                             width: rHub * 2, height: rHub * 2)),
-                     with: .color(.white.opacity(0.07)))
+                     with: .color(Color.black.opacity(0.04)))
             ctx.stroke(Path(ellipseIn: CGRect(x: center.x - rHub, y: center.y - rHub,
                                               width: rHub * 2, height: rHub * 2)),
-                       with: .color(.white.opacity(0.14)), lineWidth: 1)
+                       with: .color(Color.black.opacity(0.10)), lineWidth: 1)
             let rDot: Double = 2.5
             ctx.fill(Path(ellipseIn: CGRect(x: center.x - rDot, y: center.y - rDot,
                                             width: rDot * 2, height: rDot * 2)),
-                     with: .color(.white.opacity(0.35)))
+                     with: .color(Color.black.opacity(0.30)))
         }
     }
 
@@ -151,5 +151,5 @@ struct ExpensePie: View {
     .padding()
     .frame(maxHeight: .infinity)
     .background(Theme.bg)
-    .preferredColorScheme(.dark)
+    .preferredColorScheme(.light)
 }

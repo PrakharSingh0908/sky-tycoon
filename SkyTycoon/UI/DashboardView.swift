@@ -123,8 +123,8 @@ struct DashboardView: View {
         GameCard(highlight: settleFlash ? Theme.profit : accent) {
             HStack(alignment: .top) {
                 StatTile(label: "Net worth", value: engine.netWorth.money,
-                         color: engine.netWorth >= 0 ? Theme.textPrimary : Theme.loss,
-                         font: .game(.largeTitle, weight: .bold))
+                         color: engine.netWorth >= 0 ? Theme.sienna : Theme.loss,
+                         font: .display(.largeTitle))
                 Spacer()
                 VStack(alignment: .trailing, spacing: 6) {
                     StarRating(rating: engine.state.reputation, size: 13)
@@ -193,7 +193,7 @@ struct DashboardView: View {
             }
             switch trendMetric {
             case .netWorth:
-                TrendChart(values: engine.state.netWorthHistory, color: accent)
+                TrendChart(values: engine.state.netWorthHistory, color: Theme.sienna)
             case .cash:
                 TrendChart(values: engine.state.cashHistory, color: Theme.profit)
             case .reputation:
@@ -250,11 +250,7 @@ private struct IndustrySheet: View {
     @Environment(\.dismiss) private var dismiss
     private let accent = Theme.sky
     /// Rival slice/bar palette; the player is always Theme.sky.
-    private let palette: [Color] = [
-        Theme.teal, Theme.violet, Theme.orange, Theme.warn, Theme.mint,
-        Theme.loss, Color.white.opacity(0.7), Color.white.opacity(0.5),
-        Color.white.opacity(0.35),
-    ]
+    private let palette: [Color] = Theme.chartPalette
 
     private struct Carrier: Identifiable {
         let name: String
@@ -278,7 +274,7 @@ private struct IndustrySheet: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 Text("The industry")
-                    .font(.game(.title2, weight: .bold)).foregroundStyle(Theme.textPrimary)
+                    .font(.display(.title2)).foregroundStyle(Theme.textPrimary)
                     .padding(.top, 20)
 
                 SectionHeader(title: "Market share · weekly passengers",
@@ -307,7 +303,7 @@ private struct IndustrySheet: View {
         .background(Theme.bgElevated)
         .presentationDetents([.large])
         .presentationBackground(Theme.bgElevated)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
         .holdsSimClock()
     }
 
@@ -349,10 +345,10 @@ private struct IndustrySheet: View {
                                color: Theme.textSecondary)
                 }
                 GeometryReader { geo in
-                    RoundedRectangle(cornerRadius: 2)
+                    Capsule()
                         .fill(carrier.isPlayer
-                              ? AnyShapeStyle(Theme.accentGradient(accent))
-                              : AnyShapeStyle(Color.white.opacity(0.18)))
+                              ? AnyShapeStyle(Theme.sienna)
+                              : AnyShapeStyle(Color.black.opacity(0.12)))
                         .frame(width: geo.size.width * fraction)
                 }
                 .frame(height: 6)
@@ -363,11 +359,11 @@ private struct IndustrySheet: View {
 
 #Preview {
     DashboardView().environment(GameEngine.previewGame())
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
 }
 
 #Preview("Industry sheet") {
     IndustrySheet()
         .environment(GameEngine.previewGame())
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
 }

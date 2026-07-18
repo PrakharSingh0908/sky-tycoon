@@ -18,18 +18,14 @@ struct GameCard<Content: View>: View {
     @ViewBuilder var content: Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) { content }
+        // Warm Paper: flat mist card, no shadow, no border. A highlight
+        // makes it the page's ONE peach editorial card (sienna ink inside
+        // is the caller's job via Theme.sienna).
+        VStack(alignment: .leading, spacing: 12) { content }
             .padding(Theme.cardPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.corner))
-            .overlay {
-                if let highlight {
-                    RoundedRectangle(cornerRadius: Theme.corner)
-                        .strokeBorder(Theme.accentGradient(highlight), lineWidth: 1)
-                }
-            }
-            .shadow(color: highlight?.opacity(0.28) ?? .black.opacity(0.25),
-                    radius: highlight == nil ? 10 : 12, y: highlight == nil ? 5 : 3)
+            .background(highlight == nil ? Theme.card : Theme.peach,
+                        in: RoundedRectangle(cornerRadius: Theme.corner))
     }
 }
 
@@ -133,10 +129,10 @@ struct SectionHeader: View {
     var body: some View {
         HStack(spacing: 8) {
             HStack(spacing: 6) {
-                if let icon { Image(systemName: icon).font(.caption2.weight(.bold)) }
-                Text(title.uppercased()).font(.game(.caption, weight: .bold)).tracking(1.2)
+                if let icon { Image(systemName: icon).font(.caption2.weight(.medium)) }
+                Text(title.uppercased()).font(.game(.caption, weight: .medium)).tracking(1.2)
             }
-            .foregroundStyle(accent)
+            .foregroundStyle(Theme.textTertiary)   // v3.0: tags are ghost-like
             .layoutPriority(1)
             Rectangle().fill(Theme.hairline).frame(height: 1)
         }
@@ -154,11 +150,10 @@ struct TickerText: View {
     var body: some View {
         Text(text)
             .font(font)
-            // Every live value is an instrument readout (Flight Deck v2.0):
-            // full mono, not just mono digits, whatever font callers pass.
-            .fontDesign(.monospaced)
-            // Readouts never wrap ("$6.23 M" across two lines is not a
-            // readout); they scale down before they break.
+            // Warm Paper: sans values with monospaced DIGITS — stable while
+            // ticking, without the terminal voice.
+            .monospacedDigit()
+            // Readouts never wrap; they scale down before they break.
             .lineLimit(1)
             .minimumScaleFactor(0.65)
             .foregroundStyle(color)
@@ -185,33 +180,20 @@ struct StatTile: View {
 
 // ── MeterBar — any 0...1 quantity ────────────────────────────────────────
 
-/// A rectangular gauge track with 10% graduation ticks and a needle at the
-/// current value — instrument language drawn in pure UI.
+/// A quiet rounded track (Warm Paper: gestural, no gridlines) — the fill
+/// color carries the health semantics.
 struct MeterBar: View {
     let value: Double          // 0...1
     var color: Color = Theme.profit
-    var height: CGFloat = 8
+    var height: CGFloat = 6
 
     var body: some View {
         GeometryReader { geo in
-            let w = geo.size.width
             let fraction = min(1, max(0, value))
             ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: 2).fill(Color.white.opacity(0.08))
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(LinearGradient(colors: [color.opacity(0.65), color],
-                                         startPoint: .leading, endPoint: .trailing))
-                    .frame(width: max(4, w * fraction))
-                // Graduations: cut lines every 10%, over track and fill alike.
-                ForEach(1..<10, id: \.self) { i in
-                    Rectangle().fill(Theme.bg.opacity(0.6))
-                        .frame(width: 1, height: height)
-                        .offset(x: w * CGFloat(i) / 10)
-                }
-                // Needle: overshoots the track like a gauge pointer.
-                Rectangle().fill(Color.white.opacity(0.9))
-                    .frame(width: 1.5, height: height + 4)
-                    .offset(x: min(w - 1.5, max(0, w * fraction - 0.75)))
+                Capsule().fill(Color.black.opacity(0.06))
+                Capsule().fill(color.opacity(0.85))
+                    .frame(width: max(height, geo.size.width * fraction))
             }
         }
         .frame(height: height)
@@ -271,9 +253,10 @@ struct StatusBadge: View {
 
     var body: some View {
         Text(text.uppercased())
-            .font(.game(.caption2, weight: .bold)).tracking(0.6)
-            .padding(.horizontal, 8).padding(.vertical, 3)
-            .background(color.opacity(0.18), in: RoundedRectangle(cornerRadius: Theme.controlCorner))
+            .font(.game(.caption2, weight: .medium)).tracking(0.6)
+            .padding(.horizontal, 10).padding(.vertical, 4)
+            .background(color == Theme.ink ? Color.black.opacity(0.06)
+                        : color.opacity(0.12), in: Capsule())
             .foregroundStyle(color)
     }
 }
@@ -285,14 +268,18 @@ struct GameButtonStyle: ButtonStyle {
     var prominent = false
 
     func makeBody(configuration: Configuration) -> some View {
+        // Warm Paper pills: filled = solid lozenge, quiet = ghost outline.
+        // Ink actions are the signature; functional colors keep meaning.
         configuration.label
-            .font(.game(.subheadline, weight: .semibold))
+            .font(.game(.subheadline, weight: .medium))
             .lineLimit(1)
-            .padding(.horizontal, 14).padding(.vertical, 8)
-            .frame(minHeight: 34)
-            .background(prominent ? AnyShapeStyle(color) : AnyShapeStyle(color.opacity(0.16)),
-                        in: RoundedRectangle(cornerRadius: Theme.controlCorner))
-            .foregroundStyle(prominent ? Color.black.opacity(0.85) : color)
+            .padding(.horizontal, 16).padding(.vertical, 8)
+            .frame(minHeight: 36)
+            .background(prominent ? AnyShapeStyle(color) : AnyShapeStyle(Color.clear),
+                        in: Capsule())
+            .overlay(Capsule().strokeBorder(prominent ? Color.clear : color.opacity(0.75),
+                                            lineWidth: 1))
+            .foregroundStyle(prominent ? Color.white : color)
             .scaleEffect(configuration.isPressed ? 0.95 : 1)
             .animation(.snappy(duration: 0.15), value: configuration.isPressed)
             .sensoryFeedback(.impact(weight: .light), trigger: configuration.isPressed) { old, new in
@@ -331,10 +318,10 @@ struct PillStepper: View {
             action()
         } label: {
             Image(systemName: symbol)
-                .font(.system(size: 13, weight: .bold))
-                .frame(width: 30, height: 30)
-                .background(accent.opacity(0.16), in: RoundedRectangle(cornerRadius: Theme.controlCorner))
-                .foregroundStyle(accent)
+                .font(.system(size: 13, weight: .medium))
+                .frame(width: 32, height: 32)
+                .background(Color.black.opacity(0.05), in: Circle())
+                .foregroundStyle(Theme.ink)
         }
         .buttonStyle(.plain)
     }
@@ -359,7 +346,7 @@ struct FormulaSheet: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(explanation.title)
-                        .font(.game(.title2, weight: .bold)).foregroundStyle(Theme.textPrimary)
+                        .font(.display(.title2)).foregroundStyle(Theme.textPrimary)
                     Text(explanation.subtitle)
                         .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
                 }
@@ -368,9 +355,9 @@ struct FormulaSheet: View {
                     dismiss()
                 } label: {
                     Image(systemName: "xmark")
-                        .font(.system(size: 12, weight: .bold))
+                        .font(.system(size: 12, weight: .medium))
                         .frame(width: 28, height: 28)
-                        .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: Theme.controlCorner))
+                        .background(Color.black.opacity(0.05), in: Circle())
                         .foregroundStyle(Theme.textSecondary)
                 }
                 .buttonStyle(.plain)
@@ -394,10 +381,10 @@ struct FormulaSheet: View {
 
             Text(explanation.formula)
                 .font(.system(.caption, design: .monospaced))
-                .foregroundStyle(Theme.teal)
+                .foregroundStyle(Theme.sienna)
                 .padding(12)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Theme.teal.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+                .background(Theme.peach.opacity(0.5), in: RoundedRectangle(cornerRadius: Theme.controlCorner))
 
             Spacer()
         }
@@ -405,7 +392,7 @@ struct FormulaSheet: View {
         .background(Theme.bgElevated)
         .presentationDetents([.medium, .large])
         .presentationBackground(Theme.bgElevated)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
         .holdsSimClock()
     }
 }
@@ -421,7 +408,7 @@ struct GameScreen<Content: View>: View {
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.cardSpacing) {
                 Text(title)
-                    .font(.game(.largeTitle, weight: .bold))
+                    .font(.display(.largeTitle))   // serif regular: the voice
                     .foregroundStyle(Theme.textPrimary)
                     .padding(.top, 6)
                 content

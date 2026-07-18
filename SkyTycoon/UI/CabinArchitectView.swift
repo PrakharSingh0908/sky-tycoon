@@ -55,7 +55,7 @@ struct CabinArchitectView: View {
         }
         .background(Theme.bg)
         .scrollIndicators(.hidden)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
         .holdsSimClock()
     }
 
@@ -65,7 +65,7 @@ struct CabinArchitectView: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Cabin Architect")
-                    .font(.game(.title, weight: .bold)).foregroundStyle(Theme.textPrimary)
+                    .font(.display(.title)).foregroundStyle(Theme.textPrimary)
                 Text("\(plane.nickname) · \(spec.displayName)")
                     .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
             }
@@ -319,14 +319,14 @@ struct CabinFloorplan: View {
         hull.addQuadCurve(to: CGPoint(x: wallL, y: h - m.tailH),
                           control: CGPoint(x: wallL + 20, y: h - 8))
         hull.closeSubpath()
-        ctx.fill(hull, with: .color(Color.white.opacity(0.05)))
-        ctx.stroke(hull, with: .color(Color.white.opacity(0.15)), lineWidth: 1.5)
+        ctx.fill(hull, with: .color(Color.black.opacity(0.03)))
+        ctx.stroke(hull, with: .color(Color.black.opacity(0.15)), lineWidth: 1.5)
 
         // Cockpit hint + wifi in the dome.
         var door = Path()
         door.move(to: CGPoint(x: wallL + 10, y: 40))
         door.addLine(to: CGPoint(x: wallR - 10, y: 40))
-        ctx.stroke(door, with: .color(Color.white.opacity(0.12)), lineWidth: 1)
+        ctx.stroke(door, with: .color(Color.black.opacity(0.12)), lineWidth: 1)
         if layout.hasWifi {
             ctx.draw(Text(Image(systemName: "wifi"))
                         .font(.system(size: 11, weight: .bold)).foregroundStyle(accent),
@@ -411,7 +411,7 @@ struct CabinFloorplan: View {
         ctx.fill(Path(roundedRect: CGRect(x: x + m.seatW * 0.16, y: top + 1.5,
                                           width: m.seatW * 0.68, height: m.seatDepth * 0.16),
                       cornerRadius: 2),
-                 with: .color(.white.opacity(0.22)))
+                 with: .color(.white.opacity(0.35)))
         // Cushion lip (the part you sit on), slightly wider and lighter.
         let lip = CGRect(x: x - m.seatW * 0.05, y: top + m.seatDepth * 0.66,
                          width: m.seatW * 1.1, height: m.seatDepth * 0.30)
@@ -441,5 +441,5 @@ struct CabinFloorplan: View {
         .frame(height: 500)
         .padding(16)
         .background(Theme.card)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
 }

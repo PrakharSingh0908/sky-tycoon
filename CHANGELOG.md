@@ -7,7 +7,30 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
-## [Unreleased]
+## [Unreleased — design-system branch]
+
+### 2026-07-18 — "Warm Paper" v3.0: the Steep re-theme
+
+**Changed (everything visual)**
+- Light editorial theme replaces the dark Flight Deck: paper-white
+  canvas, flat mist cards (24pt, no shadow), hairline dividers;
+  ink/slate/ash text; ONE chromatic accent — blush peach surfaces
+  with sienna ink (hero card, Aunt Meera's letters, celebration
+  banner, formula chips); muted functional green/red/amber retained
+  for P&L semantics only; tab accents collapsed to ink.
+- Serif regular (New York) is the headline voice everywhere —
+  screen mastheads, sheet titles, boarding-pass airport codes; the
+  sans caps at medium (500) centrally in Font.game. Values keep
+  monospaced digits, not the full-mono readout.
+- Buttons are pills: filled ink lozenge + ghost outline pair. Meters
+  are quiet rounded tracks (graduations and needles retired). Charts
+  stroke sienna; slices/bars use a warm-ramp editorial palette.
+- Floating artifacts (the Steep exception that earns shadow): the
+  satellite map, boarding passes, and the sim clock pill get white
+  surfaces, hairline rings, and the soft 10% lift. The map keeps its
+  own dark imagery palette.
+- Verified by renders: Dashboard, Routes, Money, People, New Game.
+
 
 ### 2026-07-18 — Industry card opens the full market picture
 

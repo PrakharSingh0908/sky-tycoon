@@ -20,23 +20,19 @@ struct CelebrationBanner: View {
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: icon)
-                .font(.title3).foregroundStyle(accent)
+                .font(.title3).foregroundStyle(Theme.sienna)
             VStack(alignment: .leading, spacing: 1) {
                 Text(title)
-                    .font(.game(.subheadline, weight: .bold))
-                    .foregroundStyle(Theme.textPrimary)
+                    .font(.game(.subheadline, weight: .medium))
+                    .foregroundStyle(Theme.sienna)
                 Text(subtitle)
-                    .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                    .font(.game(.caption2)).foregroundStyle(Theme.sienna.opacity(0.75))
             }
             Spacer(minLength: 0)
         }
-        .padding(12)
-        .background(Theme.bgElevated, in: RoundedRectangle(cornerRadius: Theme.corner))
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.corner)
-                .strokeBorder(Theme.accentGradient(accent), lineWidth: 1)
-        )
-        .shadow(color: accent.opacity(0.30), radius: 12, y: 4)
+        .padding(14)
+        .background(Theme.peach, in: RoundedRectangle(cornerRadius: Theme.corner))
+        .shadow(color: .black.opacity(0.10), radius: 14, y: 8)
         .padding(.horizontal, Theme.gutter)
     }
 }
@@ -63,7 +59,7 @@ struct QuarterReportCard: View {
     var body: some View {
         VStack(spacing: 18) {
             Text("Quarter closed")
-                .font(.game(.title2, weight: .bold)).foregroundStyle(Theme.textPrimary)
+                .font(.display(.title2)).foregroundStyle(Theme.textPrimary)
                 .padding(.top, 20)
 
             ZStack {
@@ -93,18 +89,18 @@ struct QuarterReportCard: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("From Aunt Meera · \(letter.date.description)")
-                    .font(.game(.caption2, weight: .bold)).tracking(1)
-                    .foregroundStyle(Theme.textSecondary)
+                    .font(.game(.caption2, weight: .medium)).tracking(1)
+                    .foregroundStyle(Theme.sienna)
                 Text(letter.body)
                     .font(.system(.caption, design: .serif)).italic()
                     .foregroundStyle(Theme.textPrimary.opacity(0.85))
                     .lineLimit(3)
                 Text("Full letter on the Money tab")
-                    .font(.game(.caption2)).foregroundStyle(Theme.warn)
+                    .font(.game(.caption2)).foregroundStyle(Theme.sienna)
             }
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.warn.opacity(0.05), in: RoundedRectangle(cornerRadius: Theme.corner))
+            .background(Theme.peach.opacity(0.55), in: RoundedRectangle(cornerRadius: Theme.corner))
 
             Button {
                 dismiss()
@@ -118,7 +114,7 @@ struct QuarterReportCard: View {
         .background(Theme.bgElevated)
         .presentationDetents([.medium, .large])
         .presentationBackground(Theme.bgElevated)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
         .holdsSimClock()
     }
 
@@ -139,5 +135,5 @@ struct QuarterReportCard: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(Theme.bg)
-    .preferredColorScheme(.dark)
+    .preferredColorScheme(.light)
 }

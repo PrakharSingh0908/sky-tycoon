@@ -28,7 +28,7 @@ struct PeopleView: View {
 
 #Preview {
     PeopleView().environment(GameEngine.previewGame())
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
 }
 
 private struct StaffPoolCard: View {
@@ -209,7 +209,7 @@ private struct HiringSheet: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Hiring · \(role.displayName)")
-                    .font(.game(.title2, weight: .bold)).foregroundStyle(Theme.textPrimary)
+                    .font(.display(.title2)).foregroundStyle(Theme.textPrimary)
                     .padding(.top, 20)
                 if applicants.isEmpty {
                     Text("Nobody at the desk. Applicants arrive while a job ad runs.")
@@ -228,7 +228,7 @@ private struct HiringSheet: View {
         .background(Theme.bgElevated)
         .presentationDetents([.medium, .large])
         .presentationBackground(Theme.bgElevated)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
         .holdsSimClock()   // patience doesn't drain while you're deciding
         .sheet(item: $negotiating) { NegotiationSheet(applicant: $0) }
     }
@@ -280,7 +280,7 @@ private struct NegotiationSheet: View {
         VStack(spacing: 16) {
             if let person = current {
                 VStack(spacing: 4) {
-                    Text(person.name).font(.game(.title2, weight: .bold))
+                    Text(person.name).font(.display(.title2))
                         .foregroundStyle(Theme.textPrimary)
                     HStack(spacing: 6) {
                         StarRating(rating: person.skill, size: 11)
@@ -343,7 +343,7 @@ private struct NegotiationSheet: View {
         .background(Theme.bgElevated)
         .presentationDetents([.medium])
         .presentationBackground(Theme.bgElevated)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
         .holdsSimClock()   // applicants' patience shouldn't drain mid-haggle
         .onAppear { offer = applicant.askingWage * 0.9 }
     }

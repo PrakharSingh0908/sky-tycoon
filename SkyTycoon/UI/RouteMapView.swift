@@ -140,6 +140,10 @@ private struct GlobeSceneView: UIViewRepresentable {
 
 struct RouteMapView: View {
     @Environment(GameEngine.self) private var engine
+    // The map is dark satellite imagery — a floating artifact. It keeps its
+    // own palette instead of the paper theme's ink tokens.
+    private let mapTeal = Color(red: 0.251, green: 0.839, blue: 0.788)
+    private let mapLabel = Color.white
     /// When set, the map shows only this route's arc and labels only its
     /// two endpoints, and the camera frames the pair. The full-network
     /// map (nil) draws every arc and no code labels.
@@ -156,7 +160,7 @@ struct RouteMapView: View {
                     drawOverlay(ctx: &ctx, size: size)
                 }
             }
-            .background(Theme.bg)
+            .background(Color(red: 0.043, green: 0.071, blue: 0.125))
             .onAppear { frameFocusRoute() }
             .gesture(
                 DragGesture()
@@ -228,7 +232,7 @@ struct RouteMapView: View {
                                               width: radius * 2, height: radius * 2))
             ctx.drawLayer { layer in
                 layer.addFilter(.blur(radius: 10))
-                layer.stroke(disc, with: .color(Theme.teal.opacity(0.35)), lineWidth: 5)
+                layer.stroke(disc, with: .color(mapTeal.opacity(0.35)), lineWidth: 5)
             }
         }
 
@@ -282,15 +286,15 @@ struct RouteMapView: View {
             // Halo so dots read on bright terrain.
             ctx.fill(Path(ellipseIn: CGRect(x: p.x - dotR - 1.5, y: p.y - dotR - 1.5,
                                             width: (dotR + 1.5) * 2, height: (dotR + 1.5) * 2)),
-                     with: .color(Theme.bg.opacity(0.55)))
+                     with: .color(Color.black.opacity(0.45)))
             ctx.fill(Path(ellipseIn: CGRect(x: p.x - dotR, y: p.y - dotR,
                                             width: dotR * 2, height: dotR * 2)),
-                     with: .color(isServed || isEndpoint ? Theme.teal : .white.opacity(0.6)))
+                     with: .color(isServed || isEndpoint ? mapTeal : .white.opacity(0.6)))
             if isEndpoint {
                 ctx.draw(
                     Text(city.id)
                         .font(.system(size: 10, weight: .bold, design: .rounded))
-                        .foregroundStyle(Theme.textPrimary),
+                        .foregroundStyle(mapLabel),
                     at: CGPoint(x: p.x, y: p.y + 13))
             }
         }
@@ -309,6 +313,6 @@ struct RouteMapView: View {
     RouteMapView()
         .environment(GameEngine.previewGame())
         .frame(height: 340)
-        .background(Theme.bg)
-        .preferredColorScheme(.dark)
+        .background(Color(red: 0.043, green: 0.071, blue: 0.125))
+        .preferredColorScheme(.light)
 }

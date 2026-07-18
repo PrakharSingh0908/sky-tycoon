@@ -28,7 +28,7 @@ struct NewGameView: View {
             VStack(alignment: .leading, spacing: Theme.cardSpacing) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("SkyTycoon")
-                        .font(.game(.largeTitle, weight: .bold)).foregroundStyle(Theme.textPrimary)
+                        .font(.display(.largeTitle)).foregroundStyle(Theme.textPrimary)
                     Text("Your aunt left you $2.4M and one condition: make it fly.")
                         .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
                 }
@@ -53,7 +53,7 @@ struct NewGameView: View {
                         .focused($nameFocused)
                         .submitLabel(.done)
                         .padding(12)
-                        .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 12))
+                        .background(Color.black.opacity(0.04), in: RoundedRectangle(cornerRadius: 12))
                 }
 
                 GameCard {
@@ -77,7 +77,7 @@ struct NewGameView: View {
         .background(Theme.bg)
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) { foundButton }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
         .onAppear { nameFocused = true }
     }
 
