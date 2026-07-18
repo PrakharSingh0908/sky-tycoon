@@ -229,7 +229,7 @@ private struct AircraftCard: View {
         .lineLimit(1)
         .padding(.horizontal, 12).padding(.vertical, 8)
         .frame(minHeight: 34)
-        .background(color.opacity(0.16), in: Capsule())
+        .background(color.opacity(0.16), in: RoundedRectangle(cornerRadius: Theme.controlCorner))
         .foregroundStyle(color)
     }
 

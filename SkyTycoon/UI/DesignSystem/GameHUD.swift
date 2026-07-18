@@ -43,7 +43,7 @@ struct SimClockPill: View {
         .padding(.leading, 14)
         .padding(.trailing, 5)
         .padding(.vertical, 5)
-        .background(Theme.bgElevated, in: Capsule())
+        .background(Theme.bgElevated, in: RoundedRectangle(cornerRadius: Theme.corner))
         .shadow(color: .black.opacity(0.45), radius: 12, y: 6)
     }
 }

@@ -1,5 +1,5 @@
 # SkyTycoon — UI Design System
-### "The Ops Center" — v1.0, July 2026
+### "Flight Deck" (evolved from "The Ops Center") — v2.0, July 2026
 
 Companion to [GAME_DESIGN.md](GAME_DESIGN.md) §7. This is the living contract
 for how SkyTycoon looks, moves, and feels. Every screen and component follows
@@ -62,19 +62,43 @@ Rule: accents color *identity* (headers, buttons, selected states, chart
 lines). Health states (profit/loss/warn) always override accent — red is red
 on every tab.
 
-### 2.2 Typography
+### 2.2 Typography — two voices (v2.0)
 
-- **Rounded** design (`.rounded`) everywhere — friendly, game-like, still clean.
-- **All numbers are monospaced-digit** so ticking values never jitter layout.
-- Scale: hero numbers `.largeTitle bold`, card values `.title3 bold`,
-  labels `.caption` secondary, section headers `.caption` UPPERCASE +
-  tracking, tinted with tab accent.
+Aerospace UIs separate **placard** (what a control is) from **readout**
+(what it measures). We do the same, with exactly two fonts:
 
-### 2.3 Shape & space
+- **`Font.game`** — the engineering grotesk (plain SF, `.default` design).
+  Titles, labels, prose, buttons. Neutral and technical; the rounded
+  design is retired.
+- **`Font.data`** — the instrument readout (SF Mono). **Every value the
+  sim produces** — money, km, %, dates, counts — renders mono.
+  `TickerText` enforces this (`.fontDesign(.monospaced)`), so all live
+  numbers get the readout voice with zero call-site discipline.
+- Scale unchanged: hero `.largeTitle bold`, card values `.title3 bold`,
+  labels `.caption` secondary, headers `.caption` UPPERCASE + tracking.
 
-- Cards: 18pt radius, 14pt padding, 1pt stroke. Screens: 16pt gutters,
-  12pt between cards.
-- Buttons and badges are capsules. Meters are capsules.
+### 2.3 Shape & space — machined, not soft (v2.0)
+
+Instrument hardware is rectilinear. Two radii, both tokens:
+
+- `Theme.corner` = **10pt** — cards, sheets, panels, the clock pill.
+- `Theme.controlCorner` = **6pt** — buttons, badges, stepper keys, chips.
+- **No capsules, no circles** on controls. Meters are rectangular gauge
+  tracks (2pt radius). Screens keep 16pt gutters, 12pt card spacing,
+  14pt card padding.
+
+### 2.5 Instrument detailing (v2.0)
+
+All drawn UI — hairlines and rectangles. **No images, no gimmick
+graphics, no texture.**
+
+- **Gauges:** `MeterBar` is a rectangular track with graduation cuts
+  every 10% and a needle (1.5pt, overshooting the track) at the value.
+- **Placards:** `SectionHeader` = optional two-digit panel index in mono
+  (`01`), icon, UPPERCASE label, then a hairline rule running to the
+  card edge. Number the cards top-to-bottom per screen.
+- **Ring gauges:** the expense donut carries 12 radial graduation cuts.
+- **Charts** keep their grid + axis labels; ticks live on the gauges.
 
 ### 2.4 Motion & haptics
 
@@ -94,13 +118,13 @@ on every tab.
 |---|---|---|
 | `GameCard` | universal surface | borderless, soft shadow; content builds inside |
 | `TicketShape` / boarding-pass cards | routes as flight tickets | punched side notches + dashed perforation between "flight" and "stub"; big airport codes, plane on a dotted path (Flighty-inspired) |
-| `SectionHeader` | labeled card groups | icon + UPPERCASE caption in tab accent |
-| `TickerText` | any live number | monospaced, numericText transition, auto-animates |
+| `SectionHeader` | placard labels | mono panel index (`01`) + icon + UPPERCASE label + hairline rule to card edge |
+| `TickerText` | any live number | SF Mono readout (enforced), numericText transition, auto-animates |
 | `StatTile` | big number + caption | for hero stats; optional trend arrow |
-| `MeterBar` | any 0–1 quantity | gradient capsule; color = semantic health |
+| `MeterBar` | any 0–1 quantity | rectangular gauge: graduation cuts every 10%, needle at value; color = semantic health |
 | `StarRating` | reputation/skill | half-star precision, amber |
 | `StatusBadge` | short state pills | NEW/USED/LEASED, ON ORDER, warnings |
-| `GameButtonStyle` | all actions | capsule, accent fill (prominent) or 15% tint (quiet), press-scale + haptic |
+| `GameButtonStyle` | all actions | 6pt machined rect, accent fill (prominent) or 15% tint (quiet), press-scale + haptic |
 | `PillStepper` | player-set numbers | −/+ round buttons around a ticker value |
 | `SimClockPill` | floating sim clock | date + ⏸/1x/2x/4x segments in one floating capsule, bottom-trailing above the tab bar on every tab |
 | `AircraftProfileView` | side-view aircraft art | parametric vector per archetype (Canvas); livery regions (fuselage / tail+engines / cheatline) painted from the airline's `Livery`; optional tail emblem (airline initial). Showroom planes wear `.factory` gray until owned |
@@ -199,6 +223,27 @@ and their chosen speed resumes on dismissal. The clock pill shows a pause
 glyph during holds.
 
 ## 5. Iteration log
+
+- **v2.0 (2026-07-18): "Flight Deck."** Aerospace/mechanical direction,
+  pure UI system — no gimmicks, no graphics. Typography split into
+  placard (plain SF) + readout (SF Mono, enforced by `TickerText`);
+  geometry machined (10pt cards / 6pt controls, capsules retired);
+  gauges gained graduations + needles; headers became numbered placards
+  with rules; the expense ring gained graduation cuts.
+
+  **Implementation plan:**
+  1. ✅ Tokens: `Font.game` → `.default`, new `Font.data` (mono),
+     `Theme.corner` 18→10, new `Theme.controlCorner` 6.
+  2. ✅ Components: TickerText mono enforcement; SectionHeader placard
+     (index/icon/rule); MeterBar gauge; StatusBadge / GameButtonStyle /
+     PillStepper / FormulaSheet close / city menu chips → machined rects;
+     SimClockPill → 10pt panel.
+  3. ✅ Screens: panel indices wired on Dashboard (01–03), Route detail
+     (01–04), Money (01–06).
+  4. ◻ Remaining: indices on Fleet/Showroom/People cards (repeated cards
+     need loop indices); axis-tick pass on TrendChart/sparkline if the
+     grid alone feels bare; boarding-pass stub typography recheck at
+     Dynamic Type XXL; app-icon alignment with the machined language.
 
 - **v1.7 (2026-07-16):** removed the Brand Studio (and the Dashboard
   livery card). Fleet photos render in natural paint; the `Livery` model

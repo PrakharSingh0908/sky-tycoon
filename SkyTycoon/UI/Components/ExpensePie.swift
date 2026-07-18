@@ -72,6 +72,16 @@ struct ExpensePie: View {
                            style: StrokeStyle(lineWidth: 14, lineCap: .butt))
                 start += sweep
             }
+            // Gauge graduations: 12 cut lines across the ring (Flight Deck).
+            for i in 0..<12 {
+                let a = Double(i) / 12 * 2 * .pi - .pi / 2
+                var tick = Path()
+                tick.move(to: CGPoint(x: center.x + cos(a) * (radius - 7),
+                                      y: center.y + sin(a) * (radius - 7)))
+                tick.addLine(to: CGPoint(x: center.x + cos(a) * (radius + 7),
+                                         y: center.y + sin(a) * (radius + 7)))
+                ctx.stroke(tick, with: .color(Theme.card), lineWidth: 1)
+            }
         }
     }
 

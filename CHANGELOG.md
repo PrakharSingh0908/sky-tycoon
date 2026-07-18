@@ -9,6 +9,23 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — "Flight Deck" v2.0: aerospace-mechanical design pass
+
+**Changed** (see DESIGN_SYSTEM.md v2.0 for the full contract + plan)
+- Typography split into two voices: labels/prose move from SF Rounded
+  to plain SF (engineering grotesk); every sim value renders in SF
+  Mono, enforced centrally by TickerText. *Why:* placard vs readout is
+  the core aerospace convention, and enforcing mono in one component
+  covers every live number without call-site discipline.
+- Geometry machined: cards/sheets/clock pill 18pt→10pt, controls get a
+  new 6pt token; capsules and circular buttons retired across the app.
+- Instrument detailing, all drawn UI: MeterBar is now a rectangular
+  gauge with 10% graduation cuts and a value needle; SectionHeader is
+  a placard (mono panel index + label + hairline rule), numbered on
+  Dashboard/Route detail/Money; the expense donut gained 12 radial
+  graduation cuts. No images or gimmick graphics anywhere.
+
+
 ### 2026-07-18 — Expense-share donut on Dashboard and Money
 
 **Added**

@@ -33,8 +33,9 @@ enum Theme {
     static let violet = Color(red: 0.690, green: 0.549, blue: 1.0)        // #B08CFF
     static let mint = profit
 
-    // ── Shape & space ────────────────────────────────────────────────────
-    static let corner: CGFloat = 18
+    // ── Shape & space (v2.0 "Flight Deck": machined, not soft) ───────────
+    static let corner: CGFloat = 10        // cards, sheets, panels
+    static let controlCorner: CGFloat = 6  // buttons, badges, steppers
     static let cardPadding: CGFloat = 14
     static let gutter: CGFloat = 16
     static let cardSpacing: CGFloat = 12
@@ -49,11 +50,19 @@ enum Theme {
     }
 }
 
-// ── Fonts ────────────────────────────────────────────────────────────────
+// ── Fonts (v2.0 "Flight Deck") ───────────────────────────────────────────
+// Two voices: `game` is the engineering grotesk (plain SF) for titles,
+// labels, and prose; `data` is the instrument readout (SF Mono) for every
+// value the sim produces. TickerText forces mono, so live numbers get the
+// readout voice automatically.
 
 extension Font {
     static func game(_ style: TextStyle, weight: Weight = .regular) -> Font {
-        .system(style, design: .rounded).weight(weight)
+        .system(style, design: .default).weight(weight)
+    }
+
+    static func data(_ style: TextStyle, weight: Weight = .regular) -> Font {
+        .system(style, design: .monospaced).weight(weight)
     }
 }
 

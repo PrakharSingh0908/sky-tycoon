@@ -48,7 +48,7 @@ struct DashboardView: View {
         let lastDone = Balance.milestones.last { done.contains($0.id) }
         return GameCard {
             HStack {
-                SectionHeader(title: "Milestones", icon: "flag.checkered", accent: accent)
+                SectionHeader(title: "Milestones", icon: "flag.checkered", accent: accent, index: 1)
                 Spacer()
                 Text("\(done.count)/\(Balance.milestones.count)")
                     .font(.game(.caption, weight: .bold)).foregroundStyle(Theme.textSecondary)
@@ -135,7 +135,7 @@ struct DashboardView: View {
 
     private var trendsCard: some View {
         GameCard {
-            SectionHeader(title: "Trends", icon: "chart.xyaxis.line", accent: accent)
+            SectionHeader(title: "Trends", icon: "chart.xyaxis.line", accent: accent, index: 2)
             HStack(spacing: 8) {
                 ForEach(TrendMetric.allCases) { metric in
                     Button(metric.rawValue) { trendMetric = metric }
@@ -159,7 +159,7 @@ struct DashboardView: View {
     private func lastWeekCard(_ report: WeeklyReport) -> some View {
         GameCard {
             SectionHeader(title: "Last week · \(report.date.description)",
-                          icon: "clock.arrow.circlepath", accent: accent)
+                          icon: "clock.arrow.circlepath", accent: accent, index: 3)
             HStack(spacing: 20) {
                 StatTile(label: "Revenue", value: report.revenue.money)
                 StatTile(label: "Costs", value: (report.profit - report.revenue).money,
