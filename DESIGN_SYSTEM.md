@@ -97,7 +97,11 @@ graphics, no texture.**
 - **Placards:** `SectionHeader` = optional two-digit panel index in mono
   (`01`), icon, UPPERCASE label, then a hairline rule running to the
   card edge. Number the cards top-to-bottom per screen.
-- **Ring gauges:** the expense donut carries 12 radial graduation cuts.
+- **Turbine chart:** the expense-share ring is a turbofan face — 24
+  swept blades (shaded root→tip) around a spinner hub inside a nacelle
+  ring. Blade color comes from the category owning its angular slot, so
+  blade count reads share; the legend carries exact percentages. Still
+  pure drawn geometry.
 - **Charts** keep their grid + axis labels; ticks live on the gauges.
 
 ### 2.4 Motion & haptics

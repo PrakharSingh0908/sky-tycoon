@@ -9,6 +9,20 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Expense chart restyled as a turbofan face
+
+**Changed**
+- ExpensePie's ring is now 24 swept fan blades (root-to-tip shading,
+  tip leading root) around a spinner hub inside a nacelle ring — an
+  aircraft engine seen head-on, drawn entirely in Canvas geometry.
+  Each blade takes the color of the expense category owning its
+  angular slot, so proportion still reads from the chart while the
+  legend keeps exact percentages. Added a component preview with
+  sample slices as the visual regression pin. *Why:* user direction;
+  it turns the one purely generic chart into the game's strongest
+  Flight Deck moment without adding a single image asset.
+
+
 ### 2026-07-18 — "Flight Deck" v2.0: aerospace-mechanical design pass
 
 **Changed** (see DESIGN_SYSTEM.md v2.0 for the full contract + plan)

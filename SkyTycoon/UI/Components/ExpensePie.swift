@@ -57,31 +57,70 @@ struct ExpensePie: View {
         }
     }
 
+    /// The share ring drawn as a turbofan face: 24 swept blades around a
+    /// spinner hub inside a nacelle ring. Each blade takes the color of the
+    /// category owning its angular position, so blade count per category
+    /// still reads share (the legend carries exact percentages).
     private var donut: some View {
         Canvas { ctx, size in
             let center = CGPoint(x: size.width / 2, y: size.height / 2)
-            let radius = min(size.width, size.height) / 2 - 7
-            var start = Angle.degrees(-90)
+            let R = min(size.width, size.height) / 2 - 1.5
+            let rOuter = R - 4.5
+            let rInner = R * 0.44
+            let blades = 24
+
+            // Cumulative share boundaries → color at any angular fraction.
+            var bounds: [(end: Double, color: Color)] = []
+            var cum = 0.0
             for slice in slices {
-                let sweep = Angle.degrees(slice.amount / total * 360)
-                var arc = Path()
-                arc.addArc(center: center, radius: radius,
-                           startAngle: start, endAngle: start + sweep,
-                           clockwise: false)
-                ctx.stroke(arc, with: .color(slice.color),
-                           style: StrokeStyle(lineWidth: 14, lineCap: .butt))
-                start += sweep
+                cum += slice.amount / total
+                bounds.append((cum, slice.color))
             }
-            // Gauge graduations: 12 cut lines across the ring (Flight Deck).
-            for i in 0..<12 {
-                let a = Double(i) / 12 * 2 * .pi - .pi / 2
-                var tick = Path()
-                tick.move(to: CGPoint(x: center.x + cos(a) * (radius - 7),
-                                      y: center.y + sin(a) * (radius - 7)))
-                tick.addLine(to: CGPoint(x: center.x + cos(a) * (radius + 7),
-                                         y: center.y + sin(a) * (radius + 7)))
-                ctx.stroke(tick, with: .color(Theme.card), lineWidth: 1)
+            func color(at fraction: Double) -> Color {
+                bounds.first { fraction <= $0.end }?.color ?? bounds[bounds.count - 1].color
             }
+            func pt(_ r: Double, _ a: Double) -> CGPoint {
+                CGPoint(x: center.x + cos(a) * r, y: center.y + sin(a) * r)
+            }
+
+            let slot = 2 * Double.pi / Double(blades)
+            let sweep = slot * 0.74            // blade width; the rest is gap
+            let twist = slot * 1.15            // tip leads root: the fan sweep
+            for i in 0..<blades {
+                let root = Double(i) * slot - .pi / 2
+                var blade = Path()
+                blade.addArc(center: center, radius: rInner,
+                             startAngle: .radians(root),
+                             endAngle: .radians(root + sweep), clockwise: false)
+                blade.addLine(to: pt(rOuter, root + sweep + twist))
+                blade.addArc(center: center, radius: rOuter,
+                             startAngle: .radians(root + sweep + twist),
+                             endAngle: .radians(root + twist), clockwise: true)
+                blade.closeSubpath()
+                let c = color(at: (Double(i) + 0.5) / Double(blades))
+                // Root-to-tip shading gives the blade its curvature.
+                ctx.fill(blade, with: .linearGradient(
+                    Gradient(colors: [c.opacity(0.55), c]),
+                    startPoint: pt(rInner, root + sweep / 2),
+                    endPoint: pt(rOuter, root + sweep / 2 + twist)))
+            }
+
+            // Nacelle ring.
+            ctx.stroke(Path(ellipseIn: CGRect(x: center.x - R, y: center.y - R,
+                                              width: R * 2, height: R * 2)),
+                       with: .color(.white.opacity(0.18)), lineWidth: 1.5)
+            // Spinner hub.
+            let rHub = rInner - 3
+            ctx.fill(Path(ellipseIn: CGRect(x: center.x - rHub, y: center.y - rHub,
+                                            width: rHub * 2, height: rHub * 2)),
+                     with: .color(.white.opacity(0.07)))
+            ctx.stroke(Path(ellipseIn: CGRect(x: center.x - rHub, y: center.y - rHub,
+                                              width: rHub * 2, height: rHub * 2)),
+                       with: .color(.white.opacity(0.14)), lineWidth: 1)
+            let rDot: Double = 2.5
+            ctx.fill(Path(ellipseIn: CGRect(x: center.x - rDot, y: center.y - rDot,
+                                            width: rDot * 2, height: rDot * 2)),
+                     with: .color(.white.opacity(0.35)))
         }
     }
 
@@ -97,4 +136,20 @@ struct ExpensePie: View {
                 .monospacedDigit()
         }
     }
+}
+
+#Preview {
+    GameCard {
+        ExpensePie(slices: [
+            ExpenseSlice(label: "Fuel", amount: 42_000, color: Theme.orange),
+            ExpenseSlice(label: "Wages", amount: 31_000, color: Theme.violet),
+            ExpenseSlice(label: "Maintenance", amount: 18_000, color: Theme.warn),
+            ExpenseSlice(label: "Leases", amount: 12_000, color: Theme.teal),
+            ExpenseSlice(label: "Overhead", amount: 8_000, color: Theme.textSecondary),
+        ])
+    }
+    .padding()
+    .frame(maxHeight: .infinity)
+    .background(Theme.bg)
+    .preferredColorScheme(.dark)
 }
