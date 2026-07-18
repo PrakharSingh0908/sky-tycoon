@@ -9,6 +9,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Panel index numbers removed from card headers
+
+**Changed**
+- SectionHeader drops the two-digit panel index ("01", "02"...);
+  headers keep the icon, label, and hairline rule. All 13 numbered
+  call sites cleaned up. *Why:* user direction; the numbers read as
+  serial-number noise rather than instrument labeling.
+
+
 ### 2026-07-18 — Receipt sheet sizes itself to the receipt
 
 **Fixed**

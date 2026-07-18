@@ -94,9 +94,9 @@ graphics, no texture.**
 
 - **Gauges:** `MeterBar` is a rectangular track with graduation cuts
   every 10% and a needle (1.5pt, overshooting the track) at the value.
-- **Placards:** `SectionHeader` = optional two-digit panel index in mono
-  (`01`), icon, UPPERCASE label, then a hairline rule running to the
-  card edge. Number the cards top-to-bottom per screen.
+- **Placards:** `SectionHeader` = icon, UPPERCASE label, then a hairline
+  rule running to the card edge. (Panel index numbers were tried and
+  removed 2026-07-18 — they read as serial-number noise.)
 - **Turbine chart:** the expense-share ring is a turbofan face — 24
   swept blades (shaded root→tip) around a spinner hub inside a nacelle
   ring. Blade color comes from the category owning its angular slot, so
@@ -143,7 +143,7 @@ the player is just reading.
 |---|---|---|
 | `GameCard` | universal surface | borderless, soft shadow; content builds inside |
 | `TicketShape` / boarding-pass cards | routes as flight tickets | punched side notches + dashed perforation between "flight" and "stub"; big airport codes, plane on a dotted path (Flighty-inspired) |
-| `SectionHeader` | placard labels | mono panel index (`01`) + icon + UPPERCASE label + hairline rule to card edge |
+| `SectionHeader` | placard labels | icon + UPPERCASE label + hairline rule to card edge |
 | `TickerText` | any live number | SF Mono readout (enforced), numericText transition, auto-animates |
 | `StatTile` | big number + caption | for hero stats; optional trend arrow |
 | `MeterBar` | any 0–1 quantity | rectangular gauge: graduation cuts every 10%, needle at value; color = semantic health |

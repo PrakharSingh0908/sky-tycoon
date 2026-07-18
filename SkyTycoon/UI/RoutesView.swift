@@ -286,11 +286,11 @@ struct RouteDetailView: View {
                     .frame(height: 200)
                     .clipShape(RoundedRectangle(cornerRadius: Theme.corner))
                 GameCard {
-                    SectionHeader(title: "Load factor · 26 weeks", icon: "chart.xyaxis.line", accent: accent, index: 1)
+                    SectionHeader(title: "Load factor · 26 weeks", icon: "chart.xyaxis.line", accent: accent)
                     LoadFactorSparkline(history: route.loadFactorHistory)
                 }
                 GameCard {
-                    SectionHeader(title: "Economics", icon: "slider.horizontal.3", accent: accent, index: 2)
+                    SectionHeader(title: "Economics", icon: "slider.horizontal.3", accent: accent)
                     HStack(spacing: 20) {
                         StatTile(label: "Distance", value: "\(Int(route.distanceKm)) km")
                         StatTile(label: "Load factor", value: "\(Int(route.lastLoadFactor * 100))%",
@@ -335,7 +335,7 @@ struct RouteDetailView: View {
     private func weeklyMoneyCard(_ route: Route) -> some View {
         let margin = route.lastWeeklyRevenue - route.lastWeeklyFuel
         return GameCard {
-            SectionHeader(title: "Last week", icon: "chart.bar.fill", accent: accent, index: 3)
+            SectionHeader(title: "Last week", icon: "chart.bar.fill", accent: accent)
             HStack(spacing: 20) {
                 StatTile(label: "Revenue", value: route.lastWeeklyRevenue.money,
                          color: Theme.profit, font: .game(.subheadline, weight: .bold))
@@ -354,7 +354,7 @@ struct RouteDetailView: View {
             engine.canOperate(aircraftID: $0.id, routeID: route.id)
         }
         return GameCard {
-            SectionHeader(title: "Assign aircraft", icon: "airplane.circle.fill", accent: accent, index: 4)
+            SectionHeader(title: "Assign aircraft", icon: "airplane.circle.fill", accent: accent)
             if !hasCandidate {
                 Text(engine.state.fleet.isEmpty
                      ? "No aircraft in the fleet yet."

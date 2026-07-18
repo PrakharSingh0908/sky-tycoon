@@ -123,22 +123,16 @@ struct PerforationLine: View {
 
 // ── SectionHeader ────────────────────────────────────────────────────────
 
-/// Placard-style: optional panel index, label, then a hairline rule running
-/// to the card edge — instrument-panel labeling, drawn, never an image.
+/// Placard-style: label, then a hairline rule running to the card edge —
+/// instrument-panel labeling, drawn, never an image.
 struct SectionHeader: View {
     let title: String
     var icon: String? = nil
     var accent: Color = Theme.sky
-    var index: Int? = nil
 
     var body: some View {
         HStack(spacing: 8) {
             HStack(spacing: 6) {
-                if let index {
-                    Text(String(format: "%02d", index))
-                        .font(.data(.caption2, weight: .bold))
-                        .foregroundStyle(accent.opacity(0.55))
-                }
                 if let icon { Image(systemName: icon).font(.caption2.weight(.bold)) }
                 Text(title.uppercased()).font(.game(.caption, weight: .bold)).tracking(1.2)
             }

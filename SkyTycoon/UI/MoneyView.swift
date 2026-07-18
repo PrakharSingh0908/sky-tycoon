@@ -20,7 +20,7 @@ struct MoneyView: View {
             balanceSheetCard
             marketingCard
             GameCard {
-                SectionHeader(title: "52-week P&L", icon: "chart.bar.fill", accent: accent, index: 2)
+                SectionHeader(title: "52-week P&L", icon: "chart.bar.fill", accent: accent)
                 Text("Profit bars · revenue line. Tap any statement line below for its formula.")
                     .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
                 ProfitChart(reports: engine.state.reports)
@@ -35,7 +35,7 @@ struct MoneyView: View {
 
     private var balanceSheetCard: some View {
         GameCard {
-            SectionHeader(title: "Balance sheet", icon: "building.columns.fill", accent: accent, index: 4)
+            SectionHeader(title: "Balance sheet", icon: "building.columns.fill", accent: accent)
             HStack(spacing: 20) {
                 StatTile(label: "Cash", value: engine.state.cash.money,
                          color: engine.state.cash >= 0 ? Theme.profit : Theme.loss)
@@ -53,7 +53,7 @@ struct MoneyView: View {
 
     private var marketingCard: some View {
         GameCard {
-            SectionHeader(title: "Marketing", icon: "megaphone.fill", accent: accent, index: 5)
+            SectionHeader(title: "Marketing", icon: "megaphone.fill", accent: accent)
             MeterRow(label: "Brand awareness", value: engine.state.brandAwareness / 100,
                      display: "\(Int(engine.state.brandAwareness))/100",
                      color: Theme.health(0.3 + engine.state.brandAwareness / 150))
@@ -77,7 +77,7 @@ struct MoneyView: View {
 
     @ViewBuilder private var trustFundCard: some View {
         GameCard {
-            SectionHeader(title: "Aunt's Trust Fund", icon: "envelope.fill", accent: Theme.warn, index: 1)
+            SectionHeader(title: "Aunt's Trust Fund", icon: "envelope.fill", accent: Theme.warn)
             switch engine.state.trustFundResolution {
             case .pending:
                 Text("Reach 4 consecutive profitable quarters by \(engine.state.trustFundDeadline.description).")
@@ -170,7 +170,7 @@ struct MoneyView: View {
     private func statementCard(_ r: WeeklyReport) -> some View {
         GameCard {
             SectionHeader(title: "Last week · \(r.date.description)",
-                          icon: "doc.text.fill", accent: accent, index: 3)
+                          icon: "doc.text.fill", accent: accent)
             // Expense share at a glance; the rows below carry the exact numbers.
             let slices = r.expenseSlices
             if !slices.isEmpty {
@@ -319,7 +319,7 @@ struct MoneyView: View {
 
     private var loansCard: some View {
         GameCard {
-            SectionHeader(title: "The bank", icon: "building.columns.fill", accent: accent, index: 6)
+            SectionHeader(title: "The bank", icon: "building.columns.fill", accent: accent)
             Text("Lending limit: total debt ≤ \(Balance.borrowingLimit(netWorth: engine.netWorth).money) (from net worth). Current debt \(engine.totalDebt.money).")
                 .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
             ForEach(engine.state.loans) { loan in
