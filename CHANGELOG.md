@@ -9,6 +9,17 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Assign card always offers the showroom
+
+**Changed**
+- The route detail's Assign Aircraft card now ends with a route-aware
+  showroom link in every state: a quiet "Buy more aircraft" when the
+  fleet has candidates, the prominent "Get an aircraft for this route"
+  when nothing fits (previously the link existed only in the
+  nothing-fits case). *Why:* growing a route's capacity shouldn't
+  require detouring via the Fleet tab.
+
+
 ### 2026-07-18 — Receipt sheet no longer crops at the top
 
 **Fixed**

@@ -360,13 +360,6 @@ struct RouteDetailView: View {
                      ? "No aircraft in the fleet yet."
                      : "Nothing in the fleet can fly this route. Check range and runway class.")
                     .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
-                NavigationLink {
-                    ShowroomView(fittingRoute: route)
-                } label: {
-                    Label("Get an aircraft for this route", systemImage: "cart.fill")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(GameButtonStyle(color: Theme.orange, prominent: true))
             }
             ForEach(engine.state.fleet) { plane in
                 let assigned = route.assignedAircraftIDs.contains(plane.id)
@@ -413,6 +406,16 @@ struct RouteDetailView: View {
                 }
                 .buttonStyle(.plain)
             }
+            // Always a path to more metal: route-aware showroom at the
+            // bottom — prominent when nothing in the fleet fits.
+            NavigationLink {
+                ShowroomView(fittingRoute: route)
+            } label: {
+                Label(hasCandidate ? "Buy more aircraft" : "Get an aircraft for this route",
+                      systemImage: "cart.fill")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(GameButtonStyle(color: Theme.orange, prominent: !hasCandidate))
         }
     }
 }
