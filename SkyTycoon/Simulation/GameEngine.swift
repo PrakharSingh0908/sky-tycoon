@@ -65,6 +65,7 @@ final class GameEngine {
             trustFundResolution: .pending,
             consecutiveProfitableQuarters: 0,
             reputation: 3.0,
+            brandAwareness: Balance.startingAwareness, weeklyMarketingSpend: 0,
             letters: [], completedMilestones: [],
             weeksInsolvent: 0, isBankrupt: false,
             cities: Balance.indiaCities,          // MVP: India city set for all, swap per-country later
@@ -123,7 +124,7 @@ final class GameEngine {
         let profile = Balance.countryProfiles[state.country]!
         var report = WeeklyReport(date: state.date, revenue: 0, fuelCost: 0,
                                   wageCost: 0, maintenanceCost: 0, loanCost: 0,
-                                  leaseCost: 0, cabinCost: 0,
+                                  leaseCost: 0, cabinCost: 0, marketingCost: 0,
                                   overheadCost: Balance.hqOverheadPerWeek)
 
         // 0. DELIVERIES — new-plane orders count down and enter service.
@@ -209,61 +210,29 @@ final class GameEngine {
             guard !activePlanes.isEmpty else {
                 state.routes[r].lastLoadFactor = 0
                 state.routes[r].lastWeeklyProfit = 0
+                state.routes[r].lastWeeklyRevenue = 0
+                state.routes[r].lastWeeklyFuel = 0
                 appendLoadFactor(0, routeIndex: r)
                 continue
             }
 
-            let origin = city(route.originID)!
-            let dest = city(route.destinationID)!
+            // One shared formula for the tick AND the UI breakdowns
+            // (pillar 4: the explanation can never drift from the sim).
+            let econ = computeEconomics(route: route, planes: activePlanes,
+                                        profile: profile,
+                                        fuelEventMult: fuelEventMult,
+                                        demandEventMult: demandEventMult)
+            var avgComfort = activePlanes.map(\.comfortScore).reduce(0, +)
+                / Double(activePlanes.count)
+            avgComfort = min(1, avgComfort)
 
-            // Gravity demand (GDD §4.3), weekly, both directions combined.
-            let gravity = Balance.demandK
-                * pow(origin.population * dest.population, 0.55)
-                / pow(route.distanceKm, 0.35)
-            let growth = pow(1 + profile.demandGrowthPerYear, Double(state.date.year - 1))
-            let season = 1.0 + 0.20 * sin(Double(state.date.week) / 52.0 * 2 * .pi)
-            let brand = 0.5 + (state.reputation / 5.0) * 1.1     // 0.5 ... 1.6
-
-            let referenceFare = route.distanceKm * Balance.referenceFarePerKm * profile.fareLevel
-            let priceRatio = route.fare / max(referenceFare, 1)
-            let priceResponse = pow(priceRatio, -profile.priceElasticity)
-
-            let demand = gravity * growth * season * brand * min(priceResponse, 2.5)
-                * demandEventMult
-
-            // Capacity offered this week.
-            var seatsOffered = 0
-            var avgComfort = 0.0
-            for plane in activePlanes {
-                let spec = Balance.specs[plane.type]!
-                seatsOffered += plane.seats(spec: spec) * route.weeklyFrequency * 2
-                avgComfort += plane.comfortScore
-            }
-            avgComfort /= Double(activePlanes.count)
-
-            let pax = min(demand, Double(seatsOffered))
-            let loadFactor = seatsOffered > 0 ? pax / Double(seatsOffered) : 0
-            let revenue = pax * route.fare
-
-            // Costs: the AIRFRAME burns fuel (max seats), regardless of how
-            // the cabin is configured — a spacious cabin doesn't shrink the
-            // plane. This keeps the seat-config tradeoff honest: fewer seats,
-            // same fuel. Poor condition adds a burn penalty (GDD §4.1).
-            var fuel = 0.0
-            for plane in activePlanes {
-                let spec = Balance.specs[plane.type]!
-                fuel += Double(spec.maxSeats) * route.distanceKm
-                     * spec.fuelBurnPerSeatKm * Double(route.weeklyFrequency) * 2
-                     * Balance.fuelPricePerUnit * profile.fuelCost
-                     * Balance.fuelConditionMultiplier(condition: plane.condition)
-                     * fuelEventMult
-            }
-
-            report.revenue += revenue
-            report.fuelCost += fuel
-            state.routes[r].lastLoadFactor = loadFactor
-            state.routes[r].lastWeeklyProfit = revenue - fuel   // route-level, pre-overhead
-            appendLoadFactor(loadFactor, routeIndex: r)
+            report.revenue += econ.revenue
+            report.fuelCost += econ.fuel
+            state.routes[r].lastLoadFactor = econ.loadFactor
+            state.routes[r].lastWeeklyProfit = econ.revenue - econ.fuel   // route-level, pre-overhead
+            state.routes[r].lastWeeklyRevenue = econ.revenue
+            state.routes[r].lastWeeklyFuel = econ.fuel
+            appendLoadFactor(econ.loadFactor, routeIndex: r)
 
             // Wear accumulates with flight hours; worse condition wears
             // faster. Calibrated so a hard-flown airframe (≈65 block
@@ -282,14 +251,15 @@ final class GameEngine {
             // Route satisfaction drifts toward the GDD §4.5 weighted target:
             // punctuality 35%, comfort 25%, service 20%, price fairness 15%,
             // incidents 5% (placeholder 1.0 until M3's event deck).
+            // Fairness is the fare↔satisfaction link: cheap fares (vs the
+            // market reference) actively please passengers.
             let cabinSkill = state.staff[.cabinCrew]?.skill ?? 1
             let cabinU = utilization[.cabinCrew] ?? 0
             let cabinAdequacy = cabinU <= 1 ? 1.0 : 1.0 / cabinU   // understaffed cabin = worse service
             let service = (cabinSkill / 5.0) * cabinAdequacy
-            let fairness = max(0, min(1, 1.4 - priceRatio * 0.6))
             let incidents = 1.0
             let target = (punctuality * 0.35 + avgComfort * 0.25 + service * 0.20
-                          + fairness * 0.15 + incidents * 0.05) * 100
+                          + econ.fairness * 0.15 + incidents * 0.05) * 100
             state.routes[r].satisfaction += (target - route.satisfaction) * 0.15
             state.routes[r].lastPunctuality = punctuality
         }
@@ -361,6 +331,12 @@ final class GameEngine {
         for plane in state.fleet where plane.status != .onOrder {
             report.cabinCost += plane.cabin.weeklyUpkeep(spec: Balance.specs[plane.type]!)
         }
+
+        // 5d. MARKETING (GDD §4.8, M5): the budget is spent, awareness
+        // grows with diminishing returns and decays without it.
+        report.marketingCost = state.weeklyMarketingSpend
+        state.brandAwareness = min(100, state.brandAwareness * (1 - Balance.awarenessDecay)
+            + Balance.awarenessGain(spend: state.weeklyMarketingSpend))
 
         // 6. LOANS.
         for i in state.loans.indices {
@@ -448,6 +424,85 @@ final class GameEngine {
         // M0 fix: autosave. The GDD promises autosave every tick; the tick
         // never called save(). Persist at the end of every week.
         save()
+    }
+
+    // ── Route economics: ONE formula for the tick and the UI ────────────
+
+    /// The demand/revenue/fuel math, decomposed. The weekly tick runs on
+    /// this and the "tap any number" breakdowns read from it (pillar 4).
+    func computeEconomics(route: Route, planes: [Aircraft], profile: CountryProfile,
+                          fuelEventMult: Double, demandEventMult: Double) -> RouteEconomics {
+        guard let origin = city(route.originID), let dest = city(route.destinationID) else {
+            return RouteEconomics(gravity: 0, growth: 1, season: 1, brand: 1, eventDemand: 1,
+                                  referenceFare: 1, priceRatio: 1, priceResponse: 1, demand: 0,
+                                  seatsOffered: 0, pax: 0, loadFactor: 0, revenue: 0, fuel: 0,
+                                  fairness: 0, breakevenLoadFactor: 0)
+        }
+
+        // Gravity demand (GDD §4.3), weekly, both directions combined.
+        let gravity = Balance.demandK
+            * pow(origin.population * dest.population, 0.55)
+            / pow(route.distanceKm, 0.35)
+        let growth = pow(1 + profile.demandGrowthPerYear, Double(state.date.year - 1))
+        let season = 1.0 + 0.20 * sin(Double(state.date.week) / 52.0 * 2 * .pi)
+        // Reputation sets the brand range; awareness (M5 marketing) scales it.
+        let brand = (0.5 + (state.reputation / 5.0) * 1.1)
+            * Balance.awarenessMultiplier(state.brandAwareness)
+
+        let referenceFare = route.distanceKm * Balance.referenceFarePerKm * profile.fareLevel
+        let priceRatio = route.fare / max(referenceFare, 1)
+        let priceResponse = pow(priceRatio, -profile.priceElasticity)
+        let demand = gravity * growth * season * brand * min(priceResponse, 2.5)
+            * demandEventMult
+
+        var seatsOffered = 0
+        var fuel = 0.0
+        for plane in planes {
+            let spec = Balance.specs[plane.type]!
+            seatsOffered += plane.seats(spec: spec) * route.weeklyFrequency * 2
+            // The AIRFRAME burns fuel (max seats) regardless of cabin config;
+            // poor condition adds a burn penalty (GDD §4.1).
+            fuel += Double(spec.maxSeats) * route.distanceKm
+                 * spec.fuelBurnPerSeatKm * Double(route.weeklyFrequency) * 2
+                 * Balance.fuelPricePerUnit * profile.fuelCost
+                 * Balance.fuelConditionMultiplier(condition: plane.condition)
+                 * fuelEventMult
+        }
+
+        let pax = min(demand, Double(seatsOffered))
+        let loadFactor = seatsOffered > 0 ? pax / Double(seatsOffered) : 0
+        let revenue = pax * route.fare
+
+        // The fare↔satisfaction link: pricing below the market reference
+        // actively pleases passengers; gouging costs goodwill.
+        let fairness = max(0, min(1, 1.6 - priceRatio * 0.8))
+
+        let maxRevenue = route.fare * Double(seatsOffered)
+        let breakeven = maxRevenue > 0 ? min(1.5, fuel / maxRevenue) : 0
+
+        return RouteEconomics(gravity: gravity, growth: growth, season: season,
+                              brand: brand, eventDemand: demandEventMult,
+                              referenceFare: referenceFare, priceRatio: priceRatio,
+                              priceResponse: min(priceResponse, 2.5), demand: demand,
+                              seatsOffered: seatsOffered, pax: pax, loadFactor: loadFactor,
+                              revenue: revenue, fuel: fuel, fairness: fairness,
+                              breakevenLoadFactor: breakeven)
+    }
+
+    /// This week's economics for a route, for the UI's unit-economics and
+    /// formula breakdowns — computed by the very same function as the tick.
+    func routeEconomics(routeID: UUID) -> RouteEconomics? {
+        guard let route = state.routes.first(where: { $0.id == routeID }) else { return nil }
+        let planes = state.fleet.filter {
+            route.assignedAircraftIDs.contains($0.id) && $0.groundedWeeksRemaining == 0
+        }
+        let fuelMult = state.activeEffects
+            .filter { $0.kind == .fuelPrice }.reduce(1.0) { $0 * $1.multiplier }
+        let demandMult = state.activeEffects
+            .filter { $0.kind == .demand }.reduce(1.0) { $0 * $1.multiplier }
+        return computeEconomics(route: route, planes: planes,
+                                profile: Balance.countryProfiles[state.country]!,
+                                fuelEventMult: fuelMult, demandEventMult: demandMult)
     }
 
     /// Appends to a capped 260-week (5-year) history buffer.
@@ -823,6 +878,7 @@ final class GameEngine {
                           weeklyFrequency: max(0, clamped), fare: fare,
                           assignedAircraftIDs: [], satisfaction: 60,
                           lastLoadFactor: 0, lastWeeklyProfit: 0,
+                          lastWeeklyRevenue: 0, lastWeeklyFuel: 0,
                           loadFactorHistory: [], lastPunctuality: 1.0)
         state.routes.append(route)
         save()
@@ -1056,18 +1112,44 @@ final class GameEngine {
         save()
     }
 
+    // ── The bank (M7): three offers, one lending limit ───────────────────
+
+    var totalDebt: Double { state.loans.reduce(0) { $0 + $1.remaining } }
+
+    /// Whether the bank will extend this offer right now.
+    func canBorrow(_ offer: Balance.LoanOffer) -> Bool {
+        totalDebt + offer.amount <= Balance.borrowingLimit(netWorth: netWorth)
+    }
+
+    @discardableResult
+    func takeLoan(offer: Balance.LoanOffer) -> Bool {
+        guard canBorrow(offer) else { return false }
+        takeLoan(amount: offer.amount, weeklyRate: offer.weeklyRate, weeks: offer.weeks)
+        return true
+    }
+
+    /// Weekly marketing budget (M5), clamped to the slider's range.
+    func setMarketingSpend(_ spend: Double) {
+        state.weeklyMarketingSpend = max(0, min(Balance.marketingSpendMax, spend))
+        save()
+    }
+
     // ── Derived values for the UI ────────────────────────────────────────
 
-    var netWorth: Double {
-        // Leased planes aren't assets — the lessor owns them.
-        let fleetValue = state.fleet
+    /// Book value of the owned fleet (leased planes aren't assets — the
+    /// lessor owns them). Same formula as resale, so selling is never an
+    /// exploit.
+    var fleetValue: Double {
+        state.fleet
             .filter { $0.acquisition != .leased }
             .reduce(0.0) {
                 $0 + Balance.resaleValue(type: $1.type, ageYears: $1.ageYears,
                                          condition: $1.condition)
             }
-        let debt = state.loans.reduce(0.0) { $0 + $1.remaining }
-        return state.cash + fleetValue - debt
+    }
+
+    var netWorth: Double {
+        state.cash + fleetValue - totalDebt
     }
     func city(_ id: String) -> City? { state.cities.first { $0.id == id } }
     var latestReport: WeeklyReport? { state.reports.last }

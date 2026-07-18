@@ -207,6 +207,48 @@ enum Balance {
     /// Weekly attrition rate at happiness 0 (scales linearly up to the threshold).
     static let attritionMaxRatePerWeek = 0.03
 
+    // ── Marketing (GDD §4.8, M5) ─────────────────────────────────────────
+
+    /// Awareness gained per week from spend, with diminishing returns:
+    /// gain = 8 × spend / (spend + $60k). Holding 100 costs ~$36k/week.
+    static func awarenessGain(spend: Double) -> Double {
+        guard spend > 0 else { return 0 }
+        return 8.0 * spend / (spend + 60_000)
+    }
+    /// Awareness decays 3%/week without spend.
+    static let awarenessDecay = 0.03
+    static let marketingSpendMax = 60_000.0
+    static let startingAwareness = 25.0
+
+    /// Awareness scales the brand multiplier around a neutral point of 25
+    /// (a young airline's default): −3% demand at zero awareness, +9% at
+    /// full. Bounded tight so the M6 arc calibration holds.
+    static func awarenessMultiplier(_ awareness: Double) -> Double {
+        0.97 + 0.12 * awareness / 100.0
+    }
+
+    // ── The bank (GDD §3.2 MVP slice, M7) ────────────────────────────────
+
+    struct LoanOffer: Identifiable {
+        let id: String
+        let name: String
+        let amount: Double
+        let weeklyRate: Double
+        let weeks: Int
+    }
+    static let loanOffers: [LoanOffer] = [
+        LoanOffer(id: "starter", name: "Starter credit", amount: 2_000_000,
+                  weeklyRate: 0.0012, weeks: 156),
+        LoanOffer(id: "expansion", name: "Expansion loan", amount: 8_000_000,
+                  weeklyRate: 0.0015, weeks: 260),
+        LoanOffer(id: "fleet", name: "Fleet facility", amount: 20_000_000,
+                  weeklyRate: 0.0018, weeks: 260),
+    ]
+    /// Total debt may not exceed $2M + 1.2 × net worth.
+    static func borrowingLimit(netWorth: Double) -> Double {
+        2_000_000 + max(0, netWorth) * 1.2
+    }
+
     // ── The objectives layer (GDD §3.1 + §6, M6) ─────────────────────────
 
     /// Success: the fund converts to a gift on top of what you kept.

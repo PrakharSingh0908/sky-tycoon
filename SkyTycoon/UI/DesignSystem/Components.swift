@@ -254,6 +254,76 @@ struct PillStepper: View {
     }
 }
 
+// ── FormulaSheet — tap any number, see the math (design pillar 4) ────────
+
+struct Explanation: Identifiable {
+    let id = UUID()
+    let title: String
+    let subtitle: String
+    let rows: [(label: String, value: String)]
+    let formula: String
+}
+
+struct FormulaSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let explanation: Explanation
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(explanation.title)
+                        .font(.game(.title2, weight: .bold)).foregroundStyle(Theme.textPrimary)
+                    Text(explanation.subtitle)
+                        .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+                }
+                Spacer()
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12, weight: .bold))
+                        .frame(width: 28, height: 28)
+                        .background(Color.white.opacity(0.08), in: Circle())
+                        .foregroundStyle(Theme.textSecondary)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.top, 16)
+
+            VStack(spacing: 8) {
+                ForEach(explanation.rows.indices, id: \.self) { i in
+                    HStack {
+                        Text(explanation.rows[i].label)
+                            .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
+                        Spacer()
+                        Text(explanation.rows[i].value)
+                            .font(.game(.subheadline, weight: .semibold)).monospacedDigit()
+                            .foregroundStyle(Theme.textPrimary)
+                    }
+                }
+            }
+            .padding(14)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
+
+            Text(explanation.formula)
+                .font(.system(.caption, design: .monospaced))
+                .foregroundStyle(Theme.teal)
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Theme.teal.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+
+            Spacer()
+        }
+        .padding(.horizontal, 20)
+        .background(Theme.bgElevated)
+        .presentationDetents([.medium, .large])
+        .presentationBackground(Theme.bgElevated)
+        .preferredColorScheme(.dark)
+        .holdsSimClock()
+    }
+}
+
 // ── Screen scaffold — dark ops background + card stack ───────────────────
 
 struct GameScreen<Content: View>: View {

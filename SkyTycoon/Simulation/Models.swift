@@ -300,9 +300,11 @@ struct Route: Codable, Identifiable {
     var assignedAircraftIDs: [UUID]
     /// Rolling satisfaction 0...100 for this route.
     var satisfaction: Double
-    /// Last week's stats, for UI.
+    /// Last week's stats, for UI and unit economics.
     var lastLoadFactor: Double
     var lastWeeklyProfit: Double
+    var lastWeeklyRevenue: Double
+    var lastWeeklyFuel: Double
     /// Load factor per week, newest last (capped ring buffer, ~26 weeks)
     /// — feeds the route sparkline (GDD §7 tab 3).
     var loadFactorHistory: [Double]
@@ -445,8 +447,9 @@ struct WeeklyReport: Codable, Identifiable {
     var loanCost: Double
     var leaseCost: Double
     var cabinCost: Double        // interior upkeep + catering + wifi service
+    var marketingCost: Double    // the M5 awareness budget
     var overheadCost: Double
-    var profit: Double { revenue - fuelCost - wageCost - maintenanceCost - loanCost - leaseCost - cabinCost - overheadCost }
+    var profit: Double { revenue - fuelCost - wageCost - maintenanceCost - loanCost - leaseCost - cabinCost - marketingCost - overheadCost }
 }
 
 // ── The objectives layer (GDD §3.1 + §6, M6) ─────────────────────────────
@@ -480,6 +483,29 @@ struct MilestoneDef: Identifiable {
     let isComplete: (GameState) -> Bool
 }
 
+/// One week of a route's economics, decomposed term by term — the tick
+/// runs on this AND the UI explains from it, so the "tap any number"
+/// breakdowns (design pillar 4) can never drift from the sim.
+struct RouteEconomics {
+    var gravity: Double          // k × (popA·popB)^0.55 / dist^0.35
+    var growth: Double           // country demand growth compounding
+    var season: Double           // ±20% sinusoidal
+    var brand: Double            // reputation × awareness multiplier
+    var eventDemand: Double      // timed event modifiers
+    var referenceFare: Double
+    var priceRatio: Double
+    var priceResponse: Double
+    var demand: Double
+    var seatsOffered: Int
+    var pax: Double
+    var loadFactor: Double
+    var revenue: Double
+    var fuel: Double
+    var fairness: Double         // the fare↔satisfaction link, 0...1
+    /// Load factor needed for revenue to cover this route's fuel.
+    var breakevenLoadFactor: Double
+}
+
 /// THE save file. Everything lives here; the engine mutates only this.
 struct GameState: Codable {
     var saveVersion: Int = 1
@@ -495,6 +521,11 @@ struct GameState: Codable {
     var trustFundResolution: TrustFundResolution
     var consecutiveProfitableQuarters: Int
     var reputation: Double            // 1...5 stars
+
+    /// Marketing (GDD §4.8, M5): awareness 0–100, fed by weekly spend
+    /// with diminishing returns, decaying ~3%/week without it.
+    var brandAwareness: Double
+    var weeklyMarketingSpend: Double
 
     /// The objectives layer (M6).
     var letters: [QuarterlyLetter]            // newest last, capped

@@ -9,6 +9,45 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — M5 marketing + M7 money depth, unit economics, and honest formulas
+
+**Added — M5 marketing**
+- `brandAwareness` (0–100) fed by a weekly budget slider (Money tab, up
+  to $60k/wk) with diminishing returns (gain = 8×s/(s+60k)), decaying
+  3%/week unspent; its own P&L line. Awareness scales the brand
+  multiplier ±(−3%…+9%) around a neutral 25 — bounded tight so the M6
+  arc calibration holds. *Measured: 26 weeks at $40k lifts load factor
+  0.60 → 0.64 and fades 70 → 53 after 9 silent weeks — the GDD's
+  "launch push fills planes, stopping spend fades" criterion.*
+
+**Added — M7 money depth**
+- **The bank**: three offers (Starter $2M / Expansion $8M / Fleet $20M,
+  distinct rates and terms) behind one lending limit (debt ≤ $2M + 1.2 ×
+  net worth) — replacing the naive $1M/$5M buttons.
+- **Balance sheet card**: cash, fleet book value, debt, net worth with
+  its sparkline.
+- **Tap any number** (pillar 4): every P&L statement line opens a
+  formula sheet with the player's live numbers (per-route revenue/fuel,
+  per-pool wages, per-plane maintenance with the wear/condition factors,
+  amortization, lease, cabin, marketing). Route detail gets "Why these
+  numbers?" — the full demand decomposition (gravity × growth × season ×
+  brand × price × events → pax).
+
+**Added — unit economics per route (route detail)**
+- Revenue/fuel/margin per week, margin per flight, seats vs demand, and
+  **breakeven load factor vs actual** — the gap that IS the business.
+- Architecture guarantee: the tick's route loop was refactored onto ONE
+  shared `computeEconomics` function that `routeEconomics()` (the UI
+  path) also calls — the explanation can never drift from the sim.
+
+**Changed — the fare↔satisfaction link, stronger and visible**
+- Price fairness steepened (1.6 − 0.8 × fare/reference, clamped 0–1) and
+  surfaced as a live meter under the fare stepper ("18% under market").
+  *Measured: 0.8× fares → satisfaction 69 vs 1.3× → 64 — while the
+  gouger nets $97k vs $54k margin. A real dilemma, not a free lunch.*
+- Save format: marketing fields + per-route revenue/fuel (dev reset).
+- 5 tests (suite: 55).
+
 ### 2026-07-18 — Milestone 6: the objectives layer
 
 The narrative spine (GDD §3.1 + §6): letters, resolution, milestones,
