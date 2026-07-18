@@ -225,6 +225,9 @@ struct RouteDetailView: View {
     var body: some View {
         if let route = engine.state.routes.first(where: { $0.id == routeID }) {
             GameScreen(title: "\(route.originID) ⇄ \(route.destinationID)", accent: accent) {
+                RouteMapView(focusRouteID: routeID)
+                    .frame(height: 200)
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.corner))
                 GameCard {
                     SectionHeader(title: "Load factor · 26 weeks", icon: "chart.xyaxis.line", accent: accent)
                     LoadFactorSparkline(history: route.loadFactorHistory)

@@ -65,6 +65,10 @@ private struct GlobeCamera: Equatable {
 
 struct RouteMapView: View {
     @Environment(GameEngine.self) private var engine
+    /// When set, the map shows only this route's arc and labels only its
+    /// two endpoints, and the camera frames the pair. The full-network
+    /// map (nil) draws every arc and no code labels.
+    var focusRouteID: UUID? = nil
     @State private var camera: GlobeCamera = .india
     @State private var dragStart: GlobeCamera?
     @State private var zoomStart: Double?
@@ -75,6 +79,7 @@ struct RouteMapView: View {
                 draw(ctx: &ctx, size: size)
             }
             .background(Theme.bg)
+            .onAppear { frameFocusRoute() }
             .gesture(
                 DragGesture()
                     .onChanged { value in
@@ -98,6 +103,23 @@ struct RouteMapView: View {
                     .onEnded { _ in zoomStart = nil }
             )
         }
+    }
+
+    /// Centers between the focused route's endpoints, zoomed so the pair
+    /// fills the view comfortably.
+    private func frameFocusRoute() {
+        guard let focusRouteID,
+              let route = engine.state.routes.first(where: { $0.id == focusRouteID }),
+              let o = engine.city(route.originID),
+              let d = engine.city(route.destinationID) else { return }
+        let φ1 = o.latitude * .pi / 180, φ2 = d.latitude * .pi / 180
+        let Δλ = (d.longitude - o.longitude) * .pi / 180
+        let angle = acos(max(-1, min(1, sin(φ1) * sin(φ2) + cos(φ1) * cos(φ2) * cos(Δλ))))
+        camera = GlobeCamera(
+            centerLon: (o.longitude + d.longitude) / 2,
+            // Nudge up so the northward arc bow stays in frame.
+            centerLat: (o.latitude + d.latitude) / 2 + angle * 6,
+            zoom: min(9, max(1.5, 1.05 / max(angle, 0.02))))
     }
 
     // MARK: - Projection
@@ -174,7 +196,11 @@ struct RouteMapView: View {
         // and straight lines read as train tracks, not flights.
         // Unstaffed routes draw dashed: planned, not flying.
         let staffedRouteIDs = Set(engine.state.fleet.compactMap(\.assignedRouteID))
-        for route in engine.state.routes {
+        let focusRoute = focusRouteID.flatMap { id in
+            engine.state.routes.first { $0.id == id }
+        }
+        let routesToDraw = focusRoute.map { [$0] } ?? engine.state.routes
+        for route in routesToDraw {
             guard let origin = engine.city(route.originID),
                   let dest = engine.city(route.destinationID),
                   let p1 = project(origin.longitude * .pi / 180, origin.latitude * .pi / 180,
@@ -202,22 +228,28 @@ struct RouteMapView: View {
                          style: StrokeStyle(lineWidth: coreWidth, lineCap: .round, dash: dash))
         }
 
-        // City markers + code chips.
+        // City markers. Codes label only a focused route's two endpoints;
+        // the network map stays label-free (dots + arcs tell the story).
         for city in engine.state.cities {
             guard let p = project(city.longitude * .pi / 180, city.latitude * .pi / 180,
                                   size: size, radius: radius) else { continue }
             let isServed = engine.state.routes.contains {
                 $0.originID == city.id || $0.destinationID == city.id
             }
-            let dotR: CGFloat = isServed ? 4.5 : 3
+            let isEndpoint = focusRoute.map {
+                city.id == $0.originID || city.id == $0.destinationID
+            } ?? false
+            let dotR: CGFloat = isEndpoint ? 5 : (isServed ? 4.5 : 3)
             globe.fill(Path(ellipseIn: CGRect(x: p.x - dotR, y: p.y - dotR,
                                               width: dotR * 2, height: dotR * 2)),
-                       with: .color(isServed ? Theme.teal : .white.opacity(0.5)))
-            globe.draw(
-                Text(city.id)
-                    .font(.system(size: 9, weight: .bold, design: .rounded))
-                    .foregroundStyle(isServed ? Theme.textPrimary : Theme.textSecondary),
-                at: CGPoint(x: p.x, y: p.y + 11))
+                       with: .color(isServed || isEndpoint ? Theme.teal : .white.opacity(0.5)))
+            if isEndpoint {
+                globe.draw(
+                    Text(city.id)
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundStyle(Theme.textPrimary),
+                    at: CGPoint(x: p.x, y: p.y + 13))
+            }
         }
     }
 

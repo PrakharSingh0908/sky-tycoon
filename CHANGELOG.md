@@ -9,6 +9,20 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Label-free network map; focused mini-map on route detail
+
+**Changed**
+- The Routes-tab globe no longer draws airport code labels; city dots
+  and arcs carry the network view. *Why:* user direction; nine code
+  chips over domestic India read as clutter at network zoom.
+- Route detail now opens with a 200pt embedded map focused on that
+  route: only its arc is drawn, only its two endpoint codes are
+  labeled, and the camera auto-frames the pair (zoom derived from the
+  cities' angular separation, nudged north so the arc bow fits).
+  RouteMapView gained a focusRouteID parameter for this; nil keeps
+  the full-network behavior.
+
+
 ### 2026-07-18 — Assigned planes can be tapped off a route
 
 **Fixed**
