@@ -167,6 +167,12 @@ struct DashboardView: View {
                 StatTile(label: "Profit", value: report.profit.money,
                          color: report.profit >= 0 ? Theme.profit : Theme.loss)
             }
+            // Where the money went.
+            let slices = report.expenseSlices
+            if !slices.isEmpty {
+                Divider().overlay(Theme.hairline)
+                ExpensePie(slices: slices)
+            }
             // Per-route P&L (route margin: revenue − fuel), best first.
             if !engine.state.routes.isEmpty {
                 Divider().overlay(Theme.hairline)

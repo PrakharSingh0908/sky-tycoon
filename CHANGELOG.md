@@ -9,6 +9,18 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Expense-share donut on Dashboard and Money
+
+**Added**
+- ExpensePie (UI/Components): a Canvas donut of last week's cost
+  share with a percent legend, fed by WeeklyReport.expenseSlices
+  (eight themed categories, zero-cost ones dropped, biggest first).
+  Shown on the Dashboard's Last Week card and atop the Money tab's
+  weekly statement. *Why:* the statement lists exact amounts but
+  never showed proportion — "is fuel or wages eating me" should be
+  answerable at a glance, per the sim-explains-itself pillar.
+
+
 ### 2026-07-18 — Label-free network map; focused mini-map on route detail
 
 **Changed**

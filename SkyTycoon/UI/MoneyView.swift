@@ -160,6 +160,12 @@ struct MoneyView: View {
         GameCard {
             SectionHeader(title: "Last week · \(r.date.description)",
                           icon: "doc.text.fill", accent: accent)
+            // Expense share at a glance; the rows below carry the exact numbers.
+            let slices = r.expenseSlices
+            if !slices.isEmpty {
+                ExpensePie(slices: slices)
+                Divider().overlay(Theme.hairline)
+            }
             statementRow("Revenue", r.revenue, positive: true) { revenueExplanation(r) }
             Divider().overlay(Theme.hairline)
             statementRow("Fuel", -r.fuelCost) { fuelExplanation(r) }
