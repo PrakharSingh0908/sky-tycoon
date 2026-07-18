@@ -53,32 +53,41 @@ struct SimClockPill: View {
 
     // ── Glanceable: state, date, and the week filling up ─────────────────
 
+    // Speed is the most frequent action — it stays ONE tap, inline.
+    // The date/strip block is the affordance that opens the console.
     private var compactPill: some View {
-        Button {
-            expanded = true
-        } label: {
-            VStack(alignment: .leading, spacing: 5) {
-                HStack(spacing: 8) {
-                    Image(systemName: stateIcon)
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(engine.clockIsHeld ? Theme.warn
-                                         : engine.speed == .paused ? Theme.textSecondary
-                                         : Theme.cornflower)
-                    TickerText(text: "\(engine.state.date.description) · \(engine.simDayName)",
-                               font: .game(.caption, weight: .semibold),
-                               color: Theme.textPrimary)
+        HStack(spacing: 10) {
+            Button {
+                expanded = true
+            } label: {
+                VStack(alignment: .leading, spacing: 5) {
+                    HStack(spacing: 6) {
+                        if engine.clockIsHeld {
+                            Image(systemName: "pause.circle.fill")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(Theme.warn)
+                        }
+                        TickerText(text: "\(engine.state.date.description) · \(engine.simDayName)",
+                                   font: .game(.caption, weight: .semibold),
+                                   color: Theme.textPrimary)
+                        Image(systemName: "chevron.up")
+                            .font(.system(size: 8, weight: .semibold))
+                            .foregroundStyle(Theme.textTertiary)
+                    }
+                    weekStrip(height: 3, labeled: false)
+                        .frame(width: 118)
                 }
-                weekStrip(height: 3, labeled: false)
-                    .frame(width: 128)
+                .fixedSize()
             }
-            .fixedSize()
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.corner))
-            .overlay(RoundedRectangle(cornerRadius: Theme.corner)
-                .strokeBorder(Theme.hairline, lineWidth: 1))
+            .buttonStyle(.plain)
+            SpeedControl()
         }
-        .buttonStyle(.plain)
+        .padding(.leading, 12)
+        .padding(.trailing, 6)
+        .padding(.vertical, 6)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.corner))
+        .overlay(RoundedRectangle(cornerRadius: Theme.corner)
+            .strokeBorder(Theme.hairline, lineWidth: 1))
     }
 
     // ── Expanded: the full time console ──────────────────────────────────

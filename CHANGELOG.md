@@ -9,6 +9,16 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased — design-system branch]
 
+### 2026-07-18 — Speed control back to one tap
+
+**Changed**
+- The compact clock pill keeps the speed segments inline (pause/one/
+  two/three chevrons — one tap, always reachable); the date + week
+  strip block, marked with a chevron-up hint, is what expands into
+  the time console (labeled day strip + Step wk). *Why:* speed is
+  the most frequent action in the game; it can't cost two taps.
+
+
 ### 2026-07-18 — The time console: a crafted clock
 
 **Changed**
