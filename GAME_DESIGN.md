@@ -308,3 +308,29 @@ still settles on the deterministic weekly tick. Concretely:
   brand-awareness drift — instant reputation would delete the
   death-spiral-and-recovery arc that gives service quality its
   long-term weight.
+
+---
+
+## 11. Amendment — Balance pass & difficulty (2026-07-18)
+
+**Audit method:** two bot archetypes (single-plane "starter" with
+maintenance/staffing/yield discipline; fleet-planning "expander") run
+headless for 160 weeks across seeds. Findings pre-tune: the cost floor
+of the standard opening (fuel + lease + maintenance + overhead) EQUALED
+peak revenue — 30/30 runs went bankrupt; the best week of the best
+strategy made +7K.
+
+**Tune (all in Balance.swift):** referenceFarePerKm 0.11 → 0.125;
+leaseRatePerWeek 0.0018 → 0.0014 (~7.3%/yr of hull); maintenance seat
+slope 250 → 180; demandK 520 → 550. Post-tune: starter survives 15/15
+and wins the fund 14/15 (~6.5M net at week 160); a fleet-planning
+expander nets ~15.5M (fund 15/15); over-capacity expansion (big props
+on thin markets) still fails — plane-to-market fit is the skill.
+
+**Difficulty (player-chosen at founding):** three multiplicative
+levers; standard = 1.0 everywhere, so the calibrated game IS standard.
+- Relaxed: cash ×1.25, demand ×1.10, costs ×0.90 — fund 10/10 both bots.
+- Standard: identity — fund 9-10/10 with competent play.
+- Tycoon: cash ×0.75, demand ×0.93, costs ×1.10 — passive play survives
+  but cannot win the fund (0/10); smart expansion wins it 5/10.
+Stored optionally in the save; old saves read as standard.

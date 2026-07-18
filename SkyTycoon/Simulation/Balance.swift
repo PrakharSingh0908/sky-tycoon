@@ -67,7 +67,7 @@ enum Balance {
             fuelBurnPerSeatKm: burn * (variantII ? 0.96 : 1.0),
             pilotsPerFlight: 2,
             cabinCrewPerFlight: seats < 20 ? 0 : max(1, Int((Double(seats) / 50.0).rounded(.up))),
-            baseMaintPerWeek: (2_000 + 250 * Double(seats)) * maintFactor,
+            baseMaintPerWeek: (2_000 + 180 * Double(seats)) * maintFactor,
             // Runway needs scale with SIZE: heavies need the metros,
             // mid-size (regional jets included) need class 2, feeders
             // land anywhere.
@@ -186,10 +186,10 @@ enum Balance {
     // possible opening move lost money; at 450 the trust-fund arc (four
     // P&L-positive quarters) was unreachable even for a well-run airline
     // (verified by 160-week sims). Tune further in the M8 playtest pass.
-    static let demandK = 520.0
+    static let demandK = 550.0  // 2026-07-18 balance pass
     static let fuelPricePerUnit = 1.0
     static let hqOverheadPerWeek = 15_000.0
-    static let referenceFarePerKm = 0.11    // pre country fareLevel multiplier
+    static let referenceFarePerKm = 0.125   // pre country fareLevel multiplier (2026-07-18 balance pass)
 
     /// Poor condition raises fuel burn (GDD §4.1): up to +15% at condition 0.
     static func fuelConditionMultiplier(condition: Double) -> Double {
@@ -552,7 +552,7 @@ enum Balance {
     /// "the safest first plane for a cautious player" (§4.1). 0.18% makes a
     /// well-run leased turboprop marginally profitable: viable, but clearly
     /// worse than owning — the intended cash-flow-vs-equity tradeoff.
-    static let leaseRatePerWeek = 0.0018
+    static let leaseRatePerWeek = 0.0014    // ~7.3%/yr of hull value (2026-07-18 balance pass)
     /// Returning a leased aircraft costs this many weeks of payments.
     static let leaseTerminationWeeks = 4.0
 

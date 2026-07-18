@@ -10,8 +10,9 @@
 import SwiftUI
 
 struct NewGameView: View {
-    let onStart: (String, Country) -> Void
+    let onStart: (String, Country, Difficulty) -> Void
     @State private var airlineName = ""
+    @State private var difficulty: Difficulty = .standard
     @FocusState private var nameFocused: Bool
 
     private static let fantasies: [Country: (flag: String, blurb: String)] = [
@@ -62,6 +63,13 @@ struct NewGameView: View {
                     }
                 }
 
+                GameCard {
+                    SectionHeader(title: "Difficulty", icon: "dial.medium.fill", accent: Theme.violet)
+                    ForEach(Difficulty.allCases) { level in
+                        difficultyRow(level)
+                    }
+                }
+
             }
             .padding(.horizontal, Theme.gutter)
             .padding(.bottom, 16)
@@ -83,7 +91,7 @@ struct NewGameView: View {
     private var foundButton: some View {
         VStack(spacing: 8) {
             Button {
-                onStart(airlineName.trimmingCharacters(in: .whitespaces), .india)
+                onStart(airlineName.trimmingCharacters(in: .whitespaces), .india, difficulty)
             } label: {
                 Text("Found the airline").frame(maxWidth: .infinity)
             }
@@ -104,6 +112,32 @@ struct NewGameView: View {
                 .overlay(alignment: .top) { Theme.hairline.frame(height: 1) }
                 .ignoresSafeArea(edges: .bottom)
         )
+    }
+
+    private func difficultyRow(_ level: Difficulty) -> some View {
+        Button {
+            difficulty = level
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: difficulty == level ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(difficulty == level ? Theme.violet : Theme.textSecondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(level.displayName)
+                        .font(.game(.subheadline, weight: .semibold))
+                        .foregroundStyle(Theme.textPrimary)
+                    Text(level.blurb)
+                        .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                }
+                Spacer()
+            }
+            .padding(8)
+            .background(
+                RoundedRectangle(cornerRadius: Theme.corner)
+                    .fill(difficulty == level ? Theme.violet.opacity(0.08) : .clear)
+            )
+        }
+        .buttonStyle(.plain)
+        .sensoryFeedback(.selection, trigger: difficulty)
     }
 
     private func countryRow(_ country: Country) -> some View {
@@ -136,5 +170,5 @@ struct NewGameView: View {
 }
 
 #Preview {
-    NewGameView { _, _ in }
+    NewGameView { _, _, _ in }
 }

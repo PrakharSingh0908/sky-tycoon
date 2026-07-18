@@ -31,8 +31,9 @@ struct SkyTycoonApp: App {
                         .environment(engine)
                         .onAppear { engine.startClock() }
                 } else {
-                    NewGameView { name, country in
-                        let newEngine = GameEngine.newGame(airlineName: name, country: country)
+                    NewGameView { name, country, difficulty in
+                        let newEngine = GameEngine.newGame(airlineName: name, country: country,
+                                                           difficulty: difficulty)
                         newEngine.save()
                         engine = newEngine
                     }

@@ -14,6 +14,8 @@ import Observation
 @Observable
 final class GameEngine {
     private(set) var state: GameState
+    /// Difficulty levers (nil in pre-difficulty saves reads as .standard).
+    var difficulty: Difficulty { state.difficulty ?? .standard }
     var speed: SimSpeed = .paused
 
     enum SimSpeed: Double, CaseIterable {
@@ -46,7 +48,7 @@ final class GameEngine {
 
     init(state: GameState) { self.state = state }
 
-    static func newGame(airlineName: String, country: Country, seed: UInt64 = .random(in: 0...UInt64.max)) -> GameEngine {
+    static func newGame(airlineName: String, country: Country, seed: UInt64 = .random(in: 0...UInt64.max), difficulty: Difficulty = .standard) -> GameEngine {
         let profile = Balance.countryProfiles[country]!
         var rng = SeededRandomNumberGenerator(seed: seed)
         var staff: [StaffRole: StaffPool] = [:]
@@ -68,8 +70,9 @@ final class GameEngine {
             seedRNG: rng,
             date: GameDate(week: 1, year: 1),
             country: country,
+            difficulty: difficulty,
             airlineName: airlineName,
-            cash: profile.startingTrustFund + profile.startingSavings,
+            cash: (profile.startingTrustFund + profile.startingSavings) * difficulty.startingCashFactor,
             livery: .launch,
             trustFundActive: true,
             trustFundDeadline: GameDate(week: 52, year: 3),
@@ -148,7 +151,7 @@ final class GameEngine {
         var report = WeeklyReport(date: state.date, revenue: 0, fuelCost: 0,
                                   wageCost: 0, maintenanceCost: 0, loanCost: 0,
                                   leaseCost: 0, cabinCost: 0, marketingCost: 0,
-                                  overheadCost: Balance.hqOverheadPerWeek)
+                                  overheadCost: Balance.hqOverheadPerWeek * difficulty.costFactor)
 
         // 0. DELIVERIES — new-plane orders count down and enter service.
         for i in state.fleet.indices where state.fleet[i].status == .onOrder {
@@ -349,11 +352,12 @@ final class GameEngine {
             let spec = Balance.specs[plane.type]!
             report.maintenanceCost += spec.baseMaintPerWeek
                 * (1 + plane.wear / 200) * (1.6 - 0.6 * plane.condition / 100)
+                * difficulty.costFactor
         }
 
         // 5b. LEASE PAYMENTS — their own P&L line, forever (GDD §4.1).
         for plane in state.fleet where plane.acquisition == .leased {
-            report.leaseCost += plane.weeklyLeaseCost
+            report.leaseCost += plane.weeklyLeaseCost * difficulty.costFactor
         }
 
         // 5c. CABIN upkeep — interiors cost money to run (GDD §4.2 amended):
@@ -483,6 +487,7 @@ final class GameEngine {
         let priceRatio = route.fare / max(referenceFare, 1)
         let priceResponse = pow(priceRatio, -profile.priceElasticity)
         let demand = gravity * growth * season * brand * min(priceResponse, 2.5)
+            * (state.difficulty ?? .standard).demandFactor
             * demandEventMult
 
         var seatsOffered = 0

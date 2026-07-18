@@ -466,6 +466,39 @@ struct WeeklyReport: Codable, Identifiable {
 
 // ── The objectives layer (GDD §3.1 + §6, M6) ─────────────────────────────
 
+/// Player-chosen difficulty (2026-07-18). Three levers, all multiplicative,
+/// all 1.0 on standard so the calibrated balance IS standard. Optional in
+/// GameState so pre-difficulty saves decode (nil reads as .standard).
+enum Difficulty: String, Codable, CaseIterable, Identifiable {
+    case relaxed, standard, tycoon
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .relaxed: "Relaxed"; case .standard: "Standard"; case .tycoon: "Tycoon"
+        }
+    }
+    var blurb: String {
+        switch self {
+        case .relaxed: "Forgiving margins and a bigger fund. Fly for the fun of it."
+        case .standard: "The calibrated game. Competent play wins the fund."
+        case .tycoon: "Thin margins, smaller fund. Every seat has to earn."
+        }
+    }
+    /// Starting cash multiplier.
+    var startingCashFactor: Double {
+        switch self { case .relaxed: 1.25; case .standard: 1.0; case .tycoon: 0.75 }
+    }
+    /// Route demand multiplier.
+    var demandFactor: Double {
+        switch self { case .relaxed: 1.10; case .standard: 1.0; case .tycoon: 0.93 }
+    }
+    /// Maintenance + lease + overhead multiplier.
+    var costFactor: Double {
+        switch self { case .relaxed: 0.90; case .standard: 1.0; case .tycoon: 1.10 }
+    }
+}
+
 enum TrustFundResolution: String, Codable {
     case pending, succeeded, failed
 }
@@ -524,6 +557,8 @@ struct GameState: Codable {
     var seedRNG: SeededRandomNumberGenerator
     var date: GameDate
     var country: Country
+    /// Optional so saves from before difficulty existed still decode.
+    var difficulty: Difficulty? = nil
     var airlineName: String
 
     var cash: Double

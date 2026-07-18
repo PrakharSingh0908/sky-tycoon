@@ -965,3 +965,33 @@ import Foundation
         #expect(dayOneBudget >= Balance.specs[.propeller24]!.purchasePrice * 0.40)
     }
 }
+
+
+// ── Difficulty (2026-07-18) ───────────────────────────────────────────────
+
+@Suite("Difficulty levers")
+struct DifficultyTests {
+    @Test("standard difficulty is the identity — calibrated balance unchanged")
+    func standardIsIdentity() {
+        #expect(Difficulty.standard.startingCashFactor == 1.0)
+        #expect(Difficulty.standard.demandFactor == 1.0)
+        #expect(Difficulty.standard.costFactor == 1.0)
+    }
+
+    @Test("starting cash scales with difficulty")
+    func startingCash() {
+        let base = GameEngine.newGame(airlineName: "A", country: .india, seed: 7,
+                                      difficulty: .standard).state.cash
+        let relaxed = GameEngine.newGame(airlineName: "A", country: .india, seed: 7,
+                                         difficulty: .relaxed).state.cash
+        let tycoon = GameEngine.newGame(airlineName: "A", country: .india, seed: 7,
+                                        difficulty: .tycoon).state.cash
+        #expect(relaxed > base && base > tycoon)
+    }
+
+    @Test("pre-difficulty saves read as standard")
+    func oldSavesDefault() {
+        let engine = GameEngine.newGame(airlineName: "A", country: .india, seed: 7)
+        #expect(engine.difficulty == .standard)
+    }
+}

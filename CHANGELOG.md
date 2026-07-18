@@ -9,6 +9,29 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Balance pass (audited by simulation) + difficulty select
+
+**Fixed (the big one)**
+- The economy was unwinnable: bot playtests (2 archetypes x 15 seeds,
+  160 weeks) went bankrupt 30/30 because the opening play's cost floor
+  equaled its PEAK revenue, and the seasonal trough bled -48K/wk.
+  Tuned four constants: referenceFarePerKm 0.11→0.125, lease rate
+  0.0018→0.0014/wk, maintenance seat-slope 250→180, demandK 520→550.
+  Post-tune matrix: conservative play survives 15/15 and usually wins
+  the trust fund (~6.5M net); fleet-planning expansion nets ~15.5M;
+  mismatched fleets (big props on thin markets) still fail — the
+  skill curve survived the tune.
+
+**Added**
+- Difficulty, chosen at founding: Relaxed (cash x1.25, demand x1.10,
+  costs x0.90), Standard (the calibrated game, all x1.0), Tycoon
+  (x0.75 / x0.93 / x1.10 — bots: passive play can't win the fund,
+  smart expansion wins 5/10). Save-compatible (old saves = Standard);
+  determinism untouched (Standard is the identity). Picker card on
+  the new-game screen; three tests added. GDD amendment 11 has the
+  full audit method and numbers.
+
+
 ### 2026-07-18 — Route desk, 11 new airports, Routes tab promoted
 
 **Added**
