@@ -9,7 +9,7 @@
 //  zero dependencies, zero tile-server terms (DESIGN_SYSTEM.md §4.3).
 //
 //  Drag rotates the globe, pinch zooms. Routes: thickness = frequency,
-//  color = profitability, neutral while unstaffed.
+//  color = profitability, neutral + dashed while unstaffed.
 //
 
 import SwiftUI
@@ -172,6 +172,8 @@ struct RouteMapView: View {
         // Route arcs: flight-map bows (a quadratic curve lifted from the
         // chord) — at domestic zoom, true geodesics read as straight lines,
         // and straight lines read as train tracks, not flights.
+        // Unstaffed routes draw dashed: planned, not flying.
+        let staffedRouteIDs = Set(engine.state.fleet.compactMap(\.assignedRouteID))
         for route in engine.state.routes {
             guard let origin = engine.city(route.originID),
                   let dest = engine.city(route.destinationID),
@@ -193,10 +195,11 @@ struct RouteMapView: View {
 
             let color = color(for: route)
             let coreWidth = 1.5 + CGFloat(route.weeklyFrequency) / 28.0 * 3.0
+            let dash: [CGFloat] = staffedRouteIDs.contains(route.id) ? [] : [6, 6]
             globe.stroke(arc, with: .color(color.opacity(0.30)),
-                         style: StrokeStyle(lineWidth: coreWidth + 4, lineCap: .round))
+                         style: StrokeStyle(lineWidth: coreWidth + 4, lineCap: .round, dash: dash))
             globe.stroke(arc, with: .color(color),
-                         style: StrokeStyle(lineWidth: coreWidth, lineCap: .round))
+                         style: StrokeStyle(lineWidth: coreWidth, lineCap: .round, dash: dash))
         }
 
         // City markers + code chips.

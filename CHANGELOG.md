@@ -9,6 +9,16 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Unstaffed routes draw dashed on the globe
+
+**Changed**
+- Route arcs on the map now draw with a 6-6 dash when no aircraft is
+  assigned; solid once a plane flies them (both glow and core strokes
+  dash so they stay aligned). *Why:* flight-map convention reads
+  dashed = planned, solid = operating; previously an idle route only
+  differed by its neutral color, easy to miss at a glance.
+
+
 ### 2026-07-18 — Case-flattening root-caused: Hinglish keyboard, not the field
 
 **Fixed**
