@@ -9,6 +9,16 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Airline-name field never rewrites capitalization
+
+**Fixed**
+- Switched the name field from .words to .never autocapitalization.
+  *Why:* word-mode auto-shift owns case at word boundaries and on some
+  keyboards flattens mid-word capitals, so CamelCase brand names like
+  "SkyTycoon" couldn't be typed. A brand-name field must reproduce
+  keystrokes exactly; the player controls every capital via shift.
+
+
 ### 2026-07-18 — Founding CTA gets an accessible docked box
 
 **Changed**

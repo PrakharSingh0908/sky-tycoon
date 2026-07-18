@@ -43,7 +43,10 @@ struct NewGameView: View {
                         .font(.game(.title3, weight: .bold))
                         .foregroundStyle(Theme.textPrimary)
                         .keyboardType(.asciiCapable)
-                        .textInputAutocapitalization(.words)
+                        // .never so the system NEVER rewrites case: brand
+                        // names like "SkyTycoon" or "airGo" must type exactly
+                        // as entered, capitals anywhere via shift.
+                        .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .focused($nameFocused)
                         .submitLabel(.done)
