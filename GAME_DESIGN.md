@@ -285,3 +285,26 @@ All 5 countries and special rules, international routes, 3-class cabin editor, h
 - **Fixed-timestep tick loop** driven by a timer that accumulates real time and fires whole weekly ticks; UI speed settings only change accumulation rate. *(Amended July 2026: a 30 Hz `Timer` ships instead of `CADisplayLink` — with 8-second weekly ticks, frame-perfect timing buys nothing but battery drain, and the sim's determinism never depended on the driver.)*
 - **Codable snapshot saves**: the entire `GameState` serializes to one JSON blob; autosave every tick; versioned for future migration.
 - **Balance data as data**: aircraft stats, country coefficients, and event cards live in plain Swift constant tables now, designed to move to bundled JSON later so balancing never requires touching sim code.
+
+---
+
+## 10. Amendment — The Immediacy Rule (2026-07-18)
+
+Player changes take visible effect **immediately**; the sim's money
+still settles on the deterministic weekly tick. Concretely:
+
+- **Live projections:** every lever (fare, frequency, aircraft
+  assignment) re-projects its route's load factor, demand, and margin
+  the moment it moves — the boarding pass, route detail, and aircraft
+  rows all read from the same `computeEconomics` the tick uses, so
+  the projection and the eventual settle can never disagree. Settled
+  history stays clearly labeled ("Last week").
+- **Hiring:** posting a job ad produces its first applicant wave
+  same-day (seeded RNG, determinism intact); the weekly trickle
+  continues while the ad runs.
+- **Deliberately slow (practical reasoning required to stay slow):**
+  aircraft deliveries (factory lead time), maintenance checks and
+  cabin refits (physical work grounds the plane), and reputation /
+  brand-awareness drift — instant reputation would delete the
+  death-spiral-and-recovery arc that gives service quality its
+  long-term weight.

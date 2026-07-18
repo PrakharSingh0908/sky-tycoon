@@ -1040,12 +1040,20 @@ final class GameEngine {
                                        using: &state.seedRNG))
     }
 
-    /// Run a job ad for a role. Applicants trickle in on the weekly tick.
+    /// Run a job ad for a role. The first wave applies the moment the ad
+    /// is up (immediacy rule, GDD amendment 2026-07-18); the weekly tick
+    /// keeps the trickle coming. All draws from the seeded RNG.
     @discardableResult
     func postJobAd(role: StaffRole) -> Bool {
         guard state.cash >= Balance.jobAdFee, state.jobPostings[role] == nil else { return false }
         state.cash -= Balance.jobAdFee
         state.jobPostings[role] = Balance.jobPostingWeeks
+        let waiting = state.applicants.filter { $0.role == role }.count
+        let firstWave = min(1 + (Double.random(in: 0...1, using: &state.seedRNG) < 0.5 ? 1 : 0),
+                            Balance.maxApplicantsPerRole - waiting)
+        for _ in 0..<max(0, firstWave) {
+            state.applicants.append(generateApplicant(role: role))
+        }
         save()
         return true
     }

@@ -9,6 +9,21 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — The Immediacy Rule: changes act now, money settles weekly
+
+**Changed**
+- Live projections: boarding passes, the route detail's Economics
+  card, and per-aircraft rows now show load factor and margin
+  projected from CURRENT settings via the same computeEconomics the
+  tick uses — touch a fare and the numbers move instantly. Captions
+  say "projected"; settled truth stays on "Last week" surfaces.
+- Posting a job ad now delivers its first applicant wave immediately
+  (same seeded-RNG draw the weekly tick uses; determinism intact).
+- Kept slow on purpose: deliveries (factory lead time), checks and
+  refits (physical grounding), reputation/awareness drift (instant
+  reputation would delete the recovery arc). Recorded as GDD §10.
+
+
 ### 2026-07-18 — Panel index numbers removed from card headers
 
 **Changed**

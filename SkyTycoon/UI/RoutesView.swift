@@ -144,17 +144,22 @@ private struct BoardingPassCard: View {
 
             PerforationLine().padding(.horizontal, 13)   // meets the punches
 
-            // ── The stub ─────────────────────────────────────────────────
+            // ── The stub: LIVE projection from current settings ──────────
+            // (Immediacy rule: touch a lever anywhere and these move NOW;
+            // money still settles weekly.)
             VStack(spacing: 10) {
-                MeterRow(label: "Load factor", value: route.lastLoadFactor,
-                         color: Theme.health(route.lastLoadFactor))
+                let econ = engine.routeEconomics(routeID: route.id)
+                let projLF = econ?.loadFactor ?? route.lastLoadFactor
+                let projMargin = econ.map { $0.revenue - $0.fuel } ?? route.lastWeeklyProfit
+                MeterRow(label: "Load factor", value: projLF,
+                         color: Theme.health(projLF))
                 HStack {
-                    Text("on-time \(Int(route.lastPunctuality * 100))% · sat \(Int(route.satisfaction))")
+                    Text("projected · on-time \(Int(route.lastPunctuality * 100))% · sat \(Int(route.satisfaction))")
                         .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
                     Spacer()
-                    TickerText(text: route.lastWeeklyProfit.money + "/wk",
+                    TickerText(text: projMargin.money + "/wk",
                                font: .game(.subheadline, weight: .bold),
-                               color: route.lastWeeklyProfit >= 0 ? Theme.profit : Theme.loss)
+                               color: projMargin >= 0 ? Theme.profit : Theme.loss)
                 }
                 HStack(spacing: 10) {
                     NavigationLink {
@@ -238,9 +243,11 @@ private struct BoardingPassCard: View {
             if plane.groundedWeeksRemaining > 0 {
                 StatusBadge(text: "In shop · \(plane.groundedWeeksRemaining) wk", color: Theme.warn)
             } else {
-                TickerText(text: "LF \(Int(route.lastLoadFactor * 100))%",
+                let lf = engine.routeEconomics(routeID: route.id)?.loadFactor
+                    ?? route.lastLoadFactor
+                TickerText(text: "LF \(Int(lf * 100))%",
                            font: .game(.caption2, weight: .semibold),
-                           color: Theme.health(route.lastLoadFactor))
+                           color: Theme.health(lf))
             }
         }
     }
@@ -291,10 +298,14 @@ struct RouteDetailView: View {
                 }
                 GameCard {
                     SectionHeader(title: "Economics", icon: "slider.horizontal.3", accent: accent)
+                    // Projected LF: moves the instant fare/frequency/
+                    // assignment change (immediacy rule).
+                    let projLF = engine.routeEconomics(routeID: routeID)?.loadFactor
+                        ?? route.lastLoadFactor
                     HStack(spacing: 20) {
                         StatTile(label: "Distance", value: "\(Int(route.distanceKm)) km")
-                        StatTile(label: "Load factor", value: "\(Int(route.lastLoadFactor * 100))%",
-                                 color: Theme.health(route.lastLoadFactor))
+                        StatTile(label: "Proj. load factor", value: "\(Int(projLF * 100))%",
+                                 color: Theme.health(projLF))
                         StatTile(label: "On-time", value: "\(Int(route.lastPunctuality * 100))%",
                                  color: Theme.health(route.lastPunctuality))
                     }
