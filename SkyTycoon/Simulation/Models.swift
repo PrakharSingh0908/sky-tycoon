@@ -347,14 +347,26 @@ struct JobApplicant: Codable, Identifiable {
     var weeksRemaining: Int
 }
 
+/// One person on the roster. The sim runs on the pool's aggregates
+/// (averages of these members); identity is for the player.
+struct StaffMember: Codable, Identifiable {
+    let id: UUID
+    var name: String
+    var skill: Double             // 1...5
+    var weeklyWage: Double
+    var hiredOn: GameDate
+}
+
 struct StaffPool: Codable {
     var role: StaffRole
     var headcount: Int
-    var weeklyWage: Double        // player-set, compared against market rate
+    var weeklyWage: Double        // pool average — kept in sync with members
     var happiness: Double         // 0...100
-    var skill: Double             // 1...5
+    var skill: Double             // pool average — kept in sync with members
     /// Last week's demand ÷ roster capacity (1.0 = fully used, >1 = overworked).
     var lastUtilization: Double
+    /// The individuals (invariant: members.count == headcount).
+    var members: [StaffMember]
 }
 
 struct Loan: Codable, Identifiable {

@@ -53,13 +53,21 @@ final class GameEngine {
 
     static func newGame(airlineName: String, country: Country, seed: UInt64 = .random(in: 0...UInt64.max)) -> GameEngine {
         let profile = Balance.countryProfiles[country]!
+        var rng = SeededRandomNumberGenerator(seed: seed)
         var staff: [StaffRole: StaffPool] = [:]
         for role in StaffRole.allCases {
-            staff[role] = StaffPool(role: role, headcount: role == .hq ? 3 : 0,
-                                    weeklyWage: role.marketWage * profile.laborCost,
-                                    happiness: 70, skill: 2.0, lastUtilization: 0)
+            let count = role == .hq ? 3 : 0
+            let wage = role.marketWage * profile.laborCost
+            staff[role] = StaffPool(role: role, headcount: count,
+                                    weeklyWage: wage,
+                                    happiness: 70, skill: 2.0, lastUtilization: 0,
+                                    members: (0..<count).map { _ in
+                                        StaffMember(id: UUID(),
+                                                    name: Self.generateName(rng: &rng),
+                                                    skill: 2.0, weeklyWage: wage,
+                                                    hiredOn: GameDate(week: 1, year: 1))
+                                    })
         }
-        var rng = SeededRandomNumberGenerator(seed: seed)
         let initialMarket = Self.generateUsedListings(rng: &rng)
         let state = GameState(
             seedRNG: rng,
@@ -87,6 +95,18 @@ final class GameEngine {
             netWorthHistory: [], cashHistory: [], reputationHistory: []
         )
         return GameEngine(state: state)
+    }
+
+    private static func generateName(rng: inout SeededRandomNumberGenerator) -> String {
+        "\(Balance.applicantFirstNames.randomElement(using: &rng)!) \(Balance.applicantLastNames.randomElement(using: &rng)!)"
+    }
+
+    /// Recomputes a pool's aggregate wage/skill from its members (the sim
+    /// runs on the aggregates; the roster is the source of truth).
+    private func recomputeAggregates(_ pool: inout StaffPool) {
+        guard !pool.members.isEmpty else { return }
+        pool.weeklyWage = pool.members.map(\.weeklyWage).reduce(0, +) / Double(pool.members.count)
+        pool.skill = min(5, pool.members.map(\.skill).reduce(0, +) / Double(pool.members.count))
     }
 
     /// Rolls a fresh set of second-hand listings from the seeded RNG
@@ -310,10 +330,17 @@ final class GameEngine {
                 if Double.random(in: 0...1, using: &state.seedRNG) < expected - Double(leavers) {
                     leavers += 1
                 }
+                // Seeded-random members hand in their notice.
+                for _ in 0..<min(leavers, pool.members.count) {
+                    pool.members.remove(at: Int.random(in: 0..<pool.members.count,
+                                                       using: &state.seedRNG))
+                }
                 pool.headcount = max(0, pool.headcount - leavers)
+                recomputeAggregates(&pool)
             }
 
             // Skill creeps up slowly with tenure.
+            for i in pool.members.indices { pool.members[i].skill = min(5, pool.members[i].skill + 0.005) }
             pool.skill = min(5, pool.skill + 0.005)
             pool.lastUtilization = u
             state.staff[role] = pool
@@ -698,6 +725,7 @@ final class GameEngine {
             for r in StaffRole.allCases where role == nil || role == r {
                 guard var pool = state.staff[r] else { continue }
                 pool.weeklyWage *= factor
+                for i in pool.members.indices { pool.members[i].weeklyWage *= factor }
                 state.staff[r] = pool
             }
         case .fuelPrice(let multiplier, let weeks):
@@ -1078,25 +1106,61 @@ final class GameEngine {
         return true
     }
 
-    /// Individual hires blend into the aggregate pool: wage and skill
-    /// become headcount-weighted averages, so a bargain hire lowers the
-    /// pool's average wage and a squeezed hire dents morale slightly.
+    /// Hires join the roster by name; the pool's aggregate wage/skill are
+    /// recomputed from the members, so a bargain hire lowers the average
+    /// wage and a squeezed hire dents morale slightly.
     private func hire(_ applicant: JobApplicant, atWage wage: Double) {
         guard var pool = state.staff[applicant.role] else { return }
-        let n = Double(pool.headcount)
-        pool.weeklyWage = n == 0 ? wage : (pool.weeklyWage * n + wage) / (n + 1)
-        pool.skill = n == 0 ? applicant.skill
-                            : min(5, (pool.skill * n + applicant.skill) / (n + 1))
+        pool.members.append(StaffMember(id: UUID(), name: applicant.name,
+                                        skill: applicant.skill, weeklyWage: wage,
+                                        hiredOn: state.date))
         pool.happiness = max(0, pool.happiness - applicant.irritation / 25)
         pool.headcount += 1
+        recomputeAggregates(&pool)
         state.staff[applicant.role] = pool
     }
 
-    func setHeadcount(role: StaffRole, count: Int) {
-        state.staff[role]?.headcount = max(0, count); save()
+    /// Let a specific person go (from the roster dropdown). Firing stings
+    /// the pool's morale a little — people notice.
+    @discardableResult
+    func fireStaff(role: StaffRole, memberID: UUID) -> Bool {
+        guard var pool = state.staff[role],
+              let i = pool.members.firstIndex(where: { $0.id == memberID }) else { return false }
+        pool.members.remove(at: i)
+        pool.headcount = max(0, pool.headcount - 1)
+        pool.happiness = max(0, pool.happiness - 3)
+        recomputeAggregates(&pool)
+        state.staff[role] = pool
+        save()
+        return true
     }
+
+    /// Direct headcount set (tests + internal): the roster syncs — extra
+    /// members are generated at the pool's averages, trims come off the end.
+    func setHeadcount(role: StaffRole, count: Int) {
+        guard var pool = state.staff[role] else { return }
+        let target = max(0, count)
+        while pool.members.count > target { pool.members.removeLast() }
+        while pool.members.count < target {
+            pool.members.append(StaffMember(id: UUID(),
+                                            name: Self.generateName(rng: &state.seedRNG),
+                                            skill: pool.skill, weeklyWage: pool.weeklyWage,
+                                            hiredOn: state.date))
+        }
+        pool.headcount = target
+        state.staff[role] = pool
+        save()
+    }
+
+    /// Pool-wide wage set (the slider): everyone's pay scales to match.
     func setWage(role: StaffRole, wage: Double) {
-        state.staff[role]?.weeklyWage = max(0, wage); save()
+        guard var pool = state.staff[role] else { return }
+        let target = max(0, wage)
+        let factor = pool.weeklyWage > 0 ? target / pool.weeklyWage : 1
+        for i in pool.members.indices { pool.members[i].weeklyWage *= factor }
+        pool.weeklyWage = target
+        state.staff[role] = pool
+        save()
     }
     func setFare(routeID: UUID, fare: Double) {
         guard let r = state.routes.firstIndex(where: { $0.id == routeID }) else { return }

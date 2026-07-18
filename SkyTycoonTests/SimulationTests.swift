@@ -66,7 +66,9 @@ import Foundation
         for role in StaffRole.allCases {
             if let pool = s.staff[role] {
                 f += [Double(pool.headcount), pool.weeklyWage, pool.happiness,
-                      pool.skill, pool.lastUtilization]
+                      pool.skill, pool.lastUtilization,
+                      Double(pool.members.count)]
+                f += pool.members.map(\.weeklyWage)
             }
         }
         for loan in s.loans { f += [loan.remaining, loan.weeklyPayment] }
@@ -826,6 +828,46 @@ import Foundation
         #expect(abs(econ.revenue - econ.pax * route.fare) < 0.01)
         #expect(econ.seatsOffered > 0)
         #expect(econ.breakevenLoadFactor > 0 && econ.breakevenLoadFactor < 1)
+    }
+
+    // ── 6f. The roster — individuals behind the aggregates ───────────────
+
+    @Test func rosterAlwaysMatchesHeadcount() {
+        let engine = GameEngine.newGame(airlineName: "TestAir", country: .india, seed: 905)
+        func check(_ where_: String) {
+            for role in StaffRole.allCases {
+                let pool = engine.state.staff[role]!
+                #expect(pool.members.count == pool.headcount,
+                        "\(role) roster mismatch \(where_): \(pool.members.count) vs \(pool.headcount)")
+            }
+        }
+        check("at start")   // HQ starts with 3 named members
+
+        engine.setHeadcount(role: .pilots, count: 5)
+        check("after setHeadcount up")
+        engine.setHeadcount(role: .pilots, count: 2)
+        check("after setHeadcount down")
+
+        // Hire through the ad flow — the applicant's name joins the roster.
+        engine.postJobAd(role: .cabinCrew)
+        while engine.state.applicants.isEmpty { engine.advanceWeek() }
+        let applicant = engine.state.applicants[0]
+        #expect(engine.hireApplicant(applicantID: applicant.id))
+        check("after hiring")
+        #expect(engine.state.staff[.cabinCrew]!.members.contains { $0.name == applicant.name })
+
+        // Fire that specific person.
+        let member = engine.state.staff[.cabinCrew]!.members.first { $0.name == applicant.name }!
+        #expect(engine.fireStaff(role: .cabinCrew, memberID: member.id))
+        check("after firing")
+        #expect(!engine.state.staff[.cabinCrew]!.members.contains { $0.id == member.id })
+
+        // Aggregates track the roster: pool wage == average of member wages.
+        let pilots = engine.state.staff[.pilots]!
+        if !pilots.members.isEmpty {
+            let avg = pilots.members.map(\.weeklyWage).reduce(0, +) / Double(pilots.members.count)
+            #expect(abs(pilots.weeklyWage - avg) < 0.01)
+        }
     }
 
     // ── 7. Recruitment — job ads, applicants, negotiation ────────────────

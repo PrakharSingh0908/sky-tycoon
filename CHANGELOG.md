@@ -9,6 +9,21 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — The roster: staff become individuals
+
+**Added**
+- Every pool carries a **roster** — a dropdown on each People card
+  listing each person by name with skill, wage, and hire date, and a
+  per-person Fire button (which stings pool morale a little; people
+  notice). Hired applicants keep their name and negotiated wage;
+  generated hires get seeded identities. Invariant enforced everywhere
+  (hiring, firing, attrition, setHeadcount): members.count == headcount,
+  and the pool's aggregate wage/skill are recomputed from the roster —
+  the crew-hours sim still runs on aggregates, unchanged. Attrition now
+  removes seeded-random named members. "Fire one" is gone; you fire
+  someone. (Save shape changed — dev reset. Suite: 57.)
+
+
 ### 2026-07-18 — Buy an aircraft straight from route assignment
 
 **Added**

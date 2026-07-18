@@ -37,6 +37,7 @@ private struct StaffPoolCard: View {
     let pool: StaffPool
     let accent: Color
     let onNegotiate: (JobApplicant) -> Void
+    @State private var rosterExpanded = true
 
     private var roleApplicants: [JobApplicant] {
         engine.state.applicants.filter { $0.role == role }
@@ -86,12 +87,20 @@ private struct StaffPoolCard: View {
                     .disabled(engine.state.cash < Balance.jobAdFee)
                 }
                 Spacer()
-                Button("Fire one", role: .destructive) {
-                    engine.setHeadcount(role: role, count: pool.headcount - 1)
+            }
+
+            // ── The roster: every individual, with their own pink slip ───
+            if !pool.members.isEmpty {
+                DisclosureGroup(isExpanded: $rosterExpanded) {
+                    ForEach(pool.members) { member in
+                        memberRow(member)
+                    }
+                } label: {
+                    Label("Roster (\(pool.members.count))", systemImage: "person.text.rectangle")
+                        .font(.game(.caption, weight: .semibold))
+                        .foregroundStyle(Theme.textSecondary)
                 }
-                .buttonStyle(GameButtonStyle(color: Theme.loss))
-                .disabled(pool.headcount == 0)
-                .opacity(pool.headcount == 0 ? 0.4 : 1)
+                .tint(Theme.textSecondary)
             }
 
             ForEach(roleApplicants) { applicant in
@@ -126,6 +135,25 @@ private struct StaffPoolCard: View {
         }
         .padding(10)
         .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 12))
+    }
+
+    private func memberRow(_ member: StaffMember) -> some View {
+        HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(member.name)
+                    .font(.game(.subheadline, weight: .semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                HStack(spacing: 4) {
+                    StarRating(rating: member.skill, size: 8)
+                    Text("\(member.weeklyWage.money)/wk · since \(member.hiredOn.description)")
+                        .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                }
+            }
+            Spacer()
+            Button("Fire") { engine.fireStaff(role: role, memberID: member.id) }
+                .buttonStyle(GameButtonStyle(color: Theme.loss))
+        }
+        .padding(.vertical, 4)
     }
 
     private var workloadColor: Color {
