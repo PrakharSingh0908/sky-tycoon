@@ -12,7 +12,7 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 ### 2026-07-18 — Polish: arced routes, zoomed map, days on the clock, route P&L up front
 
 **Changed**
-- Route map camera zooms to India (globe zoom 2.6 → 3.6) so the network
+- Route map camera zooms to India (globe zoom 2.6 → 4.8 after a second pass) so the network
   fills the card, and routes draw as **flight-map bows** (quadratic arcs
   lifted from the chord, always bowing north) instead of near-straight
   geodesics — at domestic zoom a true great circle reads as a train

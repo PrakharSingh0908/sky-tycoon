@@ -60,7 +60,7 @@ private struct GlobeCamera: Equatable {
     var centerLat: Double
     var zoom: Double        // globe radius = min(w,h)/2 × zoom
 
-    static let india = GlobeCamera(centerLon: 77.5, centerLat: 20.5, zoom: 3.6)
+    static let india = GlobeCamera(centerLon: 77.5, centerLat: 20.0, zoom: 4.8)
 }
 
 struct RouteMapView: View {
