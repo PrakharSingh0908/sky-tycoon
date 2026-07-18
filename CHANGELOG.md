@@ -9,6 +9,27 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Route desk, 11 new airports, Routes tab promoted
+
+**Added**
+- 11 airports join India: AMD, JAI, LKO, COK, NAG, TRV, GAU, BBI,
+  IXC, plus class-1 strips SXR and VNS (turboprop territory) — 19
+  total. Balance.distance gains a haversine fallback (coords x 1.06
+  route factor) so new pairs never need hand-tabled distances; the
+  calibrated legacy table still wins where it exists.
+- The "Open new route" card is now a route desk: a full sheet with
+  one-tap origin chips (slots shown) and every destination ranked by
+  estimated weekly demand using the sim's own gravity formula, each
+  row carrying distance, demand, and runway class — with Flying / No
+  slots / Open states. Multiple routes can be opened in one visit.
+  *Why:* two dropdowns hid the interesting decision; ranking markets
+  IS the tycoon fantasy.
+
+**Changed**
+- Tab order: Dashboard, Routes, Fleet, People, Money (Routes before
+  Fleet — the network is the game's second screen).
+
+
 ### 2026-07-18 — Satellite globe: 3D projection back, GPU-rendered
 
 **Changed**

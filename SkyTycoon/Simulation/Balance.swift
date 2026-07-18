@@ -134,6 +134,19 @@ enum Balance {
         .init(id: "CCU", name: "Kolkata",   population: 15.0, businessIndex: 0.25, runwayClass: 2, weeklySlots: 45, latitude: 22.655, longitude: 88.447),
         .init(id: "PNQ", name: "Pune",      population: 7.5,  businessIndex: 0.30, runwayClass: 2, weeklySlots: 30, latitude: 18.582, longitude: 73.920),
         .init(id: "GOI", name: "Goa",       population: 1.6,  businessIndex: 0.08, runwayClass: 2, weeklySlots: 30, latitude: 15.381, longitude: 73.839),
+        // Expansion set (2026-07-18): tier-2 metros and regional fields —
+        // distances for these come from the haversine fallback below.
+        .init(id: "AMD", name: "Ahmedabad", population: 8.6,  businessIndex: 0.30, runwayClass: 3, weeklySlots: 40, latitude: 23.077, longitude: 72.634),
+        .init(id: "JAI", name: "Jaipur",    population: 4.1,  businessIndex: 0.22, runwayClass: 2, weeklySlots: 30, latitude: 26.824, longitude: 75.812),
+        .init(id: "LKO", name: "Lucknow",   population: 3.9,  businessIndex: 0.20, runwayClass: 2, weeklySlots: 30, latitude: 26.760, longitude: 80.889),
+        .init(id: "COK", name: "Kochi",     population: 3.6,  businessIndex: 0.22, runwayClass: 2, weeklySlots: 35, latitude: 10.152, longitude: 76.402),
+        .init(id: "NAG", name: "Nagpur",    population: 2.9,  businessIndex: 0.20, runwayClass: 2, weeklySlots: 25, latitude: 21.092, longitude: 79.047),
+        .init(id: "TRV", name: "Trivandrum", population: 2.5, businessIndex: 0.18, runwayClass: 2, weeklySlots: 25, latitude: 8.482,  longitude: 76.920),
+        .init(id: "GAU", name: "Guwahati",  population: 1.2,  businessIndex: 0.15, runwayClass: 2, weeklySlots: 25, latitude: 26.106, longitude: 91.586),
+        .init(id: "BBI", name: "Bhubaneswar", population: 1.2, businessIndex: 0.18, runwayClass: 2, weeklySlots: 25, latitude: 20.244, longitude: 85.818),
+        .init(id: "IXC", name: "Chandigarh", population: 1.1, businessIndex: 0.25, runwayClass: 2, weeklySlots: 20, latitude: 30.673, longitude: 76.788),
+        .init(id: "SXR", name: "Srinagar",  population: 1.5,  businessIndex: 0.10, runwayClass: 1, weeklySlots: 20, latitude: 33.987, longitude: 74.774),
+        .init(id: "VNS", name: "Varanasi",  population: 1.6,  businessIndex: 0.12, runwayClass: 1, weeklySlots: 20, latitude: 25.452, longitude: 82.859),
     ]
 
     /// Straight-line-ish distances (km) for the MVP city set.
@@ -149,7 +162,17 @@ enum Balance {
     ]
 
     static func distance(_ a: String, _ b: String) -> Double {
-        distances["\(a)-\(b)"] ?? distances["\(b)-\(a)"] ?? 1000
+        if let d = distances["\(a)-\(b)"] ?? distances["\(b)-\(a)"] { return d }
+        // Haversine from airport coordinates × 1.06 route factor — new
+        // airports never need hand-tabled pairs. Deterministic.
+        guard let ca = indiaCities.first(where: { $0.id == a }),
+              let cb = indiaCities.first(where: { $0.id == b }) else { return 1000 }
+        let φ1 = ca.latitude * .pi / 180, φ2 = cb.latitude * .pi / 180
+        let dφ = (cb.latitude - ca.latitude) * .pi / 180
+        let dλ = (cb.longitude - ca.longitude) * .pi / 180
+        let h = sin(dφ / 2) * sin(dφ / 2) + cos(φ1) * cos(φ2) * sin(dλ / 2) * sin(dλ / 2)
+        let greatCircle = 6371.0 * 2 * atan2(sqrt(h), sqrt(1 - h))
+        return (greatCircle * 1.06).rounded()
     }
 
     // Demand model constants (GDD §4.3)

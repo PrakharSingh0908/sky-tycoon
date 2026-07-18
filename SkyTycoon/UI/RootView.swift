@@ -45,12 +45,12 @@ struct RootView: View {
             DashboardView()
                 .tabItem { Label("Dashboard", systemImage: "gauge") }
                 .tag(GameTab.dashboard)
-            FleetView()
-                .tabItem { Label("Fleet", systemImage: "airplane") }
-                .tag(GameTab.fleet)
             RoutesView()
                 .tabItem { Label("Routes", systemImage: "map") }
                 .tag(GameTab.routes)
+            FleetView()
+                .tabItem { Label("Fleet", systemImage: "airplane") }
+                .tag(GameTab.fleet)
             PeopleView()
                 .tabItem { Label("People", systemImage: "person.3") }
                 .tag(GameTab.people)

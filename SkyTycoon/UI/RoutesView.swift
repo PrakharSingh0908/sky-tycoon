@@ -11,8 +11,7 @@ import SwiftUI
 
 struct RoutesView: View {
     @Environment(GameEngine.self) private var engine
-    @State private var origin = "DEL"
-    @State private var destination = "BOM"
+    @State private var planning = false
     private let accent = Theme.teal
 
     var body: some View {
@@ -30,52 +29,129 @@ struct RoutesView: View {
                         destName: engine.city(route.destinationID)?.name ?? route.destinationID,
                         accent: accent)
                 }
-                openRouteCard
+                Button {
+                    planning = true
+                } label: {
+                    Label("Plan a new route", systemImage: "plus.circle.fill")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(GameButtonStyle(color: accent, prominent: true))
             }
             .toolbar(.hidden, for: .navigationBar)
+            .sheet(isPresented: $planning) { NewRouteSheet() }
         }
     }
+}
 
-    private var openRouteCard: some View {
-        GameCard {
-            SectionHeader(title: "Open new route", icon: "plus.circle.fill", accent: accent)
-            HStack(spacing: 10) {
-                cityMenu("From", selection: $origin)
-                Image(systemName: "arrow.left.arrow.right")
-                    .font(.caption.weight(.bold)).foregroundStyle(Theme.textSecondary)
-                cityMenu("To", selection: $destination)
+// ── The route desk: pick an origin, see every market ranked ──────────────
+// Replaces two dropdowns with a prospectus: destinations sorted by
+// estimated demand (the sim's own gravity formula), each row carrying
+// distance, demand, runway class, and slots — decide, tap, flying.
+
+private struct NewRouteSheet: View {
+    @Environment(GameEngine.self) private var engine
+    @Environment(\.dismiss) private var dismiss
+    @State private var origin = "DEL"
+    private let accent = Theme.teal
+
+    private struct Prospect: Identifiable {
+        let city: City
+        let distanceKm: Double
+        let demand: Double
+        var id: String { city.id }
+    }
+
+    private var prospects: [Prospect] {
+        engine.state.cities
+            .filter { $0.id != origin }
+            .map { city in
+                let dist = Balance.distance(origin, city.id)
+                guard let from = engine.city(origin) else {
+                    return Prospect(city: city, distanceKm: dist, demand: 0)
+                }
+                // The sim's gravity term (computeEconomics uses the same
+                // form), so ranking here matches what the route will earn.
+                let demand = Balance.demandK
+                    * pow(from.population * city.population, 0.55)
+                    / pow(max(dist, 100), 0.35)
+                return Prospect(city: city, distanceKm: dist, demand: demand)
             }
-            let dist = Balance.distance(origin, destination)
-            if origin != destination {
-                Text("\(Int(dist)) km · \(engine.freeSlots(at: origin)) free slots at \(origin), \(engine.freeSlots(at: destination)) at \(destination)")
+            .sorted { $0.demand > $1.demand }
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("New route")
+                    .font(.game(.title2, weight: .bold)).foregroundStyle(Theme.textPrimary)
+                    .padding(.top, 20)
+
+                // Origin: one tap per airport, slots shown for the pick.
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(engine.state.cities) { city in
+                            Button(city.id) { origin = city.id }
+                                .buttonStyle(GameButtonStyle(color: accent,
+                                                             prominent: origin == city.id))
+                        }
+                    }
+                }
+                .fadeEdge(.trailing, length: 16)
+                Text("From \(engine.city(origin)?.name ?? origin) · \(engine.freeSlots(at: origin)) free slots")
                     .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+
+                VStack(spacing: 8) {
+                    ForEach(prospects) { prospect in
+                        prospectRow(prospect)
+                    }
+                }
+                .padding(.bottom, 24)
             }
-            Button("Open route") {
-                let fareLevel = Balance.countryProfiles[engine.state.country]!.fareLevel
-                _ = engine.openRoute(from: origin, to: destination,
-                    fare: dist * Balance.referenceFarePerKm * fareLevel,
-                    frequency: 7)
-            }
-            .buttonStyle(GameButtonStyle(color: accent, prominent: true))
-            .disabled(origin == destination)
-            .opacity(origin == destination ? 0.4 : 1)
+            .padding(.horizontal, 20)
         }
+        .background(Theme.bgElevated)
+        .presentationDetents([.large])
+        .presentationBackground(Theme.bgElevated)
+        .preferredColorScheme(.dark)
+        .holdsSimClock()
     }
 
-    private func cityMenu(_ label: String, selection: Binding<String>) -> some View {
-        Menu {
-            ForEach(engine.state.cities) { city in
-                Button("\(city.name) (\(city.id))") { selection.wrappedValue = city.id }
-            }
-        } label: {
-            HStack(spacing: 4) {
-                Text(selection.wrappedValue).font(.game(.headline, weight: .bold))
-                Image(systemName: "chevron.up.chevron.down").font(.caption2)
-            }
-            .padding(.horizontal, 12).padding(.vertical, 8)
-            .background(accent.opacity(0.14), in: RoundedRectangle(cornerRadius: Theme.controlCorner))
-            .foregroundStyle(accent)
+    @ViewBuilder private func prospectRow(_ prospect: Prospect) -> some View {
+        let existing = engine.state.routes.contains {
+            ($0.originID == origin && $0.destinationID == prospect.city.id) ||
+            ($0.destinationID == origin && $0.originID == prospect.city.id)
         }
+        let hasSlots = engine.freeSlots(at: origin) > 0
+            && engine.freeSlots(at: prospect.city.id) > 0
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text(prospect.city.id)
+                        .font(.game(.headline, weight: .bold)).foregroundStyle(Theme.textPrimary)
+                    Text(prospect.city.name)
+                        .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+                }
+                Text("\(Int(prospect.distanceKm)) km · ~\(Int(prospect.demand)) pax/wk · class \(prospect.city.runwayClass) runway")
+                    .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+            }
+            Spacer()
+            if existing {
+                StatusBadge(text: "Flying", color: Theme.profit)
+            } else if !hasSlots {
+                StatusBadge(text: "No slots", color: Theme.warn)
+            } else {
+                Button("Open") {
+                    let dist = prospect.distanceKm
+                    let fareLevel = Balance.countryProfiles[engine.state.country]!.fareLevel
+                    _ = engine.openRoute(from: origin, to: prospect.city.id,
+                        fare: dist * Balance.referenceFarePerKm * fareLevel,
+                        frequency: 7)
+                }
+                .buttonStyle(GameButtonStyle(color: accent, prominent: true))
+            }
+        }
+        .padding(10)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.corner))
     }
 }
 
@@ -429,4 +505,10 @@ struct RouteDetailView: View {
             .buttonStyle(GameButtonStyle(color: Theme.orange, prominent: !hasCandidate))
         }
     }
+}
+
+#Preview("New route desk") {
+    NewRouteSheet()
+        .environment(GameEngine.previewGame())
+        .preferredColorScheme(.dark)
 }
