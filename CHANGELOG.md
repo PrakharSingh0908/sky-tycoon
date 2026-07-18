@@ -9,6 +9,22 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Satellite globe: 3D projection back, GPU-rendered
+
+**Changed**
+- The satellite map is a 3D globe again: Blue Marble textures a
+  SceneKit sphere with an orthographic camera, and the route/city
+  overlay draws in Canvas with matching orthographic math. The flat
+  CPU-drawn version (same day) redrew a 5400px image per drag frame —
+  janky and flat-looking; the GPU renders the textured sphere for
+  free and only on change. The sphere uses custom explicit-UV
+  geometry after SCNSphere's undocumented texture seam misaligned
+  terrain by ~18 degrees (verified dot-on-city in the simulator:
+  DEL/BOM/BLR sit on their real terrain). Rotation is built as
+  quaternions (pitch after yaw) so SceneKit's euler order can't
+  surprise. Drag rotates, pinch zooms, focus framing unchanged.
+
+
 ### 2026-07-18 — Satellite map replaces the vector globe
 
 **Changed**

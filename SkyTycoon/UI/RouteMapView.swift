@@ -2,39 +2,141 @@
 //  RouteMapView.swift
 //  SkyTycoon — UI (teal accent)
 //
-//  The network map (GDD §7 tab 3): NASA Blue Marble satellite imagery
-//  (public domain, bundled — fully offline, zero tile servers) draped
-//  under the ops-dark scrim, with glowing route arcs, city dots, and
-//  code chips on top. Flat equirectangular camera: drag pans, pinch
-//  zooms; at domestic zoom flat vs globe is indistinguishable, and a
-//  flat projection is what makes real imagery drapeable in one draw.
+//  The satellite globe (GDD §7 tab 3): NASA Blue Marble imagery (public
+//  domain, bundled, fully offline) textured onto a GPU-rendered SceneKit
+//  sphere — the 3D orthographic projection with real terrain, at zero
+//  per-frame CPU cost. Route arcs, city dots, and code chips draw in a
+//  SwiftUI Canvas overlay whose orthographic math matches the SceneKit
+//  camera exactly (both are true orthographic, same radius), so overlay
+//  and terrain can never drift apart.
 //
-//  Routes: thickness = frequency, color = profitability, neutral +
-//  dashed while unstaffed.
+//  Drag rotates, pinch zooms. Routes: thickness = frequency, color =
+//  profitability, neutral + dashed while unstaffed.
 //
 
 import SwiftUI
-
-// ── Satellite base (NASA Blue Marble, public domain — see CREDITS.md) ────
-
-private enum SatelliteBase {
-    static let image: UIImage? = {
-        guard let url = Bundle.main.url(forResource: "bluemarble_world",
-                                        withExtension: "jpg"),
-              let img = UIImage(contentsOfFile: url.path) else { return nil }
-        return img
-    }()
-}
+import SceneKit
 
 // ── Camera ────────────────────────────────────────────────────────────────
 
-private struct MapCamera: Equatable {
+private struct GlobeCamera: Equatable {
     var centerLon: Double   // degrees
     var centerLat: Double
-    var zoom: Double        // points per degree = min(w,h)/2 × zoom × π/180
+    var zoom: Double        // sphere screen radius = min(w,h)/2 × zoom
 
-    static let india = MapCamera(centerLon: 77.5, centerLat: 20.0, zoom: 4.8)
+    static let india = GlobeCamera(centerLon: 77.5, centerLat: 20.0, zoom: 4.8)
 }
+
+// ── The GPU globe: textured sphere, unlit, ops-dark multiplied ───────────
+
+private struct GlobeSceneView: UIViewRepresentable {
+    var camera: GlobeCamera
+
+    func makeUIView(context: Context) -> SCNView {
+        let view = SCNView()
+        view.backgroundColor = .clear
+        view.antialiasingMode = .multisampling4X
+        view.isUserInteractionEnabled = false   // SwiftUI owns the gestures
+        view.rendersContinuously = false        // static scene: draw on change only
+
+        let scene = SCNScene()
+        // Custom sphere with EXPLICIT UVs: local point for (lam, phi) is
+        // (cos phi * sin lam, sin phi, cos phi * cos lam), so lon 0 faces +Z
+        // and u/v map the equirect texture exactly. No dependence on
+        // SCNSphere's undocumented seam; the Canvas overlay matches by
+        // construction.
+        let sphere = Self.buildGlobeGeometry(bands: 96)
+        let material = SCNMaterial()
+        if let url = Bundle.main.url(forResource: "bluemarble_world", withExtension: "jpg"),
+           let image = UIImage(contentsOfFile: url.path) {
+            material.diffuse.contents = image
+        } else {
+            material.diffuse.contents = UIColor(red: 0.13, green: 0.19, blue: 0.28, alpha: 1)
+        }
+        material.lightingModel = .constant     // a map, not a lit planet
+        // Ops-dark scrim, done in the material so arcs stay bright above.
+        material.multiply.contents = UIColor(red: 0.60, green: 0.67, blue: 0.80, alpha: 1)
+        sphere.firstMaterial = material
+        let globe = SCNNode(geometry: sphere)
+        globe.name = "globe"
+        scene.rootNode.addChildNode(globe)
+
+        let cameraNode = SCNNode()
+        cameraNode.name = "camera"
+        let cam = SCNCamera()
+        cam.usesOrthographicProjection = true  // matches the overlay math exactly
+        cam.zNear = 0.1
+        cam.zFar = 10
+        cameraNode.camera = cam
+        cameraNode.position = SCNVector3(0, 0, 3)
+        scene.rootNode.addChildNode(cameraNode)
+
+        view.scene = scene
+        apply(camera: camera, to: view)
+        return view
+    }
+
+    func updateUIView(_ view: SCNView, context: Context) {
+        apply(camera: camera, to: view)
+    }
+
+    private func apply(camera: GlobeCamera, to view: SCNView) {
+        guard let globe = view.scene?.rootNode.childNode(withName: "globe", recursively: false),
+              let cameraNode = view.scene?.rootNode.childNode(withName: "camera", recursively: false)
+        else { return }
+        // Rotate so (centerLon, centerLat) faces the camera on +Z. Built
+        // as an explicit quaternion product (pitch AFTER yaw, in world
+        // space) so SceneKit's euler order can't surprise us.
+        let lon = Float(camera.centerLon * .pi / 180)
+        let lat = Float(camera.centerLat * .pi / 180)
+        let yaw = simd_quatf(angle: -lon, axis: SIMD3(0, 1, 0))
+        let pitch = simd_quatf(angle: lat, axis: SIMD3(1, 0, 0))
+        globe.simdOrientation = pitch * yaw
+        // Orthographic scale: world-unit half-height of the view such that
+        // the unit sphere projects to min(w,h)/2 × zoom points.
+        let bounds = view.bounds
+        guard bounds.height > 0 else { return }
+        let minSide = min(bounds.width, bounds.height)
+        cameraNode.camera?.orthographicScale =
+            Double(bounds.height) / (Double(minSide) * camera.zoom)
+    }
+
+    /// Unit sphere with our own equirect UVs. Index-limited well below
+    /// UInt16; built once at view creation.
+    private static func buildGlobeGeometry(bands: Int) -> SCNGeometry {
+        var positions: [SCNVector3] = []
+        var uvs: [CGPoint] = []
+        var indices: [UInt32] = []
+        let rings = bands / 2
+        for r in 0...rings {
+            let phi = Double.pi / 2 - Double(r) / Double(rings) * .pi   // +90 ... -90
+            for b in 0...bands {
+                let lam = -Double.pi + Double(b) / Double(bands) * 2 * .pi
+                positions.append(SCNVector3(cos(phi) * sin(lam),
+                                            sin(phi),
+                                            cos(phi) * cos(lam)))
+                uvs.append(CGPoint(x: (lam + .pi) / (2 * .pi),
+                                   y: (Double.pi / 2 - phi) / .pi))
+            }
+        }
+        let stride = bands + 1
+        for r in 0..<rings {
+            for b in 0..<bands {
+                let a = UInt32(r * stride + b)
+                let bIdx = UInt32(r * stride + b + 1)
+                let c = UInt32((r + 1) * stride + b)
+                let d = UInt32((r + 1) * stride + b + 1)
+                indices.append(contentsOf: [a, c, bIdx, bIdx, c, d])
+            }
+        }
+        let vertexSource = SCNGeometrySource(vertices: positions)
+        let uvSource = SCNGeometrySource(textureCoordinates: uvs)
+        let element = SCNGeometryElement(indices: indices, primitiveType: .triangles)
+        return SCNGeometry(sources: [vertexSource, uvSource], elements: [element])
+    }
+}
+
+// ── The map: GPU globe underneath, Canvas overlay on top ─────────────────
 
 struct RouteMapView: View {
     @Environment(GameEngine.self) private var engine
@@ -42,14 +144,17 @@ struct RouteMapView: View {
     /// two endpoints, and the camera frames the pair. The full-network
     /// map (nil) draws every arc and no code labels.
     var focusRouteID: UUID? = nil
-    @State private var camera: MapCamera = .india
-    @State private var dragStart: MapCamera?
+    @State private var camera: GlobeCamera = .india
+    @State private var dragStart: GlobeCamera?
     @State private var zoomStart: Double?
 
     var body: some View {
         GeometryReader { geo in
-            Canvas { ctx, size in
-                draw(ctx: &ctx, size: size)
+            ZStack {
+                GlobeSceneView(camera: camera)
+                Canvas { ctx, size in
+                    drawOverlay(ctx: &ctx, size: size)
+                }
             }
             .background(Theme.bg)
             .onAppear { frameFocusRoute() }
@@ -58,11 +163,11 @@ struct RouteMapView: View {
                     .onChanged { value in
                         let start = dragStart ?? camera
                         dragStart = start
-                        let ppd = pointsPerDegree(size: geo.size)
-                        camera.centerLon = max(-180, min(180,
-                            start.centerLon - value.translation.width / ppd))
-                        camera.centerLat = max(-75, min(75,
-                            start.centerLat + value.translation.height / ppd))
+                        let radius = min(geo.size.width, geo.size.height) / 2 * camera.zoom
+                        let degreesPerPoint = 60.0 / radius
+                        camera.centerLon = start.centerLon - value.translation.width * degreesPerPoint
+                        camera.centerLat = min(80, max(-80,
+                            start.centerLat + value.translation.height * degreesPerPoint))
                     }
                     .onEnded { _ in dragStart = nil }
             )
@@ -71,7 +176,7 @@ struct RouteMapView: View {
                     .onChanged { value in
                         let start = zoomStart ?? camera.zoom
                         zoomStart = start
-                        camera.zoom = min(12, max(1.2, start * value.magnification))
+                        camera.zoom = min(9, max(1.0, start * value.magnification))
                     }
                     .onEnded { _ in zoomStart = nil }
             )
@@ -88,48 +193,46 @@ struct RouteMapView: View {
         let φ1 = o.latitude * .pi / 180, φ2 = d.latitude * .pi / 180
         let Δλ = (d.longitude - o.longitude) * .pi / 180
         let angle = acos(max(-1, min(1, sin(φ1) * sin(φ2) + cos(φ1) * cos(φ2) * cos(Δλ))))
-        camera = MapCamera(
+        camera = GlobeCamera(
             centerLon: (o.longitude + d.longitude) / 2,
             // Nudge up so the northward arc bow stays in frame.
             centerLat: (o.latitude + d.latitude) / 2 + angle * 6,
-            zoom: min(12, max(1.5, 1.05 / max(angle, 0.02))))
+            zoom: min(9, max(1.5, 1.05 / max(angle, 0.02))))
     }
 
-    // MARK: - Projection (flat equirectangular)
+    // MARK: - Projection (orthographic, mirrors the SceneKit camera)
 
-    private func pointsPerDegree(size: CGSize) -> Double {
-        Double(min(size.width, size.height)) / 2 * camera.zoom * .pi / 180
+    /// Returns nil past the horizon.
+    private func project(_ lonDeg: Double, _ latDeg: Double,
+                         size: CGSize, radius: Double) -> CGPoint? {
+        let λ = (lonDeg - camera.centerLon) * .pi / 180
+        let φ = latDeg * .pi / 180
+        let φ0 = camera.centerLat * .pi / 180
+        let cosC = sin(φ0) * sin(φ) + cos(φ0) * cos(φ) * cos(λ)
+        guard cosC > 0 else { return nil }
+        let x = cos(φ) * sin(λ)
+        let y = cos(φ0) * sin(φ) - sin(φ0) * cos(φ) * cos(λ)
+        return CGPoint(x: size.width / 2 + radius * x,
+                       y: size.height / 2 - radius * y)
     }
 
-    private func project(_ lonDeg: Double, _ latDeg: Double, size: CGSize) -> CGPoint {
-        let ppd = pointsPerDegree(size: size)
-        return CGPoint(x: size.width / 2 + (lonDeg - camera.centerLon) * ppd,
-                       y: size.height / 2 - (latDeg - camera.centerLat) * ppd)
-    }
+    // MARK: - Overlay drawing (arcs + dots only; terrain is the GPU's job)
 
-    // MARK: - Drawing
+    private func drawOverlay(ctx: inout GraphicsContext, size: CGSize) {
+        let radius = Double(min(size.width, size.height)) / 2 * camera.zoom
+        let center = CGPoint(x: size.width / 2, y: size.height / 2)
 
-    private func draw(ctx: inout GraphicsContext, size: CGSize) {
-        let ppd = pointsPerDegree(size: size)
-
-        // ── Satellite base: the whole equirect world in one draw call,
-        // positioned so the camera window shows the right patch.
-        if let base = SatelliteBase.image {
-            let worldRect = CGRect(
-                x: size.width / 2 - (camera.centerLon + 180) * ppd,
-                y: size.height / 2 - (90 - camera.centerLat) * ppd,
-                width: 360 * ppd,
-                height: 180 * ppd)
-            ctx.draw(Image(uiImage: base), in: worldRect)
-            // Ops-dark scrim: multiply toward the theme so the imagery sits
-            // behind the arcs instead of competing with them.
-            ctx.blendMode = .multiply
-            ctx.fill(Path(CGRect(origin: .zero, size: size)),
-                     with: .color(Color(red: 0.55, green: 0.63, blue: 0.78)))
-            ctx.blendMode = .normal
+        // Atmosphere rim, when the whole disc is in frame.
+        if radius < Double(max(size.width, size.height)) {
+            let disc = Path(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius,
+                                              width: radius * 2, height: radius * 2))
+            ctx.drawLayer { layer in
+                layer.addFilter(.blur(radius: 10))
+                layer.stroke(disc, with: .color(Theme.teal.opacity(0.35)), lineWidth: 5)
+            }
         }
 
-        // ── Route arcs: flight-map bows. Unstaffed routes draw dashed:
+        // Route arcs: flight-map bows. Unstaffed routes draw dashed:
         // planned, not flying.
         let staffedRouteIDs = Set(engine.state.fleet.compactMap(\.assignedRouteID))
         let focusRoute = focusRouteID.flatMap { id in
@@ -138,9 +241,11 @@ struct RouteMapView: View {
         let routesToDraw = focusRoute.map { [$0] } ?? engine.state.routes
         for route in routesToDraw {
             guard let origin = engine.city(route.originID),
-                  let dest = engine.city(route.destinationID) else { continue }
-            let p1 = project(origin.longitude, origin.latitude, size: size)
-            let p2 = project(dest.longitude, dest.latitude, size: size)
+                  let dest = engine.city(route.destinationID),
+                  let p1 = project(origin.longitude, origin.latitude,
+                                   size: size, radius: radius),
+                  let p2 = project(dest.longitude, dest.latitude,
+                                   size: size, radius: radius) else { continue }
             let mid = CGPoint(x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2)
             let dx = p2.x - p1.x, dy = p2.y - p1.y
             let chord = max(hypot(dx, dy), 1)
@@ -162,12 +267,11 @@ struct RouteMapView: View {
                        style: StrokeStyle(lineWidth: coreWidth, lineCap: .round, dash: dash))
         }
 
-        // ── City markers. Codes label only a focused route's two endpoints;
+        // City markers. Codes label only a focused route's two endpoints;
         // the network map stays label-free (dots + arcs tell the story).
         for city in engine.state.cities {
-            let p = project(city.longitude, city.latitude, size: size)
-            guard p.x > -20, p.x < size.width + 20,
-                  p.y > -20, p.y < size.height + 20 else { continue }
+            guard let p = project(city.longitude, city.latitude,
+                                  size: size, radius: radius) else { continue }
             let isServed = engine.state.routes.contains {
                 $0.originID == city.id || $0.destinationID == city.id
             }
