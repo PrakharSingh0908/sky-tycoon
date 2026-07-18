@@ -9,6 +9,16 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Boarding-pass stub: full-width load factor
+
+**Changed**
+- The stub's load-factor gauge now spans the full ticket width, with
+  on-time/satisfaction (left) and the weekly profit ticker (right) on
+  their own row beneath; stub height 102→124 so the notch geometry
+  keeps up. *Why:* user direction; the gauge is the pass's primary
+  instrument and was squeezed to half width by the profit block.
+
+
 ### 2026-07-18 — Boarding passes list their active aircraft
 
 **Added**

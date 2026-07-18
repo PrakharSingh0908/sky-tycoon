@@ -125,7 +125,7 @@ private struct BoardingPassCard: View {
     @State private var confirmingCancel = false
     @State private var showingAircraft = false
 
-    private let stubHeight: CGFloat = 102
+    private let stubHeight: CGFloat = 124
 
     var body: some View {
         VStack(spacing: 0) {
@@ -146,16 +146,15 @@ private struct BoardingPassCard: View {
 
             // ── The stub ─────────────────────────────────────────────────
             VStack(spacing: 10) {
-                HStack(spacing: 14) {
-                    MeterRow(label: "Load factor", value: route.lastLoadFactor,
-                             color: Theme.health(route.lastLoadFactor))
-                    VStack(alignment: .trailing, spacing: 2) {
-                        TickerText(text: route.lastWeeklyProfit.money + "/wk",
-                                   font: .game(.subheadline, weight: .bold),
-                                   color: route.lastWeeklyProfit >= 0 ? Theme.profit : Theme.loss)
-                        Text("on-time \(Int(route.lastPunctuality * 100))% · sat \(Int(route.satisfaction))")
-                            .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
-                    }
+                MeterRow(label: "Load factor", value: route.lastLoadFactor,
+                         color: Theme.health(route.lastLoadFactor))
+                HStack {
+                    Text("on-time \(Int(route.lastPunctuality * 100))% · sat \(Int(route.satisfaction))")
+                        .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                    Spacer()
+                    TickerText(text: route.lastWeeklyProfit.money + "/wk",
+                               font: .game(.subheadline, weight: .bold),
+                               color: route.lastWeeklyProfit >= 0 ? Theme.profit : Theme.loss)
                 }
                 HStack(spacing: 10) {
                     NavigationLink {
