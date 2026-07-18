@@ -9,6 +9,17 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased]
 
+### 2026-07-18 — Receipt icon no longer overflows its disc
+
+**Fixed**
+- The acquisition receipt's icon is now resizable + scaledToFit in a
+  32pt box instead of font-sized at 28pt. *Why:* SF Symbols size by
+  point/cap height, not bounding width; the "signature" glyph (lease
+  receipts) is far wider than tall, so at 28pt it ran past the 64pt
+  circle and looked cropped. The receipt preview now pins the leased
+  kind, since signature is the widest-glyph stress case.
+
+
 ### 2026-07-18 — Route detail money card cut to three numbers
 
 **Changed**

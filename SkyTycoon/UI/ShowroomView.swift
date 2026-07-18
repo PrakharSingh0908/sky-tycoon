@@ -210,8 +210,12 @@ private struct AcquisitionReceiptView: View {
         VStack(spacing: 16) {
             ZStack {
                 Circle().fill(Theme.profit.opacity(0.15)).frame(width: 64, height: 64)
+                // Fit, don't font-size: wide glyphs like "signature" overflow
+                // the disc when sized by point size.
                 Image(systemName: icon)
-                    .font(.system(size: 28)).foregroundStyle(Theme.profit)
+                    .resizable().scaledToFit()
+                    .frame(width: 32, height: 32)
+                    .foregroundStyle(Theme.profit)
             }
             .padding(.top, 12)
 
@@ -311,9 +315,10 @@ private struct AcquisitionReceiptView: View {
 }
 
 #Preview("Receipt") {
+    // Leased: the "signature" glyph is the widest icon — the crop stress case.
     AcquisitionReceiptView(receipt: AcquisitionReceipt(
-        kind: .ordered, type: .propeller28, nickname: "VT-C",
-        amount: Balance.specs[.propeller28]!.purchasePrice,
-        deliveryWeeks: Balance.deliveryWeeks[.propeller28]!))
+        kind: .leased, type: .propeller28, nickname: "VT-C",
+        amount: Balance.specs[.propeller28]!.purchasePrice * Balance.leaseRatePerWeek,
+        deliveryWeeks: nil))
         .environment(GameEngine.previewGame())
 }
