@@ -46,7 +46,41 @@ final class GameEngine {
 
     // ── Init / new game ──────────────────────────────────────────────────
 
-    init(state: GameState) { self.state = state }
+    init(state: GameState) {
+        self.state = state
+        backfillAvatars()
+    }
+
+    // ── Avatar backfill for pre-portrait saves (2026-07-19) ──────────────
+    // Deterministic from data the person already carries: the first name
+    // picks the gender pool, the stable UUID picks the variant. No RNG
+    // stream is consumed, so sim determinism is untouched.
+
+    private static func inferredAvatar(name: String, id: UUID, role: StaffRole) -> String {
+        let first = name.split(separator: " ").first.map(String.init) ?? ""
+        let male = Balance.firstNamesFemale.contains(first) ? false : true
+        let variants = Balance.avatarVariants(role: role, male: male)
+        let hash = id.uuidString.unicodeScalars.reduce(0) { ($0 &* 31 &+ Int($1.value)) & 0xFFFF }
+        return Balance.avatarName(role: role, male: male, variant: (hash % variants) + 1)
+    }
+
+    private func backfillAvatars() {
+        for role in StaffRole.allCases {
+            guard var pool = state.staff[role] else { continue }
+            var changed = false
+            for i in pool.members.indices where pool.members[i].avatar == nil {
+                pool.members[i].avatar = Self.inferredAvatar(
+                    name: pool.members[i].name, id: pool.members[i].id, role: role)
+                changed = true
+            }
+            if changed { state.staff[role] = pool }
+        }
+        for i in state.applicants.indices where state.applicants[i].avatar == nil {
+            let applicant = state.applicants[i]
+            state.applicants[i].avatar = Self.inferredAvatar(
+                name: applicant.name, id: applicant.id, role: applicant.role)
+        }
+    }
 
     static func newGame(airlineName: String, country: Country, seed: UInt64 = .random(in: 0...UInt64.max), difficulty: Difficulty = .standard) -> GameEngine {
         let profile = Balance.countryProfiles[country]!

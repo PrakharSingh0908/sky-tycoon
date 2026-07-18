@@ -9,6 +9,17 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased — design-system branch]
 
+### 2026-07-19 — Portraits backfilled into existing saves
+
+**Fixed**
+- Staff hired before the portrait feature showed monogram fallbacks
+  forever (their records carry avatar = nil). GameEngine now backfills
+  on load: gender inferred from the first-name pools, variant picked
+  from a stable hash of the person's UUID — deterministic, no RNG
+  stream consumed, same face on every load. Verified against a live
+  pre-feature save in the simulator.
+
+
 ### 2026-07-19 — Staff portraits + showroom spec-sheet cards
 
 **Added**
