@@ -2,16 +2,23 @@
 //  SkyTycoonApp.swift
 //  SkyTycoon
 //
-//  Created by Prakhar Singh on 16/07/26.
+//  App entry. The engine is created once (loaded from save, or a fresh
+//  new game) and injected into the environment. Views are dumb renderers
+//  of engine state.
 //
 
 import SwiftUI
 
 @main
 struct SkyTycoonApp: App {
+    @State private var engine: GameEngine = GameEngine.load()
+        ?? GameEngine.newGame(airlineName: "Aunt Air", country: .india)
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
+                .environment(engine)
+                .onAppear { engine.startClock() }
         }
     }
 }

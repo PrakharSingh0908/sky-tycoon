@@ -1,0 +1,282 @@
+//
+//  ShowroomView.swift
+//  SkyTycoon — UI (orange accent)
+//
+//  Three acquisition paths as chip-switched offer cards (GDD §4.1,
+//  DESIGN_SYSTEM.md §4).
+//
+
+import SwiftUI
+
+/// What just happened at the counter — feeds the confirmation sheet.
+struct AcquisitionReceipt: Identifiable {
+    enum Kind { case ordered, bought, leased }
+    let id = UUID()
+    let kind: Kind
+    let type: AircraftType
+    let nickname: String
+    let amount: Double          // price paid, or weekly lease payment
+    let deliveryWeeks: Int?     // .ordered only
+}
+
+struct ShowroomView: View {
+    @Environment(GameEngine.self) private var engine
+    @State private var tab: Tab = .used
+    @State private var receipt: AcquisitionReceipt?
+    private let accent = Theme.orange
+
+    enum Tab: String, CaseIterable, Identifiable {
+        case new = "New", used = "Used", lease = "Lease"
+        var id: String { rawValue }
+    }
+
+    var body: some View {
+        GameScreen(title: "Showroom", accent: accent) {
+            HStack(spacing: 8) {
+                ForEach(Tab.allCases) { t in
+                    Button(t.rawValue) { tab = t }
+                        .buttonStyle(GameButtonStyle(color: accent, prominent: tab == t))
+                }
+                Spacer()
+            }
+            switch tab {
+            case .new: newCards
+            case .used: usedCards
+            case .lease: leaseCards
+            }
+        }
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(Theme.bgElevated, for: .navigationBar)
+        .sheet(item: $receipt) { AcquisitionReceiptView(receipt: $0) }
+        .sensoryFeedback(.success, trigger: receipt?.id) { _, new in new != nil }
+    }
+
+    // ── New: full price, delivery wait ───────────────────────────────────
+
+    @ViewBuilder private var newCards: some View {
+        Text("Cash up front — delivered in 8–24 weeks.")
+            .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+        ForEach(AircraftType.allCases) { type in
+            let spec = Balance.specs[type]!
+            let discount = engine.loyaltyDiscount(seller: spec.seller)
+            let price = engine.discountedPrice(for: type)
+            GameCard {
+                offerHeader(type: type,
+                            detail: "\(spec.windowCount) windows · \(spec.maxSeats) seats · \(Int(spec.rangeKm)) km · arrives in \(Balance.deliveryWeeks[type]!) wk")
+                HStack(spacing: 6) {
+                    Text("Sold by \(spec.seller)")
+                        .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                    if discount > 0 {
+                        StatusBadge(text: "loyalty −\(Int(discount * 100))%", color: Theme.profit)
+                        Text(spec.purchasePrice.money)
+                            .font(.game(.caption2)).strikethrough()
+                            .foregroundStyle(Theme.textSecondary)
+                    }
+                    Spacer()
+                }
+                Button("Order · \(price.money)") {
+                    let nickname = nextNickname()
+                    if engine.orderNewAircraft(type: type, nickname: nickname) {
+                        receipt = AcquisitionReceipt(kind: .ordered, type: type,
+                            nickname: nickname, amount: price,
+                            deliveryWeeks: Balance.deliveryWeeks[type]!)
+                    }
+                }
+                .buttonStyle(GameButtonStyle(color: accent, prominent: true))
+                .disabled(engine.state.cash < price)
+                .opacity(engine.state.cash < price ? 0.4 : 1)
+            }
+        }
+    }
+
+    // ── Used: rotating seeded listings ───────────────────────────────────
+
+    @ViewBuilder private var usedCards: some View {
+        Text("Instant delivery, condition as listed. Market refreshes in \(engine.state.weeksUntilMarketRefresh) wk.")
+            .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+        if engine.state.usedMarket.isEmpty {
+            GameCard {
+                Text("Nothing on the market this week.")
+                    .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
+            }
+        }
+        ForEach(engine.state.usedMarket) { listing in
+            let spec = Balance.specs[listing.type]!
+            GameCard {
+                offerHeader(type: listing.type,
+                            detail: "Age \(String(format: "%.1f", listing.ageYears))y · \(spec.maxSeats) seats")
+                MeterRow(label: "Condition", value: listing.condition / 100,
+                         display: "\(Int(listing.condition))/100",
+                         color: Theme.health(listing.condition / 100))
+                Button("Buy · \(listing.price.money)") {
+                    let nickname = nextNickname()
+                    if engine.buyUsedAircraft(listingID: listing.id, nickname: nickname) {
+                        receipt = AcquisitionReceipt(kind: .bought, type: listing.type,
+                            nickname: nickname, amount: listing.price, deliveryWeeks: nil)
+                    }
+                }
+                .buttonStyle(GameButtonStyle(color: accent, prominent: true))
+                .disabled(engine.state.cash < listing.price)
+                .opacity(engine.state.cash < listing.price ? 0.4 : 1)
+            }
+        }
+    }
+
+    // ── Lease: instant, no capital, forever ──────────────────────────────
+
+    @ViewBuilder private var leaseCards: some View {
+        Text("Instant, no capital outlay — payments never end.")
+            .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+        ForEach(AircraftType.allCases) { type in
+            let spec = Balance.specs[type]!
+            let weekly = spec.purchasePrice * Balance.leaseRatePerWeek
+            GameCard {
+                offerHeader(type: type,
+                            detail: "\(spec.maxSeats) seats · \(Int(spec.rangeKm)) km range · return fee \((weekly * Balance.leaseTerminationWeeks).money)")
+                Button("Lease · \(weekly.money)/wk") {
+                    let nickname = nextNickname()
+                    if engine.leaseAircraft(type: type, nickname: nickname) {
+                        receipt = AcquisitionReceipt(kind: .leased, type: type,
+                            nickname: nickname, amount: weekly, deliveryWeeks: nil)
+                    }
+                }
+                .buttonStyle(GameButtonStyle(color: accent, prominent: true))
+            }
+        }
+    }
+
+    private func offerHeader(type: AircraftType, detail: String) -> some View {
+        let spec = Balance.specs[type]!
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "airplane").font(.title3).foregroundStyle(accent)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(spec.displayName).font(.game(.headline, weight: .bold))
+                    Text(detail).font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+                }
+            }
+            // Showroom planes wear factory paint — yours get the livery
+            // once they join the fleet.
+            AircraftPhotoView(type: type)
+                .frame(height: 78)
+                .frame(maxWidth: .infinity)
+        }
+    }
+
+    /// Registration-style nicknames: VT-A, VT-B, ... (VT = India prefix).
+    private func nextNickname() -> String {
+        let letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        let n = engine.state.fleet.count
+        let letter = letters[letters.index(letters.startIndex, offsetBy: n % 26)]
+        return "VT-\(letter)\(n / 26 == 0 ? "" : String(n / 26))"
+    }
+}
+
+// ── The delivery receipt — confirmation after any acquisition ────────────
+
+private struct AcquisitionReceiptView: View {
+    @Environment(GameEngine.self) private var engine
+    @Environment(\.dismiss) private var dismiss
+    let receipt: AcquisitionReceipt
+
+    var body: some View {
+        VStack(spacing: 16) {
+            ZStack {
+                Circle().fill(Theme.profit.opacity(0.15)).frame(width: 64, height: 64)
+                Image(systemName: icon)
+                    .font(.system(size: 28)).foregroundStyle(Theme.profit)
+            }
+            .padding(.top, 12)
+
+            VStack(spacing: 4) {
+                Text(title).font(.game(.title2, weight: .bold))
+                    .foregroundStyle(Theme.textPrimary)
+                Text("\(Balance.specs[receipt.type]!.displayName) · registered \(receipt.nickname)")
+                    .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
+            }
+
+            // Ordered planes show factory paint until delivery day.
+            AircraftPhotoView(type: receipt.type,
+                              livery: receipt.kind == .ordered ? nil : engine.state.livery)
+                .frame(height: 96)
+
+            VStack(spacing: 8) {
+                receiptRow(amountLabel, receipt.amount.money + (receipt.kind == .leased ? "/wk" : ""))
+                receiptRow("Arrival", arrivalText)
+                if receipt.kind == .leased {
+                    let fee = receipt.amount * Balance.leaseTerminationWeeks
+                    receiptRow("Return anytime", "fee \(fee.money)")
+                }
+                Divider().overlay(Theme.hairline)
+                HStack {
+                    Text("Cash remaining").font(.game(.subheadline, weight: .semibold))
+                        .foregroundStyle(Theme.textPrimary)
+                    Spacer()
+                    TickerText(text: engine.state.cash.money,
+                               font: .game(.subheadline, weight: .bold),
+                               color: engine.state.cash >= 0 ? Theme.profit : Theme.loss)
+                }
+            }
+            .padding(14)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
+
+            Button("Done") { dismiss() }
+                .buttonStyle(GameButtonStyle(color: Theme.orange, prominent: true))
+                .frame(maxWidth: .infinity)
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(Theme.bgElevated)
+        .presentationDetents([.medium])
+        .presentationBackground(Theme.bgElevated)
+        .preferredColorScheme(.dark)
+        .holdsSimClock()
+    }
+
+    private var title: String {
+        switch receipt.kind {
+        case .ordered: "Order placed"
+        case .bought: "Welcome to the fleet"
+        case .leased: "Lease signed"
+        }
+    }
+
+    private var icon: String {
+        switch receipt.kind {
+        case .ordered: "clock.badge.checkmark.fill"
+        case .bought: "checkmark.seal.fill"
+        case .leased: "signature"
+        }
+    }
+
+    private var amountLabel: String {
+        switch receipt.kind {
+        case .ordered, .bought: "Paid"
+        case .leased: "Weekly lease"
+        }
+    }
+
+    private var arrivalText: String {
+        if let weeks = receipt.deliveryWeeks {
+            return "arrives in \(weeks) weeks"
+        }
+        return "in your hangar now"
+    }
+
+    private func receiptRow(_ label: String, _ value: String) -> some View {
+        HStack {
+            Text(label).font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
+            Spacer()
+            Text(value).font(.game(.subheadline, weight: .semibold))
+                .foregroundStyle(Theme.textPrimary)
+        }
+    }
+}
+
+#Preview("Receipt") {
+    AcquisitionReceiptView(receipt: AcquisitionReceipt(
+        kind: .ordered, type: .propeller28, nickname: "VT-C",
+        amount: Balance.specs[.propeller28]!.purchasePrice,
+        deliveryWeeks: Balance.deliveryWeeks[.propeller28]!))
+        .environment(GameEngine.previewGame())
+}
