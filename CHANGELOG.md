@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Silver icons on the Fleet empty state and Showroom row
+
+- The "No aircraft yet" airplane medallion and the Showroom cart icon on the Fleet screen now wear the polished-silver gradient with the soft glow, replacing their cornflower accent fills. The treatment is extracted into a reusable polishedSilver() modifier that SectionHeader also uses, so future icons take one call. An "Empty fleet" preview pins the state.
+
+*Why:* per direction. Same v3.1.3 rule as the header icons: instruments on the console are silver; the accent is for active states and data, not stickers.
+
+
 ## Contractors split out of the wage line
 
 - Contractor overflow spend (excess hours flown at market rate × 1.8) now books to its own WeeklyReport line, P&L statement row, and graphite pie slice instead of hiding inside Wages. The Contractors row explains itself: which pools overflowed and by what share of hours, with the formula noting that hiring staff moves this spend to wages at 1×. The wage explanation now reads "Total incl. overtime" only. Old saves decode with a nil contractor line, so past reports are unchanged.

@@ -122,6 +122,16 @@ struct PerforationLine: View {
 
 /// Placard-style: label, then a hairline rule running to the card edge —
 /// instrument-panel labeling, drawn, never an image.
+/// The polished-silver icon treatment (v3.1.3): silver gradient face with
+/// a soft white glow — instruments on the console, not accent stickers.
+extension View {
+    func polishedSilver() -> some View {
+        foregroundStyle(LinearGradient(colors: [.white, Color(white: 0.58)],
+                                       startPoint: .top, endPoint: .bottom))
+            .shadow(color: .white.opacity(0.6), radius: 4)
+    }
+}
+
 struct SectionHeader: View {
     let title: String
     var icon: String? = nil
@@ -134,10 +144,7 @@ struct SectionHeader: View {
                     // Header icons are polished silver with a soft glow —
                     // instruments on the console, not accent stickers.
                     Image(systemName: icon).font(.caption2.weight(.medium))
-                        .foregroundStyle(LinearGradient(
-                            colors: [.white, Color(white: 0.58)],
-                            startPoint: .top, endPoint: .bottom))
-                        .shadow(color: .white.opacity(0.6), radius: 4)
+                        .polishedSilver()
                 }
                 Text(title.uppercased())
                     .font(.data(.caption2))                  // mono eyebrow

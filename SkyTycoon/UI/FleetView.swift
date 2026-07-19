@@ -38,7 +38,7 @@ struct FleetView: View {
         GameCard {
             HStack(spacing: 12) {
                 Image(systemName: "airplane.circle.fill")
-                    .font(.system(size: 40)).foregroundStyle(accent)
+                    .font(.system(size: 40)).polishedSilver()
                 VStack(alignment: .leading, spacing: 3) {
                     Text("No aircraft yet").font(.game(.headline, weight: .bold))
                     Text("Buy, lease, or order your first plane in the showroom below.")
@@ -54,7 +54,7 @@ struct FleetView: View {
         } label: {
             GameCard {
                 HStack {
-                    Image(systemName: "cart.fill").font(.title3).foregroundStyle(accent)
+                    Image(systemName: "cart.fill").font(.title3).polishedSilver()
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Showroom").font(.game(.headline, weight: .bold))
                             .foregroundStyle(Theme.textPrimary)
@@ -73,6 +73,13 @@ struct FleetView: View {
 
 #Preview {
     FleetView().environment(GameEngine.previewGame())
+        .preferredColorScheme(.dark)
+}
+
+// Empty-state pin: silver instruments on the no-aircraft console.
+#Preview("Empty fleet") {
+    FleetView().environment(GameEngine.newGame(airlineName: "Foundation Air",
+                                               country: .us, seed: 7))
         .preferredColorScheme(.dark)
 }
 
