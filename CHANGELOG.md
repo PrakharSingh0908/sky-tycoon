@@ -9,6 +9,17 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased — design-system branch]
 
+### 2026-07-19 — Anodized key tints; color-coded fleet action bank
+
+**Changed**
+- MetalKey gains an anodized tint: a colored wash over the gunmetal
+  face (the white primary key stays plain metal). Quiet GameButtonStyle
+  keys now anodize with their color — destructive keys read as
+  red-anodized metal with white lettering.
+- The fleet action bank is color-coded: Route in blue, Cabin in
+  violet, Service in amber — one hue per system, same machined body.
+
+
 ### 2026-07-19 — Fleet menu chips join the key bank
 
 **Fixed**

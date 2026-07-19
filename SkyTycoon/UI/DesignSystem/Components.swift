@@ -307,15 +307,14 @@ struct GameButtonStyle: ButtonStyle {
     var prominent = false
 
     func makeBody(configuration: Configuration) -> some View {
-        let functional = color == Theme.loss || color == Theme.warn || color == Theme.profit
-        return configuration.label
+        configuration.label
             .font(.game(.subheadline, weight: .medium))
             .lineLimit(1)
             .padding(.horizontal, 16).padding(.vertical, 8)
             .frame(minHeight: 36)
-            .foregroundStyle(prominent ? Theme.bg
-                             : (functional ? color : Color.white))
-            .metalKey(prominent: prominent, pressed: configuration.isPressed)
+            .foregroundStyle(prominent ? Theme.bg : Color.white)
+            .metalKey(prominent: prominent, pressed: configuration.isPressed,
+                      tint: prominent ? nil : color)
             .sensoryFeedback(.impact(weight: .light),
                              trigger: configuration.isPressed) { old, new in
                 !old && new
@@ -333,6 +332,9 @@ struct MetalKeyModifier: ViewModifier {
     var prominent: Bool
     var pressed: Bool
     var cornerRadius: CGFloat = Theme.corner
+    /// Anodized finish: a colored wash over the gunmetal face (quiet keys
+    /// only — the white primary key stays plain metal).
+    var tint: Color? = nil
 
     private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: cornerRadius) }
     private let travel: CGFloat = 2.5
@@ -358,7 +360,15 @@ struct MetalKeyModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .background(face, in: shape)
+            .background {
+                shape.fill(face)
+                if let tint, !prominent {
+                    shape.fill(LinearGradient(
+                        colors: [tint.opacity(pressed ? 0.30 : 0.45),
+                                 tint.opacity(pressed ? 0.14 : 0.22)],
+                        startPoint: .top, endPoint: .bottom))
+                }
+            }
             .overlay(shape.strokeBorder(rim, lineWidth: 1))
             .offset(y: pressed ? travel : 0)
             // The base the key travels onto — a background, so it takes the
@@ -376,9 +386,10 @@ struct MetalKeyModifier: ViewModifier {
 
 extension View {
     func metalKey(prominent: Bool, pressed: Bool,
-                  cornerRadius: CGFloat = Theme.corner) -> some View {
+                  cornerRadius: CGFloat = Theme.corner,
+                  tint: Color? = nil) -> some View {
         modifier(MetalKeyModifier(prominent: prominent, pressed: pressed,
-                                  cornerRadius: cornerRadius))
+                                  cornerRadius: cornerRadius, tint: tint))
     }
 }
 

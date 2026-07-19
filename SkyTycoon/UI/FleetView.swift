@@ -157,12 +157,17 @@ private struct AircraftCard: View {
         }
     }
 
+    /// Anodized key colors for the action bank — one hue per system.
+    private static let routeKey = Color(red: 0.404, green: 0.596, blue: 1.0)   // blue
+    private static let cabinKey = Color(red: 0.690, green: 0.549, blue: 1.0)   // violet
+    private static let serviceKey = Color(red: 0.89, green: 0.68, blue: 0.34)  // amber
+
     private var actions: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 routeMenu
                 Button("Cabin") { onArchitect(plane) }
-                    .buttonStyle(GameButtonStyle(color: accent))
+                    .buttonStyle(GameButtonStyle(color: Self.cabinKey))
                 serviceMenu
             }
         }
@@ -193,7 +198,7 @@ private struct AircraftCard: View {
                 }
             }
         } label: {
-            menuChip("Service", icon: "wrench.and.screwdriver.fill", color: accent)
+            menuChip("Service", icon: "wrench.and.screwdriver.fill", color: Self.serviceKey)
         }
     }
 
@@ -226,7 +231,7 @@ private struct AircraftCard: View {
             }
         } label: {
             menuChip("Route", icon: "point.topleft.down.to.point.bottomright.curvepath",
-                     color: Theme.teal)
+                     color: Self.routeKey)
         }
     }
 
@@ -235,15 +240,14 @@ private struct AircraftCard: View {
     private func menuChip(_ title: String, icon: String, color: Color) -> some View {
         HStack(spacing: 5) {
             Image(systemName: icon).font(.caption2.weight(.medium))
-                .foregroundStyle(Theme.cornflower)
             Text(title)
-                .foregroundStyle(Color.white)
         }
+        .foregroundStyle(Color.white)
         .font(.game(.subheadline, weight: .medium))
         .lineLimit(1)
         .padding(.horizontal, 16).padding(.vertical, 8)
         .frame(minHeight: 36)
-        .metalKey(prominent: false, pressed: false)
+        .metalKey(prominent: false, pressed: false, tint: color)
     }
 
     private func routeLabel(_ route: Route, spec: AircraftSpec) -> String {
