@@ -709,6 +709,14 @@ struct RouteEconomics {
     var fairness: Double         // the fare↔satisfaction link, 0...1
     /// Load factor needed for revenue to cover this route's fuel.
     var breakevenLoadFactor: Double
+    // ── The route's market (GDD §21) ─────────────────────────────────────
+    /// Rival carriers on this pair (0 = your monopoly).
+    var competitors: Int = 0
+    /// Endpoint affluence 0…1 (business-traveler share): affluent pairs
+    /// weigh comfort over price; budget pairs the reverse.
+    var affluence: Double = 0
+    /// Your captured share of the pair's demand (1.0 on a monopoly).
+    var captureShare: Double = 1
 }
 
 /// THE save file. Everything lives here; the engine mutates only this.

@@ -7,6 +7,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Route markets & competition (GDD §21); fleet aging
+
+- Every pair has a market: 0–4 deterministic rival carriers (big business pairs draw more), endpoint affluence, and your capture share — appeal built from comfort (weighted up on affluent pairs), price-for-market, and route satisfaction, against rivals. Monopoly pairs capture 100% regardless of comfort; contested pairs grow the pie +45%/rival, so strong products barely feel rivals while weak ones collapse.
+- Route detail shows the market strip (Demand · Passengers · Rivals · Your share) with a warning when rivals are eating you, phrased for the crowd ("this crowd pays for comfort" vs "shops on price"); route-desk prospects show rival counts.
+- Condition now decays with age (~3/year, floor 20): old airframes burn more fuel, cost more to maintain, wear faster, and fetch less — renewal becomes a real decision. Fleet list sorts worst wear first.
+
+*Why:* a 10% LF on an uncomfortable plane was wrong in both directions — passengers should flee to competitors where they exist, and fill any seat where they don't.
+
+
 ## Manufacturer recall (GDD §20)
 
 - New technical event: the maker recalls the model you operate most of (named with seller and count in the card). Comply — all airframes of the type grounded 2 weeks, $10K logistics each, retrofit freshens wear −15 — or negotiate a deferral: $25K fines per airframe, +12 wear each, −0.1 reputation, and you keep flying a defect into the compounding-fatigue/hull-loss system.

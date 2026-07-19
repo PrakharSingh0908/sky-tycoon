@@ -556,8 +556,12 @@ final class GameEngine {
 
         // M0 fix: aircraft aging. Depreciation and netWorth depend on ageYears,
         // which was never incremented. Age every delivered airframe by one week.
+        // Condition also decays with age (~3/yr, floor 20): old airframes burn
+        // more fuel, cost more to maintain, wear faster, and fetch less at
+        // resale — eventually replacement beats another heavy check.
         for i in state.fleet.indices where state.fleet[i].status != .onOrder {
             state.fleet[i].ageYears += 1.0 / 52.0
+            state.fleet[i].condition = max(20, state.fleet[i].condition - 0.06)
         }
 
         // Recruitment (GDD §4.4 as amended): active job ads attract 1–2
@@ -670,7 +674,26 @@ final class GameEngine {
                  * fuelEventMult
         }
 
-        let pax = min(demand, Double(seatsOffered))
+        // Competition (GDD §21): comfort, price-for-market, and the
+        // route's satisfaction decide your SHARE of the pair — unless you
+        // are the only carrier. Rivals also grow the total pie, so a
+        // strong product barely feels them while a weak one collapses.
+        let competitors = Balance.competitorCount(origin, dest)
+        let affluence = (origin.businessIndex + dest.businessIndex) / 2
+        var comfort = planes.isEmpty ? 0.4
+            : planes.map(\.comfortScore).reduce(0, +) / Double(planes.count)
+        comfort = min(1, comfort)
+        let priceValue = max(0, min(1, 1.5 - priceRatio))   // cheap = appealing
+        // Affluent pairs weigh comfort over price; budget pairs the reverse.
+        let wComfort = 0.25 + 0.30 * affluence
+        let wPrice = 0.45 - 0.30 * affluence
+        let appeal = max(0.05, wComfort * comfort + wPrice * priceValue
+            + 0.30 * (route.satisfaction / 100))
+        let captureShare = competitors == 0 ? 1.0
+            : appeal / (appeal + Double(competitors) * Balance.rivalAppeal * 0.8)
+        let marketPie = demand * (1 + Balance.marketGrowthPerRival * Double(competitors))
+
+        let pax = min(marketPie * captureShare, Double(seatsOffered))
         let loadFactor = seatsOffered > 0 ? pax / Double(seatsOffered) : 0
         let revenue = pax * route.fare
 
@@ -687,7 +710,9 @@ final class GameEngine {
                               priceResponse: min(priceResponse, 2.5), demand: demand,
                               seatsOffered: seatsOffered, pax: pax, loadFactor: loadFactor,
                               revenue: revenue, fuel: fuel, fairness: fairness,
-                              breakevenLoadFactor: breakeven)
+                              breakevenLoadFactor: breakeven,
+                              competitors: competitors, affluence: affluence,
+                              captureShare: captureShare)
     }
 
     /// This week's economics for a route, for the UI's unit-economics and

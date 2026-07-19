@@ -178,8 +178,12 @@ private struct NewRouteSheet: View {
                     Text(prospect.city.name)
                         .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
                 }
-                Text("\(Int(prospect.distanceKm)) km · ~\(Int(prospect.demand)) pax/wk · class \(prospect.city.runwayClass) runway")
+                let rivals = engine.city(effectiveOrigin).map {
+                    Balance.competitorCount($0, prospect.city)
+                } ?? 0
+                Text("\(Int(prospect.distanceKm)) km · ~\(Int(prospect.demand)) pax/wk · \(rivals == 0 ? "no rivals" : "\(rivals) rival\(rivals == 1 ? "" : "s")") · class \(prospect.city.runwayClass)")
                     .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                    .lineLimit(1).minimumScaleFactor(0.8)
             }
             Spacer()
             if existing {
@@ -436,6 +440,29 @@ struct RouteDetailView: View {
                         StatTile(label: "On-time", value: "\(Int(route.lastPunctuality * 100))%",
                                  color: Theme.health(route.lastPunctuality))
                     }
+                    // The pair's market (GDD §21): who's flying it, who the
+                    // passengers are, and how much of the pie you hold.
+                    if let econ = engine.routeEconomics(routeID: routeID) {
+                        Divider().overlay(Theme.hairline)
+                        HStack(spacing: 20) {
+                            StatTile(label: "Demand",
+                                     value: "~\(Int(econ.demand)) pax")
+                            StatTile(label: "Passengers",
+                                     value: affluenceLabel(econ.affluence))
+                            StatTile(label: "Rivals",
+                                     value: econ.competitors == 0
+                                        ? "None" : "\(econ.competitors)",
+                                     color: econ.competitors == 0
+                                        ? Theme.profit : Theme.textPrimary)
+                            StatTile(label: "Your share",
+                                     value: "\(Int(econ.captureShare * 100))%",
+                                     color: Theme.health(econ.captureShare))
+                        }
+                        if econ.competitors > 0 && econ.captureShare < 0.4 {
+                            Text("Passengers are choosing your rivals. Comfort, fair fares, and satisfaction win them back\(econ.affluence > 0.35 ? " — this crowd pays for comfort" : " — this crowd shops on price").")
+                                .font(.game(.caption2)).foregroundStyle(Theme.warn)
+                        }
+                    }
                     Divider().overlay(Theme.hairline)
                     PillStepper(label: "Fare", value: route.fare.money, accent: accent,
                         onDecrement: { engine.setFare(routeID: routeID, fare: route.fare - 5) },
@@ -521,6 +548,11 @@ struct RouteDetailView: View {
                     .font(.game(.caption2)).foregroundStyle(Theme.loss)
             }
         }
+    }
+
+    /// Who flies this pair: business share read as spending power.
+    private func affluenceLabel(_ affluence: Double) -> String {
+        affluence < 0.25 ? "Budget" : affluence < 0.38 ? "Mixed" : "Affluent"
     }
 
     /// Tile-width names; the art carries the identity.

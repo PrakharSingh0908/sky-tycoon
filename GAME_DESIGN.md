@@ -512,3 +512,29 @@ subject member.
 *Why:* recalls are aviation's most recognizable fleet crisis, and the
 choice connects three systems — cash, route capacity (grounded planes),
 and the wear/airworthiness danger curve.
+
+## 21. Amendment — Route markets & competition (2026-07-19)
+
+Every city pair has a MARKET, shown on the route detail (demand,
+passenger affluence, rival count, your share) and hinted in the route
+desk ("2 rivals"):
+
+- COMPETITORS (0–4, deterministic per pair): big, business-heavy pairs
+  attract more rivals; thin regional pairs are often monopolies.
+- AFFLUENCE (endpoint business share): affluent pairs weigh comfort
+  over price; budget pairs the reverse.
+- CAPTURE SHARE: your appeal (comfort × affluence weighting +
+  price-for-market + route satisfaction) against rivals at 0.5 appeal:
+  share = appeal / (appeal + rivals × 0.4). A monopoly always captures
+  100% — an uncomfortable plane still fills if you're the only option.
+- Competition also GROWS the pie (+45%/rival), so a strong product on a
+  contested pair nets near-monopoly pax while a weak one collapses to
+  its sliver — passengers flock to the competition.
+
+Also: condition now decays with age (~3/yr, floor 20) — old airframes
+burn more, cost more, wear faster, and resale falls, so fleets need
+renewal, not just checks. The Fleet list sorts worst-wear first.
+
+*Why:* load factor previously ignored WHO ELSE flies the pair; comfort
+was a satisfaction nicety instead of a competitive weapon. Markets make
+cabin quality, pricing, and route selection one connected decision.

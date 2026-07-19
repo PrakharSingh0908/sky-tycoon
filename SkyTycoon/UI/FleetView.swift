@@ -17,7 +17,8 @@ struct FleetView: View {
         NavigationStack {
             GameScreen(title: "Fleet", accent: accent) {
                 if engine.state.fleet.isEmpty { emptyCard }
-                ForEach(engine.state.fleet) { plane in
+                // Worst wear first: the plane that needs you leads the list.
+                ForEach(engine.state.fleet.sorted { $0.wear > $1.wear }) { plane in
                     AircraftCard(plane: plane, accent: accent,
                                  onArchitect: { architectingPlane = $0 })
                         // Deliveries arrive, sales depart (v2.1 win moments).

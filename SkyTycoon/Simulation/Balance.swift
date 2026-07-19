@@ -226,6 +226,25 @@ enum Balance {
     /// (marketCap = max(0, netWorth) + multiple × trailing-year profit).
     static let marketCapEarningsMultiple = 6.0
 
+    // ── Route markets & competition (GDD §21) ────────────────────────────
+    /// Rivals flying a city pair, 0…4: big, business-heavy markets attract
+    /// competition. Deterministic (stable pair hash), so a route's market
+    /// never shifts under the player.
+    static func competitorCount(_ a: City, _ b: City) -> Int {
+        let size = a.population + b.population            // millions
+        let base = size > 20 ? 2 : size > 8 ? 1 : 0
+        let biz = (a.businessIndex + b.businessIndex) / 2 > 0.35 ? 1 : 0
+        let key = min(a.id, b.id) + max(a.id, b.id)
+        let hash = key.unicodeScalars.reduce(0) { ($0 &* 31 &+ Int($1.value)) & 0x7FFFFFFF }
+        return min(4, base + biz + hash % 2)
+    }
+    /// The average rival's service appeal on a contested pair.
+    static let rivalAppeal = 0.5
+    /// Competition stimulates a market: total pie grows per rival, so a
+    /// STRONG product barely feels the competition while a weak one
+    /// collapses to its sliver.
+    static let marketGrowthPerRival = 0.45
+
     /// MVP: India only. Other countries slot in identically later.
     /// Coordinates are the real airports (IGI, CSMIA, Kempegowda, …).
     static let indiaCities: [City] = [
