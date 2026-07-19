@@ -264,7 +264,7 @@ private struct BoardingPassCard: View {
                 MeterRow(label: "Load factor", value: projLF,
                          color: Theme.health(projLF))
                 HStack {
-                    Text("projected · on-time \(Int(route.lastPunctuality * 100))% · sat \(Int(route.satisfaction))")
+                    Text("on-time \(Int(route.lastPunctuality * 100))%")
                         .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
                     Spacer()
                     TickerText(text: projMargin.money + "/wk",

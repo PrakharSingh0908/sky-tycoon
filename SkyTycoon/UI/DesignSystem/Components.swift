@@ -355,6 +355,8 @@ struct GameButtonStyle: ButtonStyle {
         configuration.label
             .font(.game(.subheadline, weight: .medium))
             .lineLimit(1)
+            // Long labels scale down inside the key — never overflow it.
+            .minimumScaleFactor(0.8)
             .padding(.horizontal, 16).padding(.vertical, 8)
             .frame(minHeight: 36)
             .foregroundStyle(material.ink)

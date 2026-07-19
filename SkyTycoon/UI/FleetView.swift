@@ -268,6 +268,7 @@ private struct AircraftCard: View {
         .foregroundStyle(finish.ink)
         .font(.game(.subheadline, weight: .medium))
         .lineLimit(1)
+        .minimumScaleFactor(0.8)
         .padding(.horizontal, 16).padding(.vertical, 8)
         .frame(minHeight: 36)
         .metalKey(finish, pressed: false)

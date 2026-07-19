@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Stub line trimmed; key labels never overflow
+
+- The boarding-pass stub's meta line is just "on-time 35%" — "projected" and the sat score are gone (satisfaction has its own meter one screen deeper).
+- All metal-key labels (GameButtonStyle and the Fleet menu chips) scale down to 80% before clipping — long labels can no longer overflow their keys.
+
+*Why:* the stub line carried three facts where one earns its place; and text escaping a machined key breaks the physical illusion faster than anything.
+
+
 ## Ops wear row: tag holds the tail code only
 
 - The Ops conditions wear row's stamped tag now shows just the tail code (PA-C); the wear percentage joins the right-hand action text ("100% wear — ground it" / "84% wear · service soon").
