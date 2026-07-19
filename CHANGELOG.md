@@ -7,6 +7,16 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Country-flavored people and rivals
+
+- Staff and applicant names now draw from the campaign country's pools: US (also UK/Australia for now) games generate names like Tyler Bennett and Madison Cooper; India keeps Rohan Iyer and Priya Sharma. Surnames are per-country too.
+- The industry ladder is per-country: US campaigns climb past Keys Island Charters → Cactus Feeders → … → TransAmerican Airways → Pacific Crown ($12M–$18B, scaled to the richer US market); India keeps its Palm Air → Himalaya Air ladder.
+- Dashboard's #1 line is market-neutral ("The market's largest carrier").
+- Gender inference for avatar backfill uses the union of all name pools, so old saves stay correct.
+
+*Why:* an American campaign staffed by Indian names against Himalaya Air broke the fantasy the moment you noticed; the world should speak the market's language.
+
+
 ## Fleet keys no longer clipped
 
 - The Fleet action bank's horizontal scroller now reserves 12pt below (2pt above) the keys, so the extruded base lip and drop shadow render instead of being cut by the scroll bounds and trailing fade mask.

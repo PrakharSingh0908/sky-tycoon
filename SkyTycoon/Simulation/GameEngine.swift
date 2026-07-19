@@ -126,7 +126,7 @@ final class GameEngine {
                                     happiness: 70, skill: 2.0, lastUtilization: 0,
                                     members: (0..<count).map { _ in
                                         { () -> StaffMember in
-                                            let p = Self.generatePerson(role: role, rng: &rng)
+                                            let p = Self.generatePerson(role: role, country: country, rng: &rng)
                                             return StaffMember(id: UUID(), name: p.name,
                                                     skill: 2.0, weeklyWage: wage,
                                                     hiredOn: GameDate(week: 1, year: 1),
@@ -164,18 +164,15 @@ final class GameEngine {
         return GameEngine(state: state)
     }
 
-    private static func generateName(rng: inout SeededRandomNumberGenerator) -> String {
-        "\(Balance.applicantFirstNames.randomElement(using: &rng)!) \(Balance.applicantLastNames.randomElement(using: &rng)!)"
-    }
-
-    /// Gender-coherent identity: name and avatar agree (2026-07-19).
-    private static func generatePerson(role: StaffRole,
+    /// Gender-coherent identity: name and avatar agree (2026-07-19), and
+    /// names come from the campaign country's labor market.
+    private static func generatePerson(role: StaffRole, country: Country,
                                        rng: inout SeededRandomNumberGenerator)
         -> (name: String, avatar: String) {
         let male = Bool.random(using: &rng)
-        let first = (male ? Balance.firstNamesMale : Balance.firstNamesFemale)
+        let first = Balance.firstNames(country: country, male: male)
             .randomElement(using: &rng)!
-        let last = Balance.applicantLastNames.randomElement(using: &rng)!
+        let last = Balance.lastNames(country: country).randomElement(using: &rng)!
         let variant = Int.random(in: 1...Balance.avatarVariants(role: role, male: male),
                                  using: &rng)
         return ("\(first) \(last)",
@@ -1197,7 +1194,7 @@ final class GameEngine {
         let profile = Balance.countryProfiles[state.country]!
         let skill = 1.0 + pow(Double.random(in: 0...1, using: &state.seedRNG), 1.3) * 3.5
         let noise = Double.random(in: -0.08...0.08, using: &state.seedRNG)
-        let person = Self.generatePerson(role: role, rng: &state.seedRNG)
+        let person = Self.generatePerson(role: role, country: state.country, rng: &state.seedRNG)
         return JobApplicant(
             id: UUID(),
             role: role,
@@ -1318,7 +1315,7 @@ final class GameEngine {
         let target = max(0, count)
         while pool.members.count > target { pool.members.removeLast() }
         while pool.members.count < target {
-            let person = Self.generatePerson(role: role, rng: &state.seedRNG)
+            let person = Self.generatePerson(role: role, country: state.country, rng: &state.seedRNG)
             pool.members.append(StaffMember(id: UUID(),
                                             name: person.name,
                                             skill: pool.skill, weeklyWage: pool.weeklyWage,
@@ -1423,21 +1420,21 @@ final class GameEngine {
     /// Share of the whole industry's weekly traffic, rivals included.
     var marketShare: Double {
         let pax = weeklyPax
-        let industry = Balance.industryRivals.map(\.weeklyPax).reduce(0, +) + pax
+        let industry = Balance.rivals(for: state.country).map(\.weeklyPax).reduce(0, +) + pax
         return industry > 0 ? pax / industry : 0
     }
 
     /// Rank by market cap among the nine incumbents (1 = biggest).
     var industryRank: (rank: Int, total: Int) {
         let cap = marketCap
-        let above = Balance.industryRivals.filter { $0.marketCap > cap }.count
-        return (above + 1, Balance.industryRivals.count + 1)
+        let above = Balance.rivals(for: state.country).filter { $0.marketCap > cap }.count
+        return (above + 1, Balance.rivals(for: state.country).count + 1)
     }
 
     /// The next carrier to overtake, if anyone is still above us.
     var nextRival: Balance.IndustryRival? {
         let cap = marketCap
-        return Balance.industryRivals
+        return Balance.rivals(for: state.country)
             .filter { $0.marketCap > cap }
             .min { $0.marketCap < $1.marketCap }
     }

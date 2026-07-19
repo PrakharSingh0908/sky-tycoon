@@ -326,7 +326,7 @@ struct DashboardView: View {
                         MeterBar(value: progress, color: Theme.cornflower, height: 4)
                     }
                 } else {
-                    Text("India's largest carrier. The sky is yours.")
+                    Text("The market's largest carrier. The sky is yours.")
                         .font(.game(.caption2, weight: .medium)).foregroundStyle(Theme.profit)
                 }
                 // The market's weather (GDD §14): the standing regime and
@@ -567,7 +567,7 @@ private struct IndustrySheet: View {
     }
 
     private var carriers: [Carrier] {
-        var all = Balance.industryRivals.map {
+        var all = Balance.rivals(for: engine.state.country).map {
             Carrier(name: $0.name, cap: $0.marketCap, pax: $0.weeklyPax, isPlayer: false)
         }
         all.append(Carrier(name: engine.state.airlineName.isEmpty ? "You"

@@ -193,7 +193,7 @@ enum Balance {
         let marketCap: Double
         let weeklyPax: Double
     }
-    static let industryRivals: [IndustryRival] = [
+    static let indiaRivals: [IndustryRival] = [
         .init(name: "Himalaya Air",      marketCap: 9_000_000_000, weeklyPax: 60_000),
         .init(name: "AirBharat",         marketCap: 4_500_000_000, weeklyPax: 38_000),
         .init(name: "Monsoon Airways",   marketCap: 2_000_000_000, weeklyPax: 24_000),
@@ -204,6 +204,24 @@ enum Balance {
         .init(name: "Coastal Feeders",   marketCap: 25_000_000,    weeklyPax: 1_600),
         .init(name: "Palm Air Charters", marketCap: 8_000_000,     weeklyPax: 900),
     ]
+    // US ladder: bigger caps (fares 1.3×, demand 1.5×), same nine rungs.
+    static let usRivals: [IndustryRival] = [
+        .init(name: "Pacific Crown",         marketCap: 18_000_000_000, weeklyPax: 90_000),
+        .init(name: "TransAmerican Airways", marketCap: 10_000_000_000, weeklyPax: 58_000),
+        .init(name: "Liberty National",      marketCap: 5_000_000_000,  weeklyPax: 38_000),
+        .init(name: "Redwood Air",           marketCap: 2_200_000_000,  weeklyPax: 22_000),
+        .init(name: "Lone Star Airways",     marketCap: 1_000_000_000,  weeklyPax: 14_000),
+        .init(name: "Great Lakes Aviation",  marketCap: 400_000_000,    weeklyPax: 8_000),
+        .init(name: "Bluegrass Connect",     marketCap: 150_000_000,    weeklyPax: 4_500),
+        .init(name: "Cactus Feeders",        marketCap: 60_000_000,     weeklyPax: 2_500),
+        .init(name: "Keys Island Charters",  marketCap: 12_000_000,     weeklyPax: 1_000),
+    ]
+    static func rivals(for country: Country) -> [IndustryRival] {
+        switch country {
+        case .us: usRivals
+        default: indiaRivals
+        }
+    }
     /// Earnings multiple in the player-valuation formula
     /// (marketCap = max(0, netWorth) + multiple × trailing-year profit).
     static let marketCapEarningsMultiple = 6.0
@@ -651,15 +669,36 @@ enum Balance {
     }
 
     // Gendered pools so names match the staff avatars (2026-07-19).
-    static let firstNamesMale = [
+    // Country-flavored (2026-07-19): people carry names from the campaign's
+    // labor market. The union lists below stay for gender inference on
+    // pre-feature saves.
+    static let indiaFirstNamesMale = [
         "Arjun", "Rohan", "Vikram", "Kabir", "Dev", "Farhan", "Aditya",
         "Rahul", "Imran", "Nikhil", "Sam", "Jake", "Marcus", "Diego", "Leo",
     ]
-    static let firstNamesFemale = [
+    static let indiaFirstNamesFemale = [
         "Priya", "Ananya", "Meera", "Isha", "Naina", "Zara", "Sana",
         "Divya", "Lakshmi", "Tara", "Emma", "Sofia", "Maya", "Grace", "Ava",
     ]
-    static let applicantFirstNames = firstNamesMale + firstNamesFemale
+    static let usFirstNamesMale = [
+        "James", "Tyler", "Ethan", "Mason", "Logan", "Carlos", "Marcus",
+        "Jake", "Dylan", "Austin", "Caleb", "Trevor", "Miguel", "Andre", "Sam",
+    ]
+    static let usFirstNamesFemale = [
+        "Emily", "Madison", "Ashley", "Hannah", "Olivia", "Emma", "Sofia",
+        "Grace", "Ava", "Chloe", "Riley", "Jasmine", "Megan", "Brooke", "Kayla",
+    ]
+
+    static func firstNames(country: Country, male: Bool) -> [String] {
+        switch country {
+        case .us, .uk, .australia: male ? usFirstNamesMale : usFirstNamesFemale
+        default: male ? indiaFirstNamesMale : indiaFirstNamesFemale
+        }
+    }
+
+    /// Unions — used only to infer gender when backfilling old saves.
+    static let firstNamesMale = indiaFirstNamesMale + usFirstNamesMale
+    static let firstNamesFemale = indiaFirstNamesFemale + usFirstNamesFemale
 
     /// Avatar variants available per role/gender (Resources/StaffAvatars,
     /// avatar_<role>_<m|f>_<nn>.png).
@@ -686,10 +725,21 @@ enum Balance {
         }
         return String(format: "avatar_%@_%@_%02d", key, male ? "m" : "f", variant)
     }
-    static let applicantLastNames = [
+    static let indiaLastNames = [
         "Sharma", "Patel", "Singh", "Nair", "Khan", "Iyer", "Das",
         "Mehta", "Reddy", "Kapoor", "Bose", "Menon", "Joshi", "Rao",
     ]
+    static let usLastNames = [
+        "Miller", "Johnson", "Carter", "Bennett", "Hayes", "Brooks",
+        "Turner", "Reed", "Walker", "Cooper", "Diaz", "Nguyen",
+        "Murphy", "Sullivan",
+    ]
+    static func lastNames(country: Country) -> [String] {
+        switch country {
+        case .us, .uk, .australia: usLastNames
+        default: indiaLastNames
+        }
+    }
 
     // ── Fleet acquisition (GDD §4.1, M1) ─────────────────────────────────
 
