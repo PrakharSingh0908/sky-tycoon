@@ -32,10 +32,10 @@ struct DashboardView: View {
 
     var body: some View {
         GameScreen(title: "Dashboard", accent: accent) {
-            // A founder's first session leads with the checklist, not the
-            // scoreboard: First Flight is THE card until the airline flies.
-            if !firstFlightDone { firstFlightCard }
             heroCard
+            // The founder's checklist rides just under the score, on the
+            // same machined housing, until the airline flies.
+            if !firstFlightDone { firstFlightCard }
             if engine.state.reputation < 2.0 { reputationCollapseBanner }
             if !engine.state.activeEffects.isEmpty || !wornAircraft.isEmpty {
                 opsConditionsCard
@@ -76,7 +76,7 @@ struct DashboardView: View {
     }
 
     private var firstFlightCard: some View {
-        GameCard {
+        MetalPanel {
             SectionHeader(title: "First flight", icon: "checklist", accent: accent)
             Text("Three moves and \(engine.state.airlineName) is an airline.")
                 .font(.game(.caption)).foregroundStyle(Theme.textSecondary)

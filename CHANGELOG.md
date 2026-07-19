@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## First Flight rides the hero's housing
+
+- The checklist moved back below the net worth board and now renders on a MetalPanel - the same machined face, gradient rim, diagonal sheen, and inner hairline frame as the hero - so the founder's opening screen reads as one two-part console.
+
+*Why:* per direction - position under the score, material matched to it.
+
+
 ## First Flight card refined
 
 - The checklist now LEADS the Dashboard (above the hero) until the airline flies, with the accent stroke removed - hierarchy by position, not decoration.
