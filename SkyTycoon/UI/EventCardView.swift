@@ -84,11 +84,18 @@ struct EventCardView: View {
                     Text(event.firedOn.description)
                         .font(.game(.caption2, weight: .semibold)).tracking(1)
                         .foregroundStyle(Theme.textSecondary)
-                    Text(event.body)
-                        .font(.game(.subheadline))
-                        .foregroundStyle(Theme.textSecondary)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
+                    // Paragraphs split on blank lines; the counsel line
+                    // renders in white so the advice stands apart.
+                    ForEach(Array(event.body.components(separatedBy: "\n\n").enumerated()),
+                            id: \.offset) { _, paragraph in
+                        Text(paragraph)
+                            .font(.game(.subheadline))
+                            .foregroundStyle(paragraph.hasPrefix("Counsel")
+                                             ? Theme.textPrimary : Theme.textSecondary)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.top, paragraph.hasPrefix("Counsel") ? 6 : 0)
+                    }
                 }
 
                 VStack(spacing: 10) {
@@ -116,6 +123,31 @@ struct EventCardView: View {
     }
 }
 
+// Flat variant: the full card in one snapshot (sheet previews catch the
+// rise animation), here the hard-landing flavor with a pilot subject.
+#Preview("Hard landing card (flat)") {
+    HardLandingCardPreview()
+}
+
+private struct HardLandingCardPreview: View {
+    private let engine = GameEngine.previewGame()
+    var body: some View {
+        let member = engine.state.staff[.pilots]?.members.first
+        EventCardView(event: GameEvent(
+            id: UUID(), cardID: "hardLanding", category: .pr, isNegative: true,
+            title: "Hard Landing, Injured Passenger",
+            body: "\(member?.name ?? "Vikram Rao") (3.6★ · 92 wk with you) landed hard. An elderly passenger's spine was injured. The family's lawyers want $300.0K.\n\nCounsel: settling stays out of the news. Court is public, and the verdict rides on their record.",
+            options: [
+                EventOption(label: "Settle quietly · −$300K", effects: []),
+                EventOption(label: "Fight it in court", effects: []),
+            ],
+            firedOn: GameDate(week: 44, year: 2),
+            subjectID: member?.id))
+            .environment(engine)
+            .preferredColorScheme(.dark)
+    }
+}
+
 // Regression pin (the receipt lesson): the sheet-presented preview is the
 // one that exercises detents — long lawsuit bodies must not truncate, and
 // the accused's portrait wears the spilling tea.
@@ -131,7 +163,7 @@ private struct LawsuitCardPreview: View {
             EventCardView(event: GameEvent(
                 id: UUID(), cardID: "teaSpill", category: .pr, isNegative: true,
                 title: "Scalding Tea, Furious Passenger",
-                body: "\(member?.name ?? "Trevor Reed") (4.1★ · 48 wk with you) spilled scalding tea over a passenger during service, and the burns needed treatment. The passenger's lawyers want $180.0K. Counsel's read: a strong record wins a public trial; a thin one gets torn apart on the stand. A quiet settlement never makes the news.",
+                body: "\(member?.name ?? "Trevor Reed") (4.1★ · 48 wk with you) spilled scalding tea on a passenger. The burns needed treatment. Their lawyers want $180.0K.\n\nCounsel: settling stays out of the news. Court is public, and the verdict rides on their record.",
                 options: [
                     EventOption(label: "Settle quietly · −$180K", effects: []),
                     EventOption(label: "Fight it in court", effects: []),

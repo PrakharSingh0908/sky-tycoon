@@ -1004,7 +1004,7 @@ final class GameEngine {
         let type = top[Int.random(in: 0..<top.count, using: &state.seedRNG)]
         let spec = Balance.specs[type]!
         let n = counts[type]!
-        let body = "\(spec.seller) has issued a mandatory recall of the \(spec.displayName): a fuel-line clamp defect found in airframes worldwide. You operate \(n). The maker covers parts. Compliance grounds each airframe two weeks and the retrofit freshens wear; a deferral means fines, and the defect keeps flying with added wear."
+        let body = "\(spec.seller) has recalled the \(spec.displayName) over a fuel-line defect. You operate \(n).\n\nCounsel: comply and each airframe is grounded 2 weeks, wear refreshed. Defer and you pay fines while the defect keeps flying."
         return (body, type)
     }
 
@@ -1020,12 +1020,12 @@ final class GameEngine {
         let member = pool.members[Int.random(in: 0..<pool.members.count, using: &state.seedRNG)]
         let tenure = max(0, state.date.totalWeeks - member.hiredOn.totalWeeks)
         let record = String(format: "%.1f★ · %d wk with you", member.skill, tenure)
-        let counsel = "Counsel's read: a strong record wins a public trial; a thin one gets torn apart on the stand. A quiet settlement never makes the news."
+        let counsel = "Counsel: settling stays out of the news. Court is public, and the verdict rides on their record."
         let body = switch card.id {
         case "teaSpill":
-            "\(member.name) (\(record)) spilled scalding tea over a passenger during service, and the burns needed treatment. The passenger's lawyers want \(180_000.0.money). \(counsel)"
+            "\(member.name) (\(record)) spilled scalding tea on a passenger. The burns needed treatment. Their lawyers want \(180_000.0.money).\n\n\(counsel)"
         default:
-            "\(member.name) (\(record)) put one down hard enough to injure an elderly passenger's spine. The family's lawyers want \(300_000.0.money). \(counsel)"
+            "\(member.name) (\(record)) landed hard. An elderly passenger's spine was injured. The family's lawyers want \(300_000.0.money).\n\n\(counsel)"
         }
         return (body, member.id)
     }
@@ -1139,7 +1139,7 @@ final class GameEngine {
             state.pendingEvent = GameEvent(
                 id: UUID(), cardID: "courtWon", category: .pr, isNegative: false,
                 title: "Cleared in Court",
-                body: "The claim fell apart under scrutiny: \(name)'s record and testimony held, and the judge dismissed the case as opportunistic. Legal costs ran \(legal.money) — and the papers ran YOUR side of the story.",
+                body: "The claim fell apart in court. \(name)'s record held, and the judge dismissed the case. Legal costs ran \(legal.money). The papers ran your side of the story.",
                 options: [EventOption(label: "Back to work", effects: [])],
                 firedOn: state.date)
         } else {
@@ -1151,7 +1151,7 @@ final class GameEngine {
             state.pendingEvent = GameEvent(
                 id: UUID(), cardID: "courtLost", category: .pr, isNegative: true,
                 title: "Humiliated in Court",
-                body: "The cross-examination was brutal and the verdict worse: liable, with \(award.money) awarded — and every row of the gallery full of press. \(name)'s record did not survive the stand. The brand takes the bruise.",
+                body: "The verdict: liable, with \(award.money) awarded, and the press filled the gallery. \(name)'s record did not survive the stand. The brand takes the bruise.",
                 options: [EventOption(label: "Take the hit", effects: [])],
                 firedOn: state.date)
         }

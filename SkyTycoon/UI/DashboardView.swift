@@ -139,7 +139,7 @@ struct DashboardView: View {
                     StatusBadge(text: plane.nickname,
                                 color: critical ? Theme.loss : Theme.warn)
                     Spacer()
-                    Text(critical ? "\(Int(plane.wear))% wear — ground it"
+                    Text(critical ? "\(Int(plane.wear))% wear · ground it"
                                   : "\(Int(plane.wear))% wear · service soon")
                         .font(.game(.caption))
                         .foregroundStyle(critical ? Theme.loss : Theme.textSecondary)

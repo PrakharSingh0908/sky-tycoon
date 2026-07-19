@@ -459,7 +459,7 @@ struct RouteDetailView: View {
                                      color: Theme.health(econ.captureShare))
                         }
                         if econ.competitors > 0 && econ.captureShare < 0.4 {
-                            Text("Passengers are choosing your rivals. Comfort, fair fares, and satisfaction win them back\(econ.affluence > 0.35 ? " — this crowd pays for comfort" : " — this crowd shops on price").")
+                            Text("Passengers are choosing your rivals. \(econ.affluence > 0.35 ? "This crowd pays for comfort." : "This crowd shops on price.") Comfort, fair fares, and satisfaction win them back.")
                                 .font(.game(.caption2)).foregroundStyle(Theme.warn)
                         }
                     }
@@ -544,7 +544,7 @@ struct RouteDetailView: View {
                 }
             }
             if level.requiresOven && ovens < planes.count {
-                Text("\(planes.count - ovens) of \(planes.count) aircraft here have no galley oven — \(level == .asianBento ? "bento mains" : "sandwiches") board cold and customers get frustrated. Fit ovens via Fleet → Service.")
+                Text("\(planes.count - ovens) of \(planes.count) aircraft here have no galley oven. \(level == .asianBento ? "Bento mains" : "Sandwiches") board cold and customers get frustrated. Fit ovens via Fleet → Service.")
                     .font(.game(.caption2)).foregroundStyle(Theme.loss)
             }
         }

@@ -127,7 +127,7 @@ enum Balance {
 
     static let longTrendDeck: [TrendTemplate] = [
         .init(key: "expansion", name: "Economic expansion",
-              detail: "GDP running hot — everyone flies more.",
+              detail: "GDP running hot. Everyone flies more.",
               kind: .demand, horizon: .long, multiplier: 1.08...1.16, weeks: 52...104),
         .init(key: "slowdown", name: "Economic slowdown",
               detail: "Belt-tightening: discretionary travel dries up first.",
@@ -555,9 +555,9 @@ enum Balance {
             body: "Global oil prices jumped overnight. Analysts expect elevated prices for about six weeks.",
             baseWeight: 1.0, isNegative: true, minTotalWeek: 6,
             options: [
-                EventOption(label: "Hedge now (−$50,000)",
+                EventOption(label: "Hedge now · −$50K",
                             effects: [.cash(-50_000)]),
-                EventOption(label: "Ride it out (fuel +30% for 6 wk)",
+                EventOption(label: "Ride it out",
                             effects: [.fuelPrice(multiplier: 1.30, weeks: 6)]),
             ],
             isEligible: { _ in true }),
@@ -566,7 +566,7 @@ enum Balance {
             body: "A supply surge has fuel contracts trading cheap. Your ops chief is grinning.",
             baseWeight: 0.6, isNegative: false, minTotalWeek: 10,
             options: [
-                EventOption(label: "Enjoy it (fuel −15% for 6 wk)",
+                EventOption(label: "Enjoy the cheap fuel",
                             effects: [.fuelPrice(multiplier: 0.85, weeks: 6)]),
             ],
             isEligible: { _ in true }),
@@ -577,9 +577,9 @@ enum Balance {
             body: "A cyclone is tracking toward the coast. Airports in its path will be disrupted for two weeks.",
             baseWeight: 0.8, isNegative: true, minTotalWeek: 8,
             options: [
-                EventOption(label: "Cancel & refund (−$40,000)",
+                EventOption(label: "Cancel & refund · −$40K",
                             effects: [.cash(-40_000), .satisfaction(3)]),
-                EventOption(label: "Fly partial ops (demand −20%)",
+                EventOption(label: "Fly partial ops",
                             effects: [.demand(multiplier: 0.80, weeks: 2), .satisfaction(-4)]),
             ],
             isEligible: { !$0.routes.isEmpty }),
@@ -593,7 +593,7 @@ enum Balance {
                 EventOption(label: "Grant the 8%",
                             effects: [.raiseWage(role: .cabinCrew, factor: 1.08),
                                       .happiness(role: .cabinCrew, delta: 12)]),
-                EventOption(label: "One-time bonus instead (−$30,000)",
+                EventOption(label: "One-time bonus · −$30K",
                             effects: [.cash(-30_000), .happiness(role: .cabinCrew, delta: 6)]),
                 EventOption(label: "Refuse",
                             effects: [.happiness(role: .cabinCrew, delta: -18)]),
@@ -604,10 +604,10 @@ enum Balance {
             body: "Morale has cratered and a strike vote is underway. This is what neglect costs.",
             baseWeight: 0.5, isNegative: true, minTotalWeek: 12,
             options: [
-                EventOption(label: "Concede +6% wages (−$20,000)",
+                EventOption(label: "Concede +6% wages",
                             effects: [.raiseWage(role: nil, factor: 1.06),
                                       .happiness(role: nil, delta: 20), .cash(-20_000)]),
-                EventOption(label: "Hold the line (reputation hit)",
+                EventOption(label: "Hold the line",
                             effects: [.happiness(role: nil, delta: -10), .satisfaction(-8),
                                       .reputation(-0.3), .demand(multiplier: 0.85, weeks: 2)]),
             ],
@@ -621,12 +621,12 @@ enum Balance {
         // ── Technical ────────────────────────────────────────────────────
         EventCard(id: "faultFound", category: .technical,
             title: "Engine Fault Found",
-            body: "Maintenance flagged a compressor issue on one airframe during a routine inspection.",
+            body: "Maintenance flagged a compressor issue on one airframe during a routine inspection. Deferring the fix adds wear.",
             baseWeight: 0.7, isNegative: true, minTotalWeek: 8,
             options: [
-                EventOption(label: "Fix now (−$80,000 · 1 wk)",
+                EventOption(label: "Fix it now · −$80K",
                             effects: [.cash(-80_000), .groundRandomAircraft(weeks: 1)]),
-                EventOption(label: "Defer it (wear +25)",
+                EventOption(label: "Defer the fix",
                             effects: [.wearRandomAircraft(25), .satisfaction(-2)]),
             ],
             isEligible: { state in
@@ -637,7 +637,7 @@ enum Balance {
             body: "A neglected airframe failed its pre-flight checks outright. It's out of service, no options this time.",
             baseWeight: 0.10, isNegative: true, minTotalWeek: 10,
             options: [
-                EventOption(label: "To the hangar (−$40,000 · 2 wk)",
+                EventOption(label: "To the hangar · −$40K",
                             effects: [.cash(-40_000), .groundRandomAircraft(weeks: 2),
                                       .satisfaction(-5)]),
             ],
@@ -651,11 +651,11 @@ enum Balance {
             body: "A film production wants a plane for a weekend shoot: triple the usual revenue, but it pulls capacity.",
             baseWeight: 0.7, isNegative: false, minTotalWeek: 10,
             options: [
-                EventOption(label: "Accept · +$120K (demand dips 1 wk)",
+                EventOption(label: "Accept · +$120K",
                             effects: [.cash(120_000), .demand(multiplier: 0.92, weeks: 1)]),
                 // Every decision has weight: declining keeps the schedule
                 // whole, and passengers feel the reliability.
-                EventOption(label: "Decline politely (+2 satisfaction)",
+                EventOption(label: "Decline politely",
                             effects: [.satisfaction(2)]),
             ],
             isEligible: { state in
@@ -666,7 +666,7 @@ enum Balance {
             body: "A festival season surge is filling planes across the network for the next three weeks.",
             baseWeight: 0.8, isNegative: false, minTotalWeek: 8,
             options: [
-                EventOption(label: "All hands on deck (+25% demand)",
+                EventOption(label: "All hands on deck",
                             effects: [.demand(multiplier: 1.25, weeks: 3)]),
             ],
             isEligible: { !$0.routes.isEmpty }),
@@ -677,7 +677,7 @@ enum Balance {
             body: "The regulator will audit your operation in four weeks. Preparation costs money; failure costs trust.",
             baseWeight: 0.5, isNegative: true, minTotalWeek: 16,
             options: [
-                EventOption(label: "Invest in preparation (−$60,000)",
+                EventOption(label: "Prepare properly · −$60K",
                             effects: [.cash(-60_000), .reputation(0.1)]),
                 EventOption(label: "Wing it",
                             effects: [.satisfaction(-3), .reputation(-0.15)]),
@@ -690,9 +690,9 @@ enum Balance {
             body: "A video of your crew helping a stranded family is everywhere. The internet loves you, for now.",
             baseWeight: 0.6, isNegative: false, minTotalWeek: 8,
             options: [
-                EventOption(label: "Amplify with a campaign (−$25,000)",
+                EventOption(label: "Run a campaign · −$25K",
                             effects: [.cash(-25_000), .reputation(0.35)]),
-                EventOption(label: "A modest thank-you post",
+                EventOption(label: "Post a thank-you",
                             effects: [.reputation(0.15)]),
             ],
             isEligible: { !$0.routes.isEmpty }),
@@ -701,7 +701,7 @@ enum Balance {
             body: "A sorting failure sent a day's worth of bags to the wrong cities. Passengers are posting photos.",
             baseWeight: 0.7, isNegative: true, minTotalWeek: 8,
             options: [
-                EventOption(label: "Compensate everyone (−$35,000)",
+                EventOption(label: "Compensate all · −$35K",
                             effects: [.cash(-35_000), .satisfaction(2)]),
                 EventOption(label: "Quietly fix it",
                             effects: [.satisfaction(-6), .reputation(-0.2)]),
@@ -730,7 +730,7 @@ enum Balance {
             options: [
                 EventOption(label: "Send them in · −$10K each",
                             effects: [.recallGround(weeks: 2, costPerPlane: 10_000)]),
-                EventOption(label: "Defer · −$25K fines each",
+                EventOption(label: "Defer · −$25K each",
                             effects: [.recallDefer(finePerPlane: 25_000, wearPerPlane: 12)]),
             ],
             isEligible: { state in state.fleet.contains { $0.status != .onOrder } }),

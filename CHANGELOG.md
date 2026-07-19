@@ -7,6 +7,16 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Crisp event copy, counsel in white, no em dashes in content
+
+- Every option label across the deck is now a crisp one-liner: an action plus at most one number ("Fix it now · −$80K", "Hold the line"). Consequences the labels dropped moved into card bodies.
+- Lawsuit and recall bodies rewritten in short sentences, ending with a "Counsel:" advice paragraph that renders in white with a blank line above it, standing apart from the gray narrative.
+- Purged em dashes from all player-facing content (event bodies, verdicts, warnings, trend copy) per standing rule; replaced with periods, commas, or middle dots.
+- Added a flat hard-landing preview (pilot subject, full card in one snapshot) alongside the sheet-presented tea-spill regression pin; verified the render: centered title, avatar medallion with badge, white counsel line, one-liner keys.
+
+*Why:* twice-given rules are now written into the working rules file - crisp one-liner buttons, no em dashes ever, counsel advice visually distinct.
+
+
 ## Event cards: one-liner keys, the accused on the card, the tea
 
 - All 15 long option labels across the deck shortened to one-liners ("Settle quietly · −$180K", "Send them in · −$10K each") — the trade-off details moved into the card bodies, which now spell out settle-vs-court and comply-vs-defer in prose. Buttons are back to strict single lines.

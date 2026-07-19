@@ -120,7 +120,7 @@ private struct AircraftCard: View {
                 if plane.status != .onOrder,
                    plane.wear >= Balance.wearDangerThreshold {
                     Label(plane.assignedRouteID != nil
-                          ? "Airworthiness critical: \(Int(plane.wear))% wear on an active route. Ground it for service — worn airframes go down."
+                          ? "Airworthiness critical: \(Int(plane.wear))% wear on an active route. Ground it for service. Worn airframes go down."
                           : "Airworthiness critical: \(Int(plane.wear))% wear. Service before it flies again.",
                           systemImage: "exclamationmark.octagon.fill")
                         .font(.game(.caption, weight: .medium))

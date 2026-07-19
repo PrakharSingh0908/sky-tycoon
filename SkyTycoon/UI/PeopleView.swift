@@ -211,7 +211,7 @@ private struct StaffPoolCard: View {
     private var contractorText: String {
         let share = Int(((pool.lastContractorShare ?? 0) * 100).rounded())
         if pool.headcount == 0 {
-            return "Nobody hired. Contractors fly all your \(role.displayName.lowercased()) hours at premium rates — and it shows in delays."
+            return "Nobody hired. Contractors fly all your \(role.displayName.lowercased()) hours at premium rates, and it shows in delays."
         }
         return "Roster maxed out: contractors cover \(share)% of \(role.displayName.lowercased()) hours at premium rates. Hire to bring it in-house."
     }
