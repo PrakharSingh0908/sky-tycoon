@@ -437,6 +437,7 @@ struct MetalKeyModifier: ViewModifier {
             // key's own size instead of stretching the row.
             .background(shape.fill(finish.lip).offset(y: travel))
             .compositingGroup()
+            .scaleEffect(pressed ? 0.97 : 1)   // subtle give under the finger
             .shadow(color: .black.opacity(pressed ? 0.15 : 0.35),
                     radius: pressed ? 2 : 5, y: pressed ? 1 : 4)
             .animation(.snappy(duration: 0.12), value: pressed)
@@ -457,6 +458,92 @@ extension View {
                   tint: Color? = nil) -> some View {
         metalKey(prominent ? .chrome : .gunmetal, pressed: pressed,
                  cornerRadius: cornerRadius, tint: tint)
+    }
+}
+
+// ── MetalPanel — the machined instrument panel (v3.1.2) ──────────────────
+// MetalKey's language at panel scale: a dark metal face with a diagonal
+// sheen, a light-catching top rim, and an extruded base. Reserved for the
+// ONE hero surface per screen — everything else stays a flat GameCard.
+
+struct MetalPanel<Content: View>: View {
+    /// Tints the rim's light catch (hero accent; settle flash).
+    var highlight: Color? = nil
+    @ViewBuilder var content: Content
+
+    private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: Theme.corner) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) { content }
+            .padding(Theme.cardPadding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background {
+                // Brushed face: vertical falloff plus a diagonal light sweep.
+                shape.fill(LinearGradient(
+                    colors: [Color(white: 0.30), Color(white: 0.12)],
+                    startPoint: .top, endPoint: .bottom))
+                shape.fill(LinearGradient(
+                    stops: [.init(color: .white.opacity(0.12), location: 0),
+                            .init(color: .clear, location: 0.5)],
+                    startPoint: .topLeading, endPoint: .bottomTrailing))
+            }
+            .overlay(shape.strokeBorder(
+                LinearGradient(
+                    colors: [(highlight ?? .white).opacity(highlight == nil ? 0.55 : 0.95),
+                             Color.black.opacity(0.55)],
+                    startPoint: .top, endPoint: .bottom),
+                lineWidth: 1))
+            // The slab the panel sits proud of.
+            .background(shape.fill(Color.black.opacity(0.9)).offset(y: 3))
+            .compositingGroup()
+            .shadow(color: .black.opacity(0.45), radius: 9, y: 5)
+    }
+}
+
+/// A recessed cutout in a MetalPanel — inverted rim (shadow on top, light
+/// catch on the bottom edge) over a darker inset floor, the way gauges sit
+/// IN a console rather than on it.
+struct InstrumentWell<Content: View>: View {
+    var alignment: Alignment = .leading
+    /// Anodized floor: a colored wash in the well (semantic hue — profit,
+    /// loss, cornflower, gold) so the console pops instead of reading gray.
+    var tint: Color? = nil
+    @ViewBuilder var content: Content
+
+    private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: 6) }
+
+    var body: some View {
+        content
+            .padding(.horizontal, 10).padding(.vertical, 8)
+            .frame(maxWidth: .infinity, alignment: alignment)
+            .background {
+                shape.fill(Color.black.opacity(0.32))
+                if let tint {
+                    shape.fill(LinearGradient(
+                        colors: [tint.opacity(0.42), tint.opacity(0.18)],
+                        startPoint: .top, endPoint: .bottom))
+                }
+                // Inner top shadow: the wall the well is sunk behind.
+                shape.fill(LinearGradient(
+                    stops: [.init(color: .black.opacity(0.35), location: 0),
+                            .init(color: .clear, location: 0.35)],
+                    startPoint: .top, endPoint: .bottom))
+            }
+            .overlay(shape.strokeBorder(
+                LinearGradient(colors: [Color.black.opacity(0.65),
+                                        (tint ?? .white).opacity(tint == nil ? 0.10 : 0.35)],
+                               startPoint: .top, endPoint: .bottom),
+                lineWidth: 1))
+    }
+}
+
+/// An engraved groove line — dark cut above, light catch below.
+struct PanelGroove: View {
+    var body: some View {
+        VStack(spacing: 0) {
+            Rectangle().fill(Color.black.opacity(0.55)).frame(height: 1)
+            Rectangle().fill(Color.white.opacity(0.08)).frame(height: 1)
+        }
     }
 }
 

@@ -129,30 +129,66 @@ struct DashboardView: View {
     // The one standing gradient border (v2.1: borders are hierarchy, and
     // the score IS the hierarchy). Flashes profit-green on weekly settle.
 
+    // v3.1.2: the score lives on a machined MetalPanel — raised metal face,
+    // engraved labels, and the supporting stats sunk into instrument wells.
     private var heroCard: some View {
-        GameCard(highlight: settleFlash ? Theme.profit : accent) {
-            HStack(alignment: .top) {
-                StatTile(label: "Net worth", value: engine.netWorth.money,
-                         color: engine.netWorth >= 0 ? Theme.textPrimary : Theme.loss,
-                         font: .display(.largeTitle))
-                Spacer()
-                VStack(alignment: .trailing, spacing: 6) {
-                    StarRating(rating: engine.state.reputation, size: 13)
-                    TickerText(text: String(format: "%.1f reputation", engine.state.reputation),
-                               font: .game(.caption, weight: .semibold),
-                               color: Theme.textSecondary)
+        MetalPanel(highlight: settleFlash ? Theme.profit : accent) {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 5) {
+                    engravedLabel("Net worth")
+                    TickerText(text: engine.netWorth.money,
+                               font: .display(.largeTitle),
+                               color: engine.netWorth >= 0 ? Theme.textPrimary : Theme.loss)
                 }
+                Spacer(minLength: 8)
+                InstrumentWell(alignment: .trailing,
+                               tint: Color(red: 0.72, green: 0.53, blue: 0.20)) {
+                    VStack(alignment: .trailing, spacing: 5) {
+                        StarRating(rating: engine.state.reputation, size: 12)
+                        HStack(spacing: 4) {
+                            TickerText(text: String(format: "%.1f", engine.state.reputation),
+                                       font: .data(.caption, weight: .semibold),
+                                       color: Theme.textPrimary)
+                            engravedLabel("Reputation")
+                        }
+                    }
+                    .fixedSize()
+                }
+                .fixedSize()
             }
-            HStack(spacing: 20) {
-                StatTile(label: "Cash", value: engine.state.cash.money,
-                         color: engine.state.cash >= 0 ? Theme.profit : Theme.loss)
+            PanelGroove()
+            HStack(spacing: 8) {
+                heroWell("Cash", engine.state.cash.money,
+                         tint: engine.state.cash >= 0 ? Theme.profit : Theme.loss)
                 if let report = engine.latestReport {
-                    StatTile(label: "Last week",
-                             value: (report.profit >= 0 ? "+" : "") + report.profit.money,
-                             color: report.profit >= 0 ? Theme.profit : Theme.loss)
+                    heroWell("Last wk",
+                             (report.profit >= 0 ? "+" : "") + report.profit.money,
+                             tint: report.profit >= 0 ? Theme.profit : Theme.loss)
                 }
-                StatTile(label: "Fleet", value: "\(engine.state.fleet.count)")
-                StatTile(label: "Routes", value: "\(engine.state.routes.count)")
+                heroWell("Fleet", "\(engine.state.fleet.count)", tint: Theme.cornflower)
+                heroWell("Routes", "\(engine.state.routes.count)", tint: Theme.cornflower)
+            }
+        }
+    }
+
+    /// Engraved console label: mono caps, cut into the metal (dark under-edge).
+    private func engravedLabel(_ text: String) -> some View {
+        Text(text.uppercased())
+            .font(.data(.caption2)).tracking(0.85)
+            .foregroundStyle(Color.white.opacity(0.55))
+            .shadow(color: .black.opacity(0.8), radius: 0, y: 1)
+            .lineLimit(1)
+    }
+
+    /// The anodized wash carries the semantics; the value stays white so it
+    /// pops off the colored floor.
+    private func heroWell(_ label: String, _ value: String, tint: Color) -> some View {
+        InstrumentWell(tint: tint) {
+            VStack(alignment: .leading, spacing: 3) {
+                TickerText(text: value,
+                           font: .game(.subheadline, weight: .semibold),
+                           color: .white)
+                engravedLabel(label)
             }
         }
     }

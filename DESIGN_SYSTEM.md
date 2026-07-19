@@ -35,7 +35,16 @@ Warm Paper experiment (v3.0, rejected on sight).
   destructive exits; paired with bronze on confirm/cancel rows).
   Every key has a gradient face, a light-catching top rim, an
   extruded base lip, and press-travel: it sinks 2.5pt into the
-  panel when touched. Surfaces everywhere else stay flat.
+  panel when touched, with a subtle 0.97 scale give. v3.1.2
+  extends the language to PANEL scale: `MetalPanel` (raised
+  machined face — the ONE hero surface per screen),
+  `InstrumentWell` (recessed cutout with inverted rim: stats sit
+  IN the console; an anodized tint floor carries the semantics —
+  profit/loss, cornflower, gold — values stay white on top), and
+  `PanelGroove` (engraved divider). Metallic surfaces POP: bright
+  brushed faces and saturated anodized washes, never dull gray.
+  Labels on metal are engraved: mono caps with a 1px dark
+  under-edge. Surfaces everywhere else stay flat.
   Muted functional green/red/amber survive for P&L semantics only.
 - **Shape:** 8px on everything (4px tags). Pills are gone.
 - **Data:** chart strokes cornflower; slices/bars use a blue ramp

@@ -7,6 +7,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Machined hero console (MetalPanel v3.1.2)
+
+- New panel-scale metal components in the design system: `MetalPanel` (raised brushed face with diagonal sheen, light-catching rim, extruded base — the one hero surface per screen), `InstrumentWell` (recessed cutout with inverted rim and an optional anodized tint floor), and `PanelGroove` (engraved divider line).
+- Dashboard hero rebuilt on them: engraved mono labels (1px dark under-edge), net worth on the raised face, reputation in a gold-tinted well under the stars, and cash / last week / fleet / routes sunk into wells whose anodized floors carry the semantics (profit green / loss red / cornflower) with white values on top.
+- Metal keys gained a subtle 0.97 pressed scale alongside the 2.5pt travel.
+
+*Why:* the hero is the score and deserved the console treatment, not a flat card; per feedback the metals are bright and the wells saturated ("popping, not dull") — color lives in the anodized floors so values stay white-legible, keeping the one-accent rule for flat surfaces intact.
+
+
 ## Brighter gold-star asset
 
 - Replaced `Resources/Icons/gold_star.png` with a new 1024px version — brighter, more saturated gold with cleaner facets. No code changes; every `StarRating` picks it up.
