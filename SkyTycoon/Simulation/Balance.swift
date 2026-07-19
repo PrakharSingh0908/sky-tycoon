@@ -487,9 +487,14 @@ enum Balance {
 
     // ── The event deck (GDD §4.7, M3) ────────────────────────────────────
 
-    /// Weekly chance that a card fires (after the opening grace weeks).
-    static let eventChancePerWeek = 0.16
-    static let eventGraceWeeks = 6
+    /// Event pacing (2026-07-19): decisions are the game, so cards arrive
+    /// on a designed rhythm, not a coin flip. The weekly chance starts at
+    /// the base and RAMPS with every event-free week — expected cadence
+    /// ~2–3 weeks, near-guaranteed within 6 ("pity timer").
+    static let eventChancePerWeek = 0.22
+    static let eventPityRampPerWeek = 0.13
+    static let eventChanceCap = 0.85
+    static let eventGraceWeeks = 3
 
     /// The 12 MVP cards. Weights are shifted by game state in
     /// GameEngine.eventWeight(for:) — events feel like consequences.

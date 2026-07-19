@@ -798,9 +798,15 @@ final class GameEngine {
 
     private func drawEvent() {
         guard state.date.totalWeeks > Balance.eventGraceWeeks,
-              state.pendingEvent == nil,
-              Double.random(in: 0...1, using: &state.seedRNG) < Balance.eventChancePerWeek
-        else { return }
+              state.pendingEvent == nil else { return }
+        // Pity ramp: every event-free week raises the odds, so decision
+        // cards arrive on a rhythm instead of drought-or-flood.
+        let sinceLast = state.date.totalWeeks
+            - (state.lastEventTotalWeek ?? Balance.eventGraceWeeks)
+        let chance = min(Balance.eventChanceCap,
+                         Balance.eventChancePerWeek
+                         + Balance.eventPityRampPerWeek * Double(max(0, sinceLast - 1)))
+        guard Double.random(in: 0...1, using: &state.seedRNG) < chance else { return }
 
         let candidates = eligibleCards()
         let weights = candidates.map { eventWeight(for: $0) }
@@ -820,6 +826,7 @@ final class GameEngine {
             id: UUID(), cardID: card.id, category: card.category,
             isNegative: card.isNegative, title: card.title, body: card.body,
             options: card.options, firedOn: state.date)
+        state.lastEventTotalWeek = state.date.totalWeeks
         if card.isNegative {
             state.lastNegativeEventTotalWeek = state.date.totalWeeks
         }

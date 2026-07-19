@@ -659,6 +659,9 @@ struct GameState: Codable {
     var industryTrends: [IndustryTrend]? = nil
     /// Guard rail: never two negative events in consecutive weeks in year 1.
     var lastNegativeEventTotalWeek: Int
+    /// Pity-timer anchor: the last week ANY card fired (GDD §4.7 pacing).
+    /// Optional for save-compat.
+    var lastEventTotalWeek: Int? = nil
     var reports: [WeeklyReport]       // capped ring buffer (last 52)
 
     /// Per-week history buffers for trend charts, newest last

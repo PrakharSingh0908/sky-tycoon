@@ -407,3 +407,18 @@ economic problem instead of an impossible 979%-overtime week.
 *Why:* one pilot "working 979% over roster" broke believability and
 muddied the signal — the player needs "hire more people or pay the
 premium," not a cartoon number.
+
+## 16. Amendment — Event pacing: the pity timer (2026-07-19)
+
+Decisions are the game. Cards no longer fire on a flat 16%/week coin
+flip (expected drought: 6+ weeks): the weekly chance starts at 22% and
+ramps +13% for every event-free week, capped at 85%
+(`eventChancePerWeek` / `eventPityRampPerWeek` / `eventChanceCap`).
+Expected cadence ≈ 2–3 weeks; the odds of going five weeks without a
+decision are under 3%. Grace shortened to 3 weeks. The anchor
+(`lastEventTotalWeek`) is save-compat optional. Year-1's
+no-consecutive-negatives guard stands.
+
+*Why:* flat probability makes droughts and floods equally likely — a
+tycoon game needs a decision RHYTHM, so the player is always within a
+week or two of the next meaningful choice.

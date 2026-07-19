@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Event pity timer (GDD §16)
+
+- Event cards now arrive on a designed rhythm: 22% base weekly chance ramping +13% per event-free week (capped 85%), grace cut from 6 to 3 weeks. Expected cadence ~2–3 weeks; five-week droughts drop below 3%. Save-compat via optional anchor field; year-1's consecutive-negatives guard unchanged.
+
+*Why:* per direction — this is a decision game as much as a simulation; a flat 16% coin flip produced six-week droughts where the player just watched numbers.
+
+
 ## Routes screen: home map + crafted layout
 
 - The map opens on YOUR campaign's market: US games frame the continental US, India keeps the subcontinent (UK/China/Australia framings ready for v1.0). Focused route maps still frame their own pair.
