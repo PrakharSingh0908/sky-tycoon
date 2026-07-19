@@ -264,7 +264,7 @@ private struct BoardingPassCard: View {
                 if showing { engine.beginInteraction() } else { engine.endInteraction() }
             }
             .confirmationDialog(
-                "Cancel \(route.originID) ⇄ \(route.destinationID)? Assigned aircraft go idle and the fares and schedule are lost.",
+                "Cancel \(route.originID) ✈︎ \(route.destinationID)? Assigned aircraft go idle and the fares and schedule are lost.",
                 isPresented: $confirmingCancel, titleVisibility: .visible
             ) {
                 Button("Cancel route", role: .destructive) {
@@ -375,7 +375,7 @@ struct RouteDetailView: View {
 
     var body: some View {
         if let route = engine.state.routes.first(where: { $0.id == routeID }) {
-            GameScreen(title: "\(route.originID) ⇄ \(route.destinationID)", accent: accent) {
+            GameScreen(title: "\(route.originID) ✈︎ \(route.destinationID)", accent: accent) {
                 RouteMapView(focusRouteID: routeID)
                     .frame(height: 200)
                     .clipShape(RoundedRectangle(cornerRadius: Theme.corner))
@@ -486,7 +486,7 @@ struct RouteDetailView: View {
                             Text("\(spec.displayName) · range \(Int(plane.effectiveRangeKm(spec: spec))) km")
                                 .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
                             if let busyOn {
-                                Text("Assigning here pulls it off \(busyOn.originID) ⇄ \(busyOn.destinationID)")
+                                Text("Assigning here pulls it off \(busyOn.originID) ✈︎ \(busyOn.destinationID)")
                                     .font(.game(.caption2)).foregroundStyle(Theme.warn)
                             }
                         }
@@ -498,7 +498,7 @@ struct RouteDetailView: View {
                         } else if plane.groundedWeeksRemaining > 0 {
                             StatusBadge(text: "In shop · \(plane.groundedWeeksRemaining) wk", color: Theme.warn)
                         } else if let busyOn {
-                            StatusBadge(text: "On \(busyOn.originID) ⇄ \(busyOn.destinationID)", color: Theme.warn)
+                            StatusBadge(text: "On \(busyOn.originID) ✈︎ \(busyOn.destinationID)", color: Theme.warn)
                         }
                     }
                 }

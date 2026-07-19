@@ -195,7 +195,7 @@ struct CabinArchitectView: View {
             if let routeID = plane.assignedRouteID,
                let route = engine.state.routes.first(where: { $0.id == routeID }),
                spec.rangeKm * draft.rangeFactor(spec: spec) < route.distanceKm {
-                Label("Too heavy for \(route.originID) ⇄ \(route.destinationID) (\(Int(route.distanceKm)) km). Refitting will unassign this aircraft.",
+                Label("Too heavy for \(route.originID) ✈︎ \(route.destinationID) (\(Int(route.distanceKm)) km). Refitting will unassign this aircraft.",
                       systemImage: "exclamationmark.triangle.fill")
                     .font(.game(.caption, weight: .medium))
                     .foregroundStyle(Theme.warn)

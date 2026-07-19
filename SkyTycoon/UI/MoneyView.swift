@@ -227,7 +227,7 @@ struct MoneyView: View {
 
     private func revenueExplanation(_ r: WeeklyReport) -> Explanation {
         var rows: [(String, String)] = engine.state.routes.map { route in
-            ("\(route.originID) ⇄ \(route.destinationID) · LF \(Int(route.lastLoadFactor * 100))%",
+            ("\(route.originID) ✈︎ \(route.destinationID) · LF \(Int(route.lastLoadFactor * 100))%",
              route.lastWeeklyRevenue.money)
         }
         rows.append(("Total", r.revenue.money))
@@ -239,7 +239,7 @@ struct MoneyView: View {
     private func fuelExplanation(_ r: WeeklyReport) -> Explanation {
         var rows: [(String, String)] = engine.state.routes
             .filter { $0.lastWeeklyFuel > 0 }
-            .map { ("\($0.originID) ⇄ \($0.destinationID)", $0.lastWeeklyFuel.money) }
+            .map { ("\($0.originID) ✈︎ \($0.destinationID)", $0.lastWeeklyFuel.money) }
         rows.append(("Total", r.fuelCost.money))
         return Explanation(title: "Fuel", subtitle: "The airframe burns fuel, full or empty",
                            rows: rows,

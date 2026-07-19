@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Stamped metal tags + plane glyph everywhere
+
+- `StatusBadge` re-machined as a stamped silver tag: silver-gradient plate, punched wire hole on the leading edge, debossed mono lettering (dark strike, light catching the cut), and the semantic color as a thin anodized wash — replacing the hairline-outline chips. All badges (staff counts, LEASED, IN SHOP, IDLE, route tags) pick it up.
+- Every remaining ⇄ between airport codes replaced with the ✈︎ text-presentation glyph (Fleet badges, route-detail titles, Money statement rows, showroom range notes, cabin warnings, cancel dialog) — it renders in any string context, matching the Dashboard's inline plane.
+
+*Why:* outline chips were the last flat-ink element left on the machined surfaces; a punched dog-tag is the aviation-native form of a status label, and the wash keeps the color semantics without breaking the silver. The exchange arrows read as a currency swap, not a flight.
+
+
 ## Plane glyph in route P&L rows
 
 - The Last Week card's per-route rows now show a small airplane between the airport codes (DEL ✈ BLR) instead of the ⇄ exchange arrows.

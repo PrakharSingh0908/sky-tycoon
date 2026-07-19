@@ -53,9 +53,11 @@ Warm Paper experiment (v3.0, rejected on sight).
   under-edge. Surfaces everywhere else stay flat.
   Muted functional green/red/amber survive for P&L semantics only.
 - **Shape:** 8px on everything (4px tags). Pills are gone.
-- **Data:** chart strokes cornflower; slices/bars use a blue ramp
-  into grays (one chromatic family). Tags/badges are mono hairline
-  outlines, not filled chips.
+- **Data:** chart strokes cornflower; categorical slices/bars use
+  the anodized-metal palette (distinct hues, machined saturation).
+  Tags/badges are STAMPED SILVER METAL: punched hole, debossed
+  mono lettering, the semantic color as a thin anodized wash on
+  the plate. Route pairs join codes with the ✈︎ text glyph.
 - The satellite map keeps its own imagery palette and sits behind a
   steel hairline like a product-preview card.
 

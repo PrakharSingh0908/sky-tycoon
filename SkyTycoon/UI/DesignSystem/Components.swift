@@ -304,15 +304,40 @@ struct StatusBadge: View {
     let text: String
     var color: Color = Theme.sky
 
+    private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: Theme.tagCorner) }
+
     var body: some View {
-        // Blueprint tag: mono, 4px corner, hairline — no filled chips.
-        Text(text.uppercased())
-            .font(.data(.caption2)).tracking(0.85)
-            .padding(.horizontal, 8).padding(.vertical, 3)
-            .overlay(RoundedRectangle(cornerRadius: Theme.tagCorner)
-                .strokeBorder(color == Theme.ink ? Theme.graphite : color.opacity(0.55),
-                              lineWidth: 1))
-            .foregroundStyle(color == Theme.ink ? Theme.textSecondary : color)
+        // v3.1.2: a stamped silver metal tag — punched hole, debossed mono
+        // lettering, the semantic color as a thin anodized wash on the plate.
+        HStack(spacing: 5) {
+            // The punched hole the tag would wire onto.
+            Circle()
+                .fill(Theme.bg)
+                .frame(width: 4.5, height: 4.5)
+                .overlay(Circle().strokeBorder(
+                    LinearGradient(colors: [.black.opacity(0.6), .white.opacity(0.5)],
+                                   startPoint: .top, endPoint: .bottom),
+                    lineWidth: 0.8))
+            Text(text.uppercased())
+                .font(.data(.caption2, weight: .semibold)).tracking(0.85)
+                // Debossed: dark strike with the light catching the cut below.
+                .foregroundStyle(Color(white: 0.13))
+                .shadow(color: .white.opacity(0.30), radius: 0, y: 0.8)
+        }
+        .padding(.leading, 6).padding(.trailing, 8).padding(.vertical, 3)
+        .background {
+            shape.fill(LinearGradient(colors: [Color(white: 0.80), Color(white: 0.52)],
+                                      startPoint: .top, endPoint: .bottom))
+            if color != Theme.ink {
+                shape.fill(LinearGradient(colors: [color.opacity(0.28), color.opacity(0.14)],
+                                          startPoint: .top, endPoint: .bottom))
+            }
+        }
+        .overlay(shape.strokeBorder(
+            LinearGradient(colors: [.white.opacity(0.75), .black.opacity(0.35)],
+                           startPoint: .top, endPoint: .bottom),
+            lineWidth: 0.8))
+        .shadow(color: .black.opacity(0.35), radius: 1.5, y: 1)
     }
 }
 

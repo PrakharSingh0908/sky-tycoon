@@ -145,7 +145,7 @@ private struct AircraftCard: View {
             if plane.groundedWeeksRemaining > 0 {
                 StatusBadge(text: "In shop · \(plane.groundedWeeksRemaining) wk", color: Theme.warn)
             } else if let route = currentRoute {
-                StatusBadge(text: "\(route.originID) ⇄ \(route.destinationID)", color: Theme.profit)
+                StatusBadge(text: "\(route.originID) ✈︎ \(route.destinationID)", color: Theme.profit)
             } else {
                 StatusBadge(text: "Idle", color: Theme.textSecondary)
             }
@@ -251,7 +251,7 @@ private struct AircraftCard: View {
     }
 
     private func routeLabel(_ route: Route, spec: AircraftSpec) -> String {
-        let base = "\(route.originID) ⇄ \(route.destinationID) · \(Int(route.distanceKm)) km"
+        let base = "\(route.originID) ✈︎ \(route.destinationID) · \(Int(route.distanceKm)) km"
         if plane.effectiveRangeKm(spec: spec) < route.distanceKm {
             // A lighter cabin might stretch it — tell the player.
             return spec.rangeKm * 1.10 >= route.distanceKm

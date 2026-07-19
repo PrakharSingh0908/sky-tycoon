@@ -39,13 +39,13 @@ struct ShowroomView: View {
         let effectiveRange = spec.rangeKm
             * CabinLayout.standard(abreast: spec.seatsAbreast).rangeFactor(spec: spec)
         if effectiveRange < route.distanceKm {
-            return ("Beyond range for \(route.originID) ⇄ \(route.destinationID)", false)
+            return ("Beyond range for \(route.originID) ✈︎ \(route.destinationID)", false)
         }
         if origin.runwayClass < spec.requiredRunwayClass
             || dest.runwayClass < spec.requiredRunwayClass {
             return ("Runway too short at \(origin.runwayClass < spec.requiredRunwayClass ? route.originID : route.destinationID)", false)
         }
-        return ("Fits \(route.originID) ⇄ \(route.destinationID)", true)
+        return ("Fits \(route.originID) ✈︎ \(route.destinationID)", true)
     }
 
     enum Tab: String, CaseIterable, Identifiable {
