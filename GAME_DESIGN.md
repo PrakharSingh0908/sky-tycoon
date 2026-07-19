@@ -1,6 +1,64 @@
 # SkyTycoon — Game Design Document
 ### A 2D airline management simulator for iOS
-Version 0.2 — July 2026
+Version 0.3 — July 2026
+
+---
+
+## §0. The Feel — Vision Charter (2026-07-19)
+
+What the game is FOR. Every system below serves this charter; when a
+mechanic and the charter disagree, the charter wins.
+
+### The fantasy
+You are nobody with a plane. Your aunt staked you $200K, the industry
+has sixty-eight carriers that have never heard of you, and the only
+aircraft you can afford to operate is a leased eleven-seat turboprop.
+Everything you will ever own, you will have earned: the first profitable
+week, the first plane with your registration on it, the first jet, the
+first time a rival you used to look up at appears BELOW you on the
+ladder. SkyTycoon is the feeling of building a foundation stone by
+stone, and knowing exactly which stone you laid this session.
+
+### The emotional arc (one campaign, ~15 to 30 hours)
+1. SURVIVAL (weeks 1 to 30). $200K, one lease, one route. Margins are
+   thin by design; a bad fare or a wrong route loses money. The win
+   condition of this era is simply a profitable week. It should feel
+   like holding a small flame out of the wind.
+2. FOUNDATION (months 6 to 18). Two or three feeders, the first used
+   plane you OWN, the Regional License unlock card. The player learns
+   the deep systems: crew economics, wear, catering, competition. Rank
+   climbs through the forgettable charter carriers; each name passed
+   is a small, private victory.
+3. ASCENT (years 2 to 4). Jets unlock. Real rivals with real names.
+   The trust-fund arc resolves; the aunt's letters change tone. Money
+   works differently now: fleets, loans, hedging trends. The board
+   fills with decisions that would have bankrupted era-1 you.
+4. EMPIRE (year 4 on). Mainline, then widebodies, then the top ten.
+   The game stops handing you goals and becomes a sandbox with teeth:
+   crashes, courts, recalls, and the ladder's summit.
+
+### Feel rules
+- EARNED, NEVER GIVEN. No free planes, no windfalls that outclass the
+  player's own work. Unlocks are thresholds crossed, announced with
+  ceremony (the event drawer), never handed out on a timer.
+- SLOW IS THE POINT. The sim ticks weekly; wealth accrues in
+  thousands, not millions. If a player feels rich in month one, the
+  tuning is wrong.
+- THE WORLD TALKS BACK. Trends, events, lawsuits, recalls, rivals:
+  every week should carry at least one thing worth reading, and every
+  choice a consequence that lands somewhere visible (charts, ledger,
+  reputation, the ladder).
+- INSTRUMENTS, NOT MENUS. The UI is a machined console (Blueprint
+  v3.1.2): split-flap boards, stamped tags, metal keys. Numbers move
+  like instruments reading a live machine, because they are.
+- ONE MORE WEEK. Every session should end with a reason to run one
+  more settle: a delivery landing, a verdict pending, a threshold a
+  few thousand dollars away.
+
+### What SkyTycoon is not
+Not an idle game (nothing meaningful happens without a decision), not
+a city builder (no tile placement), not a punishing roguelike (failure
+arcs are slow and legible, and the Grounded screen is dignified).
 
 ---
 
@@ -538,3 +596,66 @@ renewal, not just checks. The Fleet list sorts worst-wear first.
 *Why:* load factor previously ignored WHO ELSE flies the pair; comfort
 was a satisfaction nicety instead of a competitive weapon. Markets make
 cabin quality, pricing, and route selection one connected decision.
+
+## 22. Amendment — The Foundation Era (2026-07-19)
+
+The progression overhaul that makes the charter's arc real.
+
+### Starting conditions
+- The aunt's seed is a flat **$200K** (`auntSeedFund`), scaled only by
+  difficulty (relaxed 1.5×, tycoon 0.7×). Country trust-fund figures
+  are retired. The deadline-failure withdrawal claws back up to the
+  seed, not a fortune.
+- $200K buys NO airplane. The opening move is a leased Orion feeder
+  (~$2.6K/wk) and one carefully chosen route. Owning your first
+  airframe is an era-2 achievement.
+- HQ overhead now scales with the operation: $2.5K/wk base +
+  $1.4K/wk per aircraft (was a flat $15K that would have ended a $200K
+  start by itself in 13 weeks).
+- Reference fare squeezed 0.125 → 0.120 $/km. Together with rival
+  capture share (§21), contractor premiums (§15), and compounding wear
+  (§17), margins stay thin until the player earns scale.
+
+### Fleet tiers (earn the flight line)
+Models group into five tiers; a new airline starts at tier 0 and
+unlocks upward at MARKET CAP thresholds (cap blends net worth and
+trailing profit, so it measures the whole foundation, §12):
+
+| Tier | Name                | Unlocks at | Contents |
+|------|---------------------|-----------:|----------|
+| 0    | Feeder Operations   | day one    | Orion 205/208/210/212 |
+| 1    | Regional License    | $1.5M      | Northline NR-70…NR-120, Kestrel KD-72/88/98 |
+| 2    | Jet Certificate     | $8M        | Meridian M50/M70/M105, Kestrel KJ-80/90 |
+| 3    | Mainline Authority  | $40M       | Meridian M155/M200/M260, Kestrel KJ-265 |
+| 4    | Flag Carrier Rights | $200M      | Meridian M230/M300/M375 |
+
+- Crossing a threshold fires an **unlock event card** at the next
+  settle: the tier's name as the title, the freed models listed, one
+  key ("To the showroom"). The drawer opening on new metal is a
+  celebration beat, logged to the event history and charts.
+- The showroom shows locked metal behind a lock plate naming the
+  requirement ("Unlocks at $8.00M market cap"): aspiration, visible.
+  Engine guards (order/lease/used) enforce the lock; the UI only
+  communicates it.
+- Pre-§22 saves are grandfathered at tier 4.
+
+### The deep ladder (start near the bottom)
+- Each market's rival table now runs from its flag carrier down to
+  $120K charter outfits: 9 authored anchors + log-spaced generated
+  carriers with market-flavored names (Konkan Skyways, Bluebird
+  Express…). US fields 68 rivals; India 54. A fresh $200K airline
+  enters around **#60–69** and every rank gained is bought with real
+  growth.
+- Weekly pax of generated carriers tracks cap sublinearly, so market
+  share stays honest with a long tail.
+- The Industry sheet shows the top of the table, an ellipsis for the
+  crowd, and YOUR seven-carrier neighborhood: the fight you are in,
+  not sixty-nine unreadable bars. The share pie buckets the tail into
+  "Everyone else".
+
+### Why
+The old start (millions in the bank, rank #10 of 10, every plane
+purchasable on day one) skipped the entire first act. The foundation
+era gives the numbers somewhere to go, makes each unlock a story
+beat the player remembers, and turns rank into a long, legible climb
+instead of a leaderboard you enter at the top of.

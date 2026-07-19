@@ -109,6 +109,46 @@ enum Balance {
         .widebody75: makeSpec(windows: 75, engine: .widebody, name: "Meridian M375"),
     ]
 
+    // ── Fleet tiers (GDD §22): earn your way up the flight line ─────────
+    // Tier 0 feeders are day one. Everything larger unlocks at a market
+    // cap threshold, announced by an unlock event card. Old saves are
+    // grandfathered at the top tier.
+
+    static func fleetTier(of type: AircraftType) -> Int {
+        switch type {
+        case .turboprop5, .turboprop8, .turboprop10, .turboprop12:
+            0
+        case .propeller24, .propeller24II, .propeller28, .propeller28II,
+             .propeller30, .propeller30II, .propeller32, .propeller35:
+            1
+        case .jet18, .jet24, .jet26, .jet29, .jet32:
+            2
+        case .jet42, .jet50, .jet60, .jet60II:
+            3
+        case .widebody55, .widebody65, .widebody75:
+            4
+        }
+    }
+
+    /// Market cap needed to unlock each tier (index = tier).
+    static let fleetTierThresholds: [Double] = [
+        0,               // 0: feeders, day one
+        1_500_000,       // 1: regional props
+        8_000_000,       // 2: regional jets
+        40_000_000,      // 3: mainline narrowbodies
+        200_000_000,     // 4: widebodies
+    ]
+
+    static let fleetTierNames = [
+        "Feeder Operations",
+        "Regional License",
+        "Jet Certificate",
+        "Mainline Authority",
+        "Flag Carrier Rights",
+    ]
+
+    static let maxFleetTier = 4
+
     // ── Industry trend decks (GDD §14) ───────────────────────────────────
     // One LONG regime always runs (year-plus); SHORT shocks (a month or
     // three) spawn at trendChancePerWeek, at most two at a time.
@@ -216,10 +256,71 @@ enum Balance {
         .init(name: "Cactus Feeders",        marketCap: 60_000_000,     weeklyPax: 2_500),
         .init(name: "Keys Island Charters",  marketCap: 12_000_000,     weeklyPax: 1_000),
     ]
+    // ── The deep ladder (GDD §22): a $200K founder starts near the very
+    // bottom of a real industry. Named anchors top the table; generated
+    // regional and charter carriers fill it down to $120K, log-spaced,
+    // deterministic per country. US fields 68 rivals (you start #69),
+    // India 54 (#55).
+
+    private static let fillerFirstUS = [
+        "Bluebird", "Prairie", "Sequoia", "Mesa", "Tidewater", "Ozark",
+        "Catalina", "Pinnacle", "Harbor", "Caribou", "Sawtooth", "Bayou",
+        "Firefly", "Ridgeline", "Mustang", "Aurora", "Kodiak", "Chinook",
+        "Badger", "Cypress", "Dixie", "Elkhorn", "Flatiron", "Gopher",
+        "Huron", "Ivory", "Juniper", "Klondike", "Laurel", "Maverick",
+        "Nomad", "Osprey", "Pecos", "Quartz", "Rushmore", "Sundance",
+        "Teton", "Umpqua", "Vantage", "Wabash", "Yosemite", "Zephyr",
+        "Amber", "Boulder", "Cascade", "Denali", "Emerald", "Falcon",
+        "Granite", "Hickory", "Iron Range", "Jubilee", "Keystone",
+        "Lakeshore", "Meadow", "Nugget", "Overland", "Palmetto",
+        "Quicksilver", "Redstone",
+    ]
+    private static let fillerFirstIndia = [
+        "Kaveri", "Aravalli", "Malabar", "Sundarban", "Chenab", "Vindhya",
+        "Konkan", "Tawang", "Bastar", "Chambal", "Nilgiri", "Rann",
+        "Satpura", "Teesta", "Zanskar", "Bhagirathi", "Coromandel",
+        "Dandeli", "Ellora", "Gir", "Hampi", "Indrayani", "Jaisal",
+        "Kanha", "Loktak", "Mahanadi", "Narmada", "Orchha", "Periyar",
+        "Rewa", "Sharavati", "Tungabhadra", "Ujjain", "Valley",
+        "Wular", "Yamuna", "Ajanta", "Bhilai", "Charminar", "Dooars",
+        "Eravikulam", "Fatehpur", "Gomti", "Hemis",
+    ]
+    private static let fillerSuffixes = [
+        "Air", "Airways", "Aviation", "Connect", "Express", "Link",
+        "Skyways", "Charters",
+    ]
+
+    private static func buildLadder(anchors: [IndustryRival],
+                                    firstNames: [String],
+                                    totalCount: Int) -> [IndustryRival] {
+        let floorCap = 120_000.0
+        let ceilCap = anchors.map(\.marketCap).min()! * 0.85
+        let fillerCount = totalCount - anchors.count
+        var fillers: [IndustryRival] = []
+        for i in 0..<fillerCount {
+            // Log-spaced caps, biggest filler first.
+            let t = Double(i) / Double(max(1, fillerCount - 1))
+            let cap = ceilCap * pow(floorCap / ceilCap, t)
+            let name = "\(firstNames[i % firstNames.count]) \(fillerSuffixes[(i / firstNames.count + i) % fillerSuffixes.count])"
+            // Pax tracks cap sublinearly: small carriers still fly people.
+            let pax = 120.0 + 22_000.0 * pow(cap / 1_000_000_000, 0.62)
+            fillers.append(IndustryRival(name: name, marketCap: cap,
+                                         weeklyPax: pax.rounded()))
+        }
+        return (anchors + fillers).sorted { $0.marketCap > $1.marketCap }
+    }
+
+    private static let indiaLadder = buildLadder(anchors: indiaRivals,
+                                                 firstNames: fillerFirstIndia,
+                                                 totalCount: 54)
+    private static let usLadder = buildLadder(anchors: usRivals,
+                                              firstNames: fillerFirstUS,
+                                              totalCount: 68)
+
     static func rivals(for country: Country) -> [IndustryRival] {
         switch country {
-        case .us: usRivals
-        default: indiaRivals
+        case .us: usLadder
+        default: indiaLadder
         }
     }
     /// Earnings multiple in the player-valuation formula
@@ -357,8 +458,19 @@ enum Balance {
     // (verified by 160-week sims). Tune further in the M8 playtest pass.
     static let demandK = 550.0  // 2026-07-18 balance pass
     static let fuelPricePerUnit = 1.0
-    static let hqOverheadPerWeek = 15_000.0
-    static let referenceFarePerKm = 0.125   // pre country fareLevel multiplier (2026-07-18 balance pass)
+    /// HQ overhead scales with the operation (§22): a founder's desk costs
+    /// little; a fleet needs a real headquarters. Replaces the flat $15K
+    /// that would end a $200K start in 13 weeks by itself.
+    static let hqOverheadBase = 2_500.0
+    static let hqOverheadPerAircraft = 1_400.0
+    static func hqOverhead(fleetCount: Int) -> Double {
+        hqOverheadBase + hqOverheadPerAircraft * Double(fleetCount)
+    }
+    static let referenceFarePerKm = 0.120   // §22: squeezed from 0.125
+
+    /// The aunt's seed (GDD §22): every airline starts with this, flat,
+    /// scaled only by difficulty. Small on purpose — the game is the climb.
+    static let auntSeedFund = 200_000.0
 
     /// Poor condition raises fuel burn (GDD §4.1): up to +15% at condition 0.
     static func fuelConditionMultiplier(condition: Double) -> Double {

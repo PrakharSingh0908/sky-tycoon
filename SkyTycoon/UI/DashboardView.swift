@@ -666,13 +666,21 @@ private struct IndustrySheet: View {
 
                 Divider().overlay(Theme.hairline)
 
-                SectionHeader(title: "Market cap · top \(carriers.count)",
+                SectionHeader(title: "The ladder · \(carriers.count) carriers",
                               icon: "chart.bar.xaxis", accent: accent)
-                Text("Bars are log-scaled; the numbers are exact.")
+                Text("The top of the table, and the fight you are in. Bars are log-scaled; the numbers are exact.")
                     .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
                 VStack(spacing: 8) {
-                    ForEach(Array(carriers.enumerated()), id: \.element.id) { index, carrier in
-                        capRow(rank: index + 1, carrier)
+                    ForEach(ladderRows, id: \.id) { row in
+                        switch row {
+                        case .carrier(let rank, let carrier):
+                            capRow(rank: rank, carrier)
+                        case .gap(let hidden):
+                            Text("· · · \(hidden) carriers · · ·")
+                                .font(.data(.caption2)).tracking(0.85)
+                                .foregroundStyle(Theme.textTertiary)
+                                .frame(maxWidth: .infinity)
+                        }
                     }
                 }
 
@@ -690,17 +698,60 @@ private struct IndustrySheet: View {
         .holdsSimClock()
     }
 
+    /// A 69-carrier pie is noise: the majors get slices, the long tail
+    /// becomes one graphite bucket, and you are always cornflower.
     private var shareSlices: [ExpenseSlice] {
-        var colorIndex = 0
-        return carriers.map { carrier in
-            if carrier.isPlayer {
-                return ExpenseSlice(label: carrier.name, amount: max(carrier.pax, 1),
-                                    color: accent)
-            }
-            let color = palette[colorIndex % palette.count]
-            colorIndex += 1
-            return ExpenseSlice(label: carrier.name, amount: carrier.pax, color: color)
+        let majors = carriers.filter { !$0.isPlayer }.prefix(6)
+        let player = carriers.first { $0.isPlayer }
+        let restPax = carriers.filter { !$0.isPlayer }.dropFirst(6)
+            .map(\.pax).reduce(0, +)
+        var slices: [ExpenseSlice] = []
+        for (i, carrier) in majors.enumerated() {
+            slices.append(ExpenseSlice(label: carrier.name, amount: carrier.pax,
+                                       color: palette[i % palette.count]))
         }
+        if restPax > 0 {
+            slices.append(ExpenseSlice(label: "Everyone else", amount: restPax,
+                                       color: Color(white: 0.38)))
+        }
+        if let player {
+            slices.append(ExpenseSlice(label: player.name,
+                                       amount: max(player.pax, 1), color: accent))
+        }
+        return slices
+    }
+
+    /// Top 3 of the table, an ellipsis for the gap, then your fight:
+    /// three above you, you, three below.
+    private enum LadderRow: Identifiable {
+        case carrier(rank: Int, Carrier)
+        case gap(hidden: Int)
+        var id: String {
+            switch self {
+            case .carrier(_, let c): c.id
+            case .gap(let n): "gap-\(n)"
+            }
+        }
+    }
+
+    private var ladderRows: [LadderRow] {
+        let all = carriers
+        guard let playerIndex = all.firstIndex(where: { $0.isPlayer }) else {
+            return all.prefix(10).enumerated().map { .carrier(rank: $0 + 1, $1) }
+        }
+        let topEnd = 3
+        let windowStart = max(playerIndex - 3, 0)
+        let windowEnd = min(playerIndex + 3, all.count - 1)
+        var rows: [LadderRow] = []
+        if windowStart <= topEnd {
+            // The window reaches the top: one continuous run.
+            for i in 0...windowEnd { rows.append(.carrier(rank: i + 1, all[i])) }
+        } else {
+            for i in 0..<topEnd { rows.append(.carrier(rank: i + 1, all[i])) }
+            rows.append(.gap(hidden: windowStart - topEnd))
+            for i in windowStart...windowEnd { rows.append(.carrier(rank: i + 1, all[i])) }
+        }
+        return rows
     }
 
     private func capRow(rank: Int, _ carrier: Carrier) -> some View {
@@ -748,5 +799,14 @@ private struct IndustrySheet: View {
 #Preview("Industry sheet") {
     IndustrySheet()
         .environment(GameEngine.previewGame())
+        .preferredColorScheme(.dark)
+}
+
+// §22 regression pin: a brand-new airline shows the $200K seed and a
+// bottom-of-ladder rank, not a leg up.
+#Preview("Foundation start") {
+    DashboardView()
+        .environment(GameEngine.newGame(airlineName: "Foundation Air",
+                                        country: .us, seed: 7))
         .preferredColorScheme(.dark)
 }

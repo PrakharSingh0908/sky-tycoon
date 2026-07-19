@@ -11,7 +11,13 @@ import SwiftUI
 
 extension GameEngine {
     static func previewGame() -> GameEngine {
-        let engine = GameEngine.newGame(airlineName: "Aunt Air", country: .india, seed: 42)
+        // §22: new games start at tier 0 with $200K. Previews need a
+        // mid-game airline, so seed the state past the foundation era.
+        var seeded = GameEngine.newGame(airlineName: "Aunt Air", country: .india,
+                                        seed: 42).state
+        seeded.unlockedFleetTier = Balance.maxFleetTier
+        seeded.cash += 6_000_000
+        let engine = GameEngine(state: seeded)
         engine.takeLoan(amount: 6_000_000)
         if let listing = engine.state.usedMarket.first(where: { $0.type == .propeller24 })
             ?? engine.state.usedMarket.first {

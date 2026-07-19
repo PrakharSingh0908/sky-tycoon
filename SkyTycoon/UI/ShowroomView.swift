@@ -74,6 +74,27 @@ struct ShowroomView: View {
         .sensoryFeedback(.success, trigger: receipt?.id) { _, new in new != nil }
     }
 
+    /// The §22 lock: the metal is visible (aspiration), the buy path is
+    /// not. Swallows taps and names the requirement.
+    @ViewBuilder private func lockPlate(for type: AircraftType) -> some View {
+        let tier = Balance.fleetTier(of: type)
+        RoundedRectangle(cornerRadius: Theme.corner)
+            .fill(Theme.bg.opacity(0.74))
+            .overlay(
+                VStack(spacing: 6) {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 22))
+                        .foregroundStyle(Theme.textSecondary)
+                    Text(Balance.fleetTierNames[tier])
+                        .font(.game(.subheadline, weight: .semibold))
+                        .foregroundStyle(Theme.textPrimary)
+                    Text("Unlocks at \(Balance.fleetTierThresholds[tier].money) market cap")
+                        .font(.data(.caption2)).tracking(0.85)
+                        .foregroundStyle(Theme.textSecondary)
+                }
+            )
+    }
+
     // ── New: full price, delivery wait ───────────────────────────────────
 
     @ViewBuilder private var newCards: some View {
@@ -83,6 +104,7 @@ struct ShowroomView: View {
             let spec = Balance.specs[type]!
             let discount = engine.loyaltyDiscount(seller: spec.seller)
             let price = engine.discountedPrice(for: type)
+            let locked = !engine.isUnlocked(type)
             GameCard {
                 offerHeader(type: type, specs: [
                     ("Seats", "\(spec.maxSeats)"),
@@ -121,6 +143,7 @@ struct ShowroomView: View {
                     .opacity(engine.state.cash < price ? 0.4 : 1)
                 }
             }
+            .overlay { if locked { lockPlate(for: type) } }
         }
     }
 
@@ -137,6 +160,7 @@ struct ShowroomView: View {
         }
         ForEach(engine.state.usedMarket) { listing in
             let spec = Balance.specs[listing.type]!
+            let locked = !engine.isUnlocked(listing.type)
             GameCard {
                 offerHeader(type: listing.type, specs: [
                     ("Seats", "\(spec.maxSeats)"),
@@ -167,6 +191,7 @@ struct ShowroomView: View {
                     .opacity(engine.state.cash < listing.price ? 0.4 : 1)
                 }
             }
+            .overlay { if locked { lockPlate(for: listing.type) } }
         }
     }
 
@@ -178,6 +203,7 @@ struct ShowroomView: View {
         ForEach(AircraftType.allCases) { type in
             let spec = Balance.specs[type]!
             let weekly = spec.purchasePrice * Balance.leaseRatePerWeek
+            let locked = !engine.isUnlocked(type)
             GameCard {
                 offerHeader(type: type, specs: [
                     ("Seats", "\(spec.maxSeats)"),
@@ -201,6 +227,7 @@ struct ShowroomView: View {
                     .buttonStyle(GameButtonStyle(color: accent, prominent: true))
                 }
             }
+            .overlay { if locked { lockPlate(for: type) } }
         }
     }
 
@@ -414,4 +441,14 @@ private struct AcquisitionReceiptView: View {
         }
         .environment(GameEngine.previewGame())
         .preferredColorScheme(.dark)
+}
+
+// §22 regression pin: tier 0 sees the metal but not the buy path.
+#Preview("Locked showroom") {
+    NavigationStack {
+        ShowroomView()
+            .environment(GameEngine.newGame(airlineName: "Foundation Air",
+                                            country: .us, seed: 7))
+    }
+    .preferredColorScheme(.dark)
 }

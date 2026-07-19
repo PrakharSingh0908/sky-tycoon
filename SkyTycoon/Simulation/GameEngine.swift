@@ -51,6 +51,49 @@ final class GameEngine {
         backfillAvatars()
         retagFleet()
         refreshPendingEventCopy()
+        // §22 grandfather: saves from before fleet tiers keep everything.
+        if self.state.unlockedFleetTier == nil {
+            self.state.unlockedFleetTier = Balance.maxFleetTier
+        }
+    }
+
+    // ── Fleet tiers (GDD §22) ────────────────────────────────────────────
+
+    var unlockedFleetTier: Int { state.unlockedFleetTier ?? Balance.maxFleetTier }
+
+    /// Can this model be acquired yet?
+    func isUnlocked(_ type: AircraftType) -> Bool {
+        Balance.fleetTier(of: type) <= unlockedFleetTier
+    }
+
+    /// The next tier's requirement, for showroom lock labels.
+    var nextTierThreshold: Double? {
+        let next = unlockedFleetTier + 1
+        guard next <= Balance.maxFleetTier else { return nil }
+        return Balance.fleetTierThresholds[next]
+    }
+
+    /// Settle-time check: crossing a market-cap threshold grants the next
+    /// tier and deals the unlock card — the drawer opening on new metal.
+    private func checkFleetUnlocks() {
+        guard state.pendingEvent == nil,
+              unlockedFleetTier < Balance.maxFleetTier else { return }
+        let next = unlockedFleetTier + 1
+        guard marketCap >= Balance.fleetTierThresholds[next] else { return }
+        state.unlockedFleetTier = next
+        let models = AircraftType.allCases
+            .filter { Balance.fleetTier(of: $0) == next }
+            .map { Balance.specs[$0]!.displayName }
+        let unique = Array(NSOrderedSet(array: models)) as! [String]
+        state.pendingEvent = GameEvent(
+            id: UUID(), cardID: "fleetUnlock", category: .opportunity,
+            isNegative: false,
+            title: Balance.fleetTierNames[next],
+            body: "Your market cap cleared \(Balance.fleetTierThresholds[next].money). The registry has cleared you for a new class of aircraft: \(unique.joined(separator: ", ")). The showroom has them waiting.",
+            options: [EventOption(label: "To the showroom", effects: [])],
+            firedOn: state.date)
+        state.lastEventTotalWeek = state.date.totalWeeks
+        logEvent(title: "Unlocked: \(Balance.fleetTierNames[next])", isNegative: false)
     }
 
     // ── Fleet registration prefix (2026-07-19) ───────────────────────────
@@ -142,7 +185,9 @@ final class GameEngine {
             country: country,
             difficulty: difficulty,
             airlineName: airlineName,
-            cash: (profile.startingTrustFund + profile.startingSavings) * difficulty.startingCashFactor,
+            // §22 Foundation Era: a small flat seed. Leasing a feeder and
+            // making one route work IS the opening game.
+            cash: Balance.auntSeedFund * difficulty.startingCashFactor,
             livery: .launch,
             trustFundActive: true,
             trustFundDeadline: GameDate(week: 52, year: 3),
@@ -159,6 +204,8 @@ final class GameEngine {
             jobPostings: [:], applicants: [],
             sellerOrders: [:],
             pendingEvent: nil, activeEffects: [], lastNegativeEventTotalWeek: 0,
+            // §22: new airlines EARN the flight line, tier by tier.
+            unlockedFleetTier: 0,
             reports: [],
             netWorthHistory: [], cashHistory: [], reputationHistory: []
         )
@@ -253,7 +300,8 @@ final class GameEngine {
         var report = WeeklyReport(date: state.date, revenue: 0, fuelCost: 0,
                                   wageCost: 0, maintenanceCost: 0, loanCost: 0,
                                   leaseCost: 0, cabinCost: 0, marketingCost: 0,
-                                  overheadCost: Balance.hqOverheadPerWeek * difficulty.costFactor)
+                                  overheadCost: Balance.hqOverhead(fleetCount: state.fleet.count)
+                                      * difficulty.costFactor)
 
         // 0. DELIVERIES — new-plane orders count down and enter service.
         for i in state.fleet.indices where state.fleet[i].status == .onOrder {
@@ -563,6 +611,9 @@ final class GameEngine {
         // Industry trends age, expire, and respawn (GDD §14).
         tickIndustryTrends()
 
+        // Fleet tier unlocks (GDD §22): the drawer opens on new metal.
+        checkFleetUnlocks()
+
         // 9. BOOKKEEPING — aging, market refresh, reports, quarters, date, autosave.
 
         // M0 fix: aircraft aging. Depreciation and netWorth depend on ageYears,
@@ -792,8 +843,7 @@ final class GameEngine {
             // ── Failure: the remaining fund is withdrawn — hard mode ─────
             state.trustFundResolution = .failed
             state.trustFundActive = false
-            let profile = Balance.countryProfiles[state.country]!
-            let withdrawal = min(max(state.cash, 0), profile.startingTrustFund)
+            let withdrawal = min(max(state.cash, 0), Balance.auntSeedFund)
             appendLetter(tone: .heartbroken, quarterProfit: quarterProfit, quartersLeft: 0)
             state.pendingEvent = GameEvent(
                 id: UUID(), cardID: "trustFundWithdrawn", category: .story,
@@ -1279,6 +1329,7 @@ final class GameEngine {
     /// archetype's delivery wait (status .onOrder until then).
     @discardableResult
     func orderNewAircraft(type: AircraftType, nickname: String) -> Bool {
+        guard isUnlocked(type) else { return false }
         let spec = Balance.specs[type]!
         let price = discountedPrice(for: type)
         guard state.cash >= price else { return false }
@@ -1348,7 +1399,7 @@ final class GameEngine {
     func buyUsedAircraft(listingID: UUID, nickname: String) -> Bool {
         guard let idx = state.usedMarket.firstIndex(where: { $0.id == listingID }) else { return false }
         let listing = state.usedMarket[idx]
-        guard state.cash >= listing.price else { return false }
+        guard isUnlocked(listing.type), state.cash >= listing.price else { return false }
         state.cash -= listing.price
         state.usedMarket.remove(at: idx)
         state.fleet.append(Aircraft(id: UUID(), type: listing.type, nickname: nickname,
@@ -1365,6 +1416,7 @@ final class GameEngine {
     /// payment that never ends. The cautious player's first plane.
     @discardableResult
     func leaseAircraft(type: AircraftType, nickname: String) -> Bool {
+        guard isUnlocked(type) else { return false }
         let spec = Balance.specs[type]!
         state.fleet.append(Aircraft(id: UUID(), type: type, nickname: nickname,
             status: .idle, acquisition: .leased,

@@ -783,6 +783,9 @@ struct GameState: Codable {
     /// Fired-event history (capped ~120) — the charts' event rules and the
     /// Major events list. Optional for save-compat.
     var eventLog: [EventLogEntry]? = nil
+    /// Highest fleet tier earned (GDD §22). Optional for save-compat:
+    /// pre-feature saves decode nil and are grandfathered at the top.
+    var unlockedFleetTier: Int? = nil
     var reports: [WeeklyReport]       // capped ring buffer (last 52)
 
     /// Per-week history buffers for trend charts, newest last

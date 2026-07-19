@@ -7,6 +7,16 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## The Foundation Era (GDD §0 charter + §22)
+
+- Every game now starts with a flat $200K seed (difficulty-scaled). No airplane is affordable on day one: the opening move is a leased Orion feeder and one route that has to work. HQ overhead scales with fleet size ($2.5K + $1.4K per aircraft) instead of a flat $15K, and the reference fare is squeezed to 0.120 $/km.
+- Fleet tiers: five license levels (Feeder → Regional → Jet → Mainline → Flag Carrier) unlocked at market-cap thresholds ($1.5M / $8M / $40M / $200M). Crossing one fires a celebration event card listing the freed models; the showroom shows locked metal behind a lock plate naming the requirement; engine guards enforce it. Old saves grandfathered at the top tier.
+- The deep ladder: rival tables now run 54 (India) to 68 (US) carriers, from the flag carrier down to $120K charter outfits with generated market-flavored names. A fresh airline enters around #60-69 and climbs. The Industry sheet shows the top of the table plus your seven-carrier neighborhood; the share pie buckets the long tail.
+- GAME_DESIGN.md gains §0 "The Feel", a vision charter: the fantasy, the four-era emotional arc, and the feel rules (earned never given, slow is the point, the world talks back, instruments not menus, one more week).
+
+*Why:* per direction - the old start skipped the entire first act. Players should spend real time building a foundation and feel every rung of the climb.
+
+
 ## Stale pending cards refresh on load
 
 - A pending event persisted by an older build kept its baked-in labels and body, so the previous card still showed the pre-crisp copy. On load, the engine now refreshes a pending card's title, options, and body from the current deck, rebuilding personalized lawsuit and recall bodies from the stored subject with no RNG consumed.

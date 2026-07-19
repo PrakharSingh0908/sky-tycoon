@@ -187,9 +187,11 @@ struct MoneyView: View {
             statementRow("Cabin & catering", -r.cabinCost) { cabinExplanation(r) }
             statementRow("Marketing", -r.marketingCost) { marketingExplanation(r) }
             statementRow("Overhead", -r.overheadCost) {
-                Explanation(title: "Overhead", subtitle: "Fixed weekly HQ costs",
-                            rows: [("HQ operations", Balance.hqOverheadPerWeek.money)],
-                            formula: "overhead = flat \(Balance.hqOverheadPerWeek.money)/week")
+                Explanation(title: "Overhead", subtitle: "HQ scales with the operation",
+                            rows: [("Base HQ", Balance.hqOverheadBase.money),
+                                   ("Per aircraft", Balance.hqOverheadPerAircraft.money),
+                                   ("Fleet size", "\(engine.state.fleet.count)")],
+                            formula: "overhead = \(Balance.hqOverheadBase.money) + \(Balance.hqOverheadPerAircraft.money) × fleet")
             }
             Divider().overlay(Theme.hairline)
             HStack {
