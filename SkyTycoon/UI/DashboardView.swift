@@ -33,6 +33,7 @@ struct DashboardView: View {
     var body: some View {
         GameScreen(title: "Dashboard", accent: accent) {
             heroCard
+            if !firstFlightDone { firstFlightCard }
             if engine.state.reputation < 2.0 { reputationCollapseBanner }
             if !engine.state.activeEffects.isEmpty || !wornAircraft.isEmpty {
                 opsConditionsCard
@@ -54,6 +55,88 @@ struct DashboardView: View {
             try? await Task.sleep(for: .seconds(0.9))
             withAnimation(.easeOut(duration: 0.7)) { settleFlash = false }
         }
+    }
+
+    // ── First flight: the opening moves, right on the home screen ───────
+    // A new founder shouldn't hunt through tabs to make their first
+    // decision. Three steps, each a live action; the card retires itself
+    // when the airline is actually flying.
+
+    @State private var showingShowroom = false
+    @State private var showingNewRoute = false
+    @State private var showingFirstRoute = false
+
+    private var hasAssignedRoute: Bool {
+        engine.state.routes.contains { !$0.assignedAircraftIDs.isEmpty }
+    }
+    private var firstFlightDone: Bool {
+        !engine.state.fleet.isEmpty && !engine.state.routes.isEmpty && hasAssignedRoute
+    }
+
+    private var firstFlightCard: some View {
+        GameCard(highlight: Theme.cornflower) {
+            SectionHeader(title: "First flight", icon: "checklist", accent: accent)
+            Text("Three moves and \(engine.state.airlineName) is an airline.")
+                .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+            firstFlightRow(done: !engine.state.fleet.isEmpty,
+                           title: "Lease your first aircraft",
+                           detail: "No capital needed. A feeder flies day one.") {
+                showingShowroom = true
+            }
+            firstFlightRow(done: !engine.state.routes.isEmpty,
+                           title: "Open your first route",
+                           detail: "Pick a pair where the demand is.") {
+                showingNewRoute = true
+            }
+            firstFlightRow(done: hasAssignedRoute,
+                           title: "Put the plane on the route",
+                           detail: "Assign it and the week starts earning.") {
+                if engine.state.routes.first != nil {
+                    showingFirstRoute = true
+                } else {
+                    showingNewRoute = true
+                }
+            }
+        }
+        .sheet(isPresented: $showingShowroom) {
+            NavigationStack { ShowroomView(initialTab: .lease) }
+        }
+        .sheet(isPresented: $showingNewRoute) { NewRouteSheet() }
+        .sheet(isPresented: $showingFirstRoute) {
+            if let route = engine.state.routes.first {
+                NavigationStack { RouteDetailView(routeID: route.id) }
+            }
+        }
+    }
+
+    private func firstFlightRow(done: Bool, title: String, detail: String,
+                                action: @escaping () -> Void) -> some View {
+        Button {
+            if !done { action() }
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: done ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(done ? Theme.profit : Theme.cornflower)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(title)
+                        .font(.game(.subheadline, weight: done ? .regular : .semibold))
+                        .foregroundStyle(done ? Theme.textSecondary : Theme.textPrimary)
+                        .strikethrough(done)
+                    if !done {
+                        Text(detail)
+                            .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                    }
+                }
+                Spacer()
+                if !done {
+                    Image(systemName: "chevron.right")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(Theme.textSecondary)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .disabled(done)
     }
 
     // ── Reputation collapse: the soft-fail spiral warning (GDD §4.5) ────
@@ -791,6 +874,13 @@ private struct IndustrySheet: View {
     }
 }
 
+#Preview("Foundation start") {
+    DashboardView()
+        .environment(GameEngine.newGame(airlineName: "Foundation Air",
+                                        country: .us, seed: 7))
+        .preferredColorScheme(.dark)
+}
+
 #Preview {
     DashboardView().environment(GameEngine.previewGame())
         .preferredColorScheme(.dark)
@@ -804,9 +894,3 @@ private struct IndustrySheet: View {
 
 // §22 regression pin: a brand-new airline shows the $200K seed and a
 // bottom-of-ladder rank, not a leg up.
-#Preview("Foundation start") {
-    DashboardView()
-        .environment(GameEngine.newGame(airlineName: "Foundation Air",
-                                        country: .us, seed: 7))
-        .preferredColorScheme(.dark)
-}

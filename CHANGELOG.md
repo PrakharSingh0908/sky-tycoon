@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## First Flight onboarding card
+
+- New founders get a checklist card on the Dashboard, right under the hero: three steps (lease your first aircraft, open your first route, put the plane on the route), each row opening the relevant surface directly as a sheet - the showroom on the Lease tab, the route desk, or the first route's detail for assignment. Steps check off and strike through as the airline comes alive; the card retires itself once a plane is flying a route.
+- ShowroomView gained an initialTab parameter; NewRouteSheet is presentable from anywhere.
+
+*Why:* per request - a brand-new player was left staring at an empty dashboard with $200K and no pointer; the opening moves now live on the home screen.
+
+
 ## Map first-load alignment fix
 
 - Airport dots no longer drift off the terrain on first load. The SceneKit camera's orthographic scale was computed from view.bounds, which is zero before layout, so the globe rendered at the wrong zoom until the first pan recomputed it. The scale now comes from SwiftUI geometry, so the very first frame matches the Canvas overlay's math.

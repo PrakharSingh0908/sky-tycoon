@@ -24,9 +24,14 @@ struct ShowroomView: View {
     /// When shopping for a specific route, every offer shows whether the
     /// airframe can actually fly it (payload-corrected range + runways).
     var fittingRoute: Route? = nil
-    @State private var tab: Tab = .used
+    @State private var tab: Tab
     @State private var receipt: AcquisitionReceipt?
     private let accent = Theme.orange
+
+    init(fittingRoute: Route? = nil, initialTab: Tab = .used) {
+        self.fittingRoute = fittingRoute
+        _tab = State(initialValue: initialTab)
+    }
 
     /// Fit verdict for an archetype against the target route, using the
     /// standard cabin's payload-corrected range — the same rules as

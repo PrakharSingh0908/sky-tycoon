@@ -76,7 +76,7 @@ struct RoutesView: View {
 // estimated demand (the sim's own gravity formula), each row carrying
 // distance, demand, runway class, and slots — decide, tap, flying.
 
-private struct NewRouteSheet: View {
+struct NewRouteSheet: View {
     @Environment(GameEngine.self) private var engine
     @Environment(\.dismiss) private var dismiss
     @State private var origin = ""
