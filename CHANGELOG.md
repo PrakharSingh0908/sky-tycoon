@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Silver glow icon on First Flight
+
+- SectionHeader gained a silverIcon option: polished silver gradient with a soft white glow, for headers that live on metal panels. First Flight's checklist icon uses it.
+
+*Why:* the cornflower accent icon read as a flat sticker on the machined housing; silver with glow belongs to the material.
+
+
 ## First Flight rides the hero's housing
 
 - The checklist moved back below the net worth board and now renders on a MetalPanel - the same machined face, gradient rim, diagonal sheen, and inner hairline frame as the hero - so the founder's opening screen reads as one two-part console.
