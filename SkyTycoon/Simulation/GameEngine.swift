@@ -50,6 +50,7 @@ final class GameEngine {
         self.state = state
         backfillAvatars()
         retagFleet()
+        refreshPendingEventCopy()
     }
 
     // ── Fleet registration prefix (2026-07-19) ───────────────────────────
@@ -1002,10 +1003,7 @@ final class GameEngine {
         let top = counts.filter { $0.value == maxCount }.keys
             .sorted { $0.rawValue < $1.rawValue }
         let type = top[Int.random(in: 0..<top.count, using: &state.seedRNG)]
-        let spec = Balance.specs[type]!
-        let n = counts[type]!
-        let body = "\(spec.seller) has recalled the \(spec.displayName) over a fuel-line defect. You operate \(n).\n\nCounsel: comply and each airframe is grounded 2 weeks, wear refreshed. Defer and you pay fines while the defect keeps flying."
-        return (body, type)
+        return (recallBody(type: type), type)
     }
 
     /// Picks the accused for a lawsuit card and writes their record into
@@ -1018,16 +1016,45 @@ final class GameEngine {
         }
         guard let role, let pool = state.staff[role], !pool.members.isEmpty else { return nil }
         let member = pool.members[Int.random(in: 0..<pool.members.count, using: &state.seedRNG)]
+        return (lawsuitBody(cardID: card.id, member: member), member.id)
+    }
+
+    /// The lawsuit body from stored facts only (no RNG) — reused when a
+    /// persisted pending card refreshes its copy on load.
+    private func lawsuitBody(cardID: String, member: StaffMember) -> String {
         let tenure = max(0, state.date.totalWeeks - member.hiredOn.totalWeeks)
         let record = String(format: "%.1f★ · %d wk with you", member.skill, tenure)
         let counsel = "Counsel: settling stays out of the news. Court is public, and the verdict rides on their record."
-        let body = switch card.id {
-        case "teaSpill":
-            "\(member.name) (\(record)) spilled scalding tea on a passenger. The burns needed treatment. Their lawyers want \(180_000.0.money).\n\n\(counsel)"
-        default:
-            "\(member.name) (\(record)) landed hard. An elderly passenger's spine was injured. The family's lawyers want \(300_000.0.money).\n\n\(counsel)"
+        return cardID == "teaSpill"
+            ? "\(member.name) (\(record)) spilled scalding tea on a passenger. The burns needed treatment. Their lawyers want \(180_000.0.money).\n\n\(counsel)"
+            : "\(member.name) (\(record)) landed hard. An elderly passenger's spine was injured. The family's lawyers want \(300_000.0.money).\n\n\(counsel)"
+    }
+
+    /// The recall body from a stored type (no RNG) — same refresh use.
+    private func recallBody(type: AircraftType) -> String {
+        let spec = Balance.specs[type]!
+        let n = state.fleet.filter { $0.type == type && $0.status != .onOrder }.count
+        return "\(spec.seller) has recalled the \(spec.displayName) over a fuel-line defect. You operate \(n).\n\nCounsel: comply and each airframe is grounded 2 weeks, wear refreshed. Defer and you pay fines while the defect keeps flying."
+    }
+
+    /// A pending card persisted by an older build carries stale copy: its
+    /// labels and body were baked at draw time. Refresh them from the
+    /// current deck (effects included) and rebuild personalized bodies
+    /// from the stored subject — deterministic, no RNG consumed.
+    private func refreshPendingEventCopy() {
+        guard var event = state.pendingEvent,
+              let card = Balance.eventDeck.first(where: { $0.id == event.cardID })
+        else { return }
+        event.title = card.title
+        event.options = card.options
+        if let id = event.subjectID, let member = staffMember(id: id) {
+            event.body = lawsuitBody(cardID: event.cardID, member: member)
+        } else if let type = event.subjectAircraftType {
+            event.body = recallBody(type: type)
+        } else if event.subjectID == nil {
+            event.body = card.body
         }
-        return (body, member.id)
+        state.pendingEvent = event
     }
 
     /// Applies one effect. Random-aircraft picks use the seeded RNG, so

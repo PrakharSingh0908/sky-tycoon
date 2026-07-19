@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Stale pending cards refresh on load
+
+- A pending event persisted by an older build kept its baked-in labels and body, so the previous card still showed the pre-crisp copy. On load, the engine now refreshes a pending card's title, options, and body from the current deck, rebuilding personalized lawsuit and recall bodies from the stored subject with no RNG consumed.
+
+*Why:* copy fixes must reach cards already dealt, not just future draws. The truncated buttons the user saw were the old card replaying from the save.
+
+
 ## Crisp event copy, counsel in white, no em dashes in content
 
 - Every option label across the deck is now a crisp one-liner: an action plus at most one number ("Fix it now · −$80K", "Hold the line"). Consequences the labels dropped moved into card bodies.
