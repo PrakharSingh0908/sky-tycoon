@@ -109,6 +109,64 @@ enum Balance {
         .widebody75: makeSpec(windows: 75, engine: .widebody, name: "Meridian M375"),
     ]
 
+    // ── Industry trend decks (GDD §14) ───────────────────────────────────
+    // One LONG regime always runs (year-plus); SHORT shocks (a month or
+    // three) spawn at trendChancePerWeek, at most two at a time.
+
+    struct TrendTemplate {
+        let key: String
+        let name: String
+        let detail: String
+        let kind: IndustryTrend.Kind
+        let horizon: IndustryTrend.Horizon
+        let multiplier: ClosedRange<Double>
+        let weeks: ClosedRange<Int>
+    }
+
+    static let trendChancePerWeek = 0.10
+
+    static let longTrendDeck: [TrendTemplate] = [
+        .init(key: "expansion", name: "Economic expansion",
+              detail: "GDP running hot — everyone flies more.",
+              kind: .demand, horizon: .long, multiplier: 1.08...1.16, weeks: 52...104),
+        .init(key: "slowdown", name: "Economic slowdown",
+              detail: "Belt-tightening: discretionary travel dries up first.",
+              kind: .demand, horizon: .long, multiplier: 0.86...0.94, weeks: 52...104),
+        .init(key: "oil_supercycle", name: "Oil supercycle",
+              detail: "Structural crude shortage keeps jet fuel dear.",
+              kind: .fuel, horizon: .long, multiplier: 1.12...1.28, weeks: 52...104),
+        .init(key: "cheap_credit", name: "Cheap credit era",
+              detail: "Low rates: manufacturers and lessors sharpen pencils.",
+              kind: .aircraftPrices, horizon: .long, multiplier: 0.88...0.95, weeks: 52...104),
+        .init(key: "labor_squeeze", name: "Labor squeeze",
+              detail: "Aviation talent is scarce industry-wide.",
+              kind: .wages, horizon: .long, multiplier: 1.10...1.20, weeks: 52...104),
+    ]
+
+    static let shortTrendDeck: [TrendTemplate] = [
+        .init(key: "fuel_spike", name: "Fuel spike",
+              detail: "Refinery outage bites the spot market.",
+              kind: .fuel, horizon: .short, multiplier: 1.15...1.35, weeks: 4...8),
+        .init(key: "travel_rush", name: "Travel rush",
+              detail: "Festival season packs every cabin.",
+              kind: .demand, horizon: .short, multiplier: 1.10...1.22, weeks: 4...10),
+        .init(key: "business_surge", name: "Business travel surge",
+              detail: "Conference circuit back in full swing.",
+              kind: .demand, horizon: .short, multiplier: 1.06...1.15, weeks: 6...12),
+        .init(key: "safety_scare", name: "Safety scare",
+              detail: "A rival's incident makes headlines; bookings dip.",
+              kind: .demand, horizon: .short, multiplier: 0.84...0.92, weeks: 3...6),
+        .init(key: "pilot_shortage", name: "Pilot shortage",
+              detail: "Crews command a premium this quarter.",
+              kind: .wages, horizon: .short, multiplier: 1.10...1.25, weeks: 6...12),
+        .init(key: "metal_glut", name: "Used-metal glut",
+              detail: "A failed carrier's fleet floods the market.",
+              kind: .aircraftPrices, horizon: .short, multiplier: 0.85...0.93, weeks: 6...12),
+        .init(key: "order_boom", name: "Order-book boom",
+              detail: "Backlogs stretch; sellers stop discounting.",
+              kind: .aircraftPrices, horizon: .short, multiplier: 1.06...1.15, weeks: 6...12),
+    ]
+
     static let countryProfiles: [Country: CountryProfile] = [
         .india: .init(fareLevel: 0.6, priceElasticity: 1.8, laborCost: 0.4,
             fuelCost: 1.3, demandGrowthPerYear: 0.09,

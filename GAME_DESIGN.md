@@ -364,3 +364,29 @@ move back.
   Games sheet (Dashboard) loads, starts new games into, or deletes
   slots. Legacy single-file saves migrate to slot 1. GameSession (app
   layer) is the only object that swaps running engines.
+
+## 14. Amendment — Industry trends (2026-07-19)
+
+The market breathes on two horizons, shown in the Dashboard's Industry
+card (renamed from "Industry standing"):
+
+- **Long regime** (52–104 wk, exactly one always in force): Economic
+  expansion / slowdown (demand ±), Oil supercycle (fuel +), Cheap
+  credit era (aircraft prices −), Labor squeeze (wages +).
+- **Short shocks** (3–12 wk, at most two, ~10%/wk spawn): Fuel spike,
+  Travel rush, Business travel surge, Safety scare, Pilot shortage,
+  Used-metal glut, Order-book boom.
+
+Each trend multiplies ONE lever while it runs — route demand, fuel
+price, the wage bill (market premium), or aircraft prices (new-order
+quotes, lease signings lock the rate at signing, used listings bake it
+in at generation). Trends stack multiplicatively with event effects on
+the same levers, use the seeded RNG (deterministic per save), and the
+state field is optional for save-compat: pre-feature saves seed their
+first regime on the next settle.
+
+*Why:* the economy was static between events — the same fares and costs
+forever. Regimes give eras a personality ("the cheap-credit years were
+when we built the fleet"), shocks create short tactical windows (buy
+into a metal glut, shrink into a safety scare), and both explain
+themselves on the dashboard instead of moving numbers silently.

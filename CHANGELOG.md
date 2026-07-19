@@ -7,6 +7,16 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Industry trends (GDD §14)
+
+- New two-horizon trend system: one long economic regime is always in force (expansion/slowdown, oil supercycle, cheap credit, labor squeeze; 52–104 wk) plus up to two short shocks (fuel spike, travel rush, business surge, safety scare, pilot shortage, used-metal glut, order boom; 3–12 wk, ~10%/wk spawn). All seeded-RNG deterministic.
+- Real economic teeth: trends multiply route demand, fuel price, the wage bill, and aircraft prices — new-order quotes move live, lease rates lock at signing, used listings bake the multiplier in at generation. They stack with event effects on the same levers.
+- Dashboard card renamed "Industry standing" → "Industry" and now lists active trends: LONG/SHORT tag, name, story line, live lever effect (+12% demand, green/red by whether it favors you), and weeks remaining.
+- `GameState.industryTrends` is optional for save-compat; old saves seed their first regime on the next settle.
+
+*Why:* between events the economy was a flat line — every era felt identical. Regimes give the game macro weather worth planning around, shocks create tactical buy/shrink windows, and the card explains the forces instead of moving numbers silently.
+
+
 ## Roster row cleanup
 
 - The staff roster row no longer wraps: the "On duty next wk" badge is gone — that fact now lives on the meta line ("$440/wk · on duty next wk", cornflower while pending); name and meta are both single-line; Fire is a quiet obsidian key instead of a red-tinted one.

@@ -316,11 +316,14 @@ final class GameEngine {
             - Balance.skillDelayFactor * (1 - opsSkill / 5)))
 
         // Timed event modifiers in force this week (fuel spikes, demand
-        // surges) — products of all active effects of each kind.
+        // surges) — products of all active effects of each kind — times
+        // the industry trends on the same levers (GDD §14).
         let fuelEventMult = state.activeEffects
             .filter { $0.kind == .fuelPrice }.reduce(1.0) { $0 * $1.multiplier }
+            * trendMultiplier(.fuel)
         let demandEventMult = state.activeEffects
             .filter { $0.kind == .demand }.reduce(1.0) { $0 * $1.multiplier }
+            * trendMultiplier(.demand)
 
         // 3. OPERATE ROUTES — demand, revenue, fuel, wear, satisfaction.
         for r in state.routes.indices {
@@ -385,12 +388,15 @@ final class GameEngine {
         }
 
         // 4. WAGES, overtime, happiness (pay AND workload), attrition.
+        // Wage trends (labor squeeze, pilot shortage) are a market premium
+        // on the whole bill while they run.
+        let wageTrendMult = trendMultiplier(.wages)
         for role in StaffRole.allCases {
             guard var pool = state.staff[role] else { continue }
             let u = utilization[role] ?? 0
             let demand = crewDemandHours[role] ?? 0
             let capacity = Double(pool.headcount) * Balance.weeklyHoursPerStaff
-            report.wageCost += Double(pool.headcount) * pool.weeklyWage
+            report.wageCost += Double(pool.headcount) * pool.weeklyWage * wageTrendMult
 
             // Hours beyond capacity are worked anyway — at 1.5×. An empty
             // pool means contractors at market rate: flights still fly, but
@@ -401,6 +407,7 @@ final class GameEngine {
                 let hourly = (pool.headcount > 0 ? pool.weeklyWage : marketRate)
                     / Balance.weeklyHoursPerStaff
                 report.wageCost += overtimeHours * hourly * Balance.overtimeMultiplier
+                    * wageTrendMult
             }
 
             // Happiness target: pay vs market, minus overwork (GDD §4.4 —
@@ -489,6 +496,9 @@ final class GameEngine {
         for i in state.activeEffects.indices { state.activeEffects[i].weeksRemaining -= 1 }
         state.activeEffects.removeAll { $0.weeksRemaining <= 0 }
 
+        // Industry trends age, expire, and respawn (GDD §14).
+        tickIndustryTrends()
+
         // 9. BOOKKEEPING — aging, market refresh, reports, quarters, date, autosave.
 
         // M0 fix: aircraft aging. Depreciation and netWorth depend on ageYears,
@@ -517,6 +527,14 @@ final class GameEngine {
         state.weeksUntilMarketRefresh -= 1
         if state.weeksUntilMarketRefresh <= 0 {
             state.usedMarket = Self.generateUsedListings(rng: &state.seedRNG)
+            // Aircraft-price trends bake into the listings at generation, so
+            // the shown price IS the charged price for the listing's life.
+            let metalMult = aircraftPriceMultiplier
+            if metalMult != 1.0 {
+                for i in state.usedMarket.indices {
+                    state.usedMarket[i].price *= metalMult
+                }
+            }
             state.weeksUntilMarketRefresh = Int.random(
                 in: Balance.usedMarketRefreshWeeksMin...Balance.usedMarketRefreshWeeksMax,
                 using: &state.seedRNG)
@@ -628,8 +646,10 @@ final class GameEngine {
         }
         let fuelMult = state.activeEffects
             .filter { $0.kind == .fuelPrice }.reduce(1.0) { $0 * $1.multiplier }
+            * trendMultiplier(.fuel)
         let demandMult = state.activeEffects
             .filter { $0.kind == .demand }.reduce(1.0) { $0 * $1.multiplier }
+            * trendMultiplier(.demand)
         return computeEconomics(route: route, planes: planes,
                                 profile: Balance.countryProfiles[state.country]!,
                                 fuelEventMult: fuelMult, demandEventMult: demandMult)
@@ -865,6 +885,54 @@ final class GameEngine {
         save()
     }
 
+    // ── Industry trends (GDD §14) ────────────────────────────────────────
+    // One LONG economic regime is always in force; up to two SHORT shocks
+    // come and go. All draws use the seeded RNG — deterministic per save.
+
+    var industryTrends: [IndustryTrend] { state.industryTrends ?? [] }
+
+    /// Product of all active trends on one lever.
+    func trendMultiplier(_ kind: IndustryTrend.Kind) -> Double {
+        industryTrends.filter { $0.kind == kind }
+            .reduce(1.0) { $0 * $1.multiplier }
+    }
+
+    /// Moves new-order prices, lease signings, and used listings together.
+    var aircraftPriceMultiplier: Double { trendMultiplier(.aircraftPrices) }
+
+    private func spawnTrend(from deck: [Balance.TrendTemplate],
+                            excluding activeKeys: Set<String>) -> IndustryTrend? {
+        let candidates = deck.filter { !activeKeys.contains($0.key) }
+        guard !candidates.isEmpty else { return nil }
+        let pick = candidates[Int.random(in: 0..<candidates.count, using: &state.seedRNG)]
+        return IndustryTrend(
+            id: UUID(), key: pick.key, name: pick.name, detail: pick.detail,
+            kind: pick.kind, horizon: pick.horizon,
+            multiplier: Double.random(in: pick.multiplier, using: &state.seedRNG),
+            weeksRemaining: Int.random(in: pick.weeks, using: &state.seedRNG))
+    }
+
+    private func tickIndustryTrends() {
+        var trends = industryTrends
+        for i in trends.indices { trends[i].weeksRemaining -= 1 }
+        trends.removeAll { $0.weeksRemaining <= 0 }
+
+        let activeKeys = Set(trends.map(\.key))
+        // The economy always has a regime.
+        if !trends.contains(where: { $0.horizon == .long }),
+           let regime = spawnTrend(from: Balance.longTrendDeck, excluding: activeKeys) {
+            trends.append(regime)
+        }
+        // Short shocks: capped at two, spawn-checked weekly.
+        if trends.filter({ $0.horizon == .short }).count < 2,
+           Double.random(in: 0...1, using: &state.seedRNG) < Balance.trendChancePerWeek,
+           let shock = spawnTrend(from: Balance.shortTrendDeck,
+                                  excluding: Set(trends.map(\.key))) {
+            trends.append(shock)
+        }
+        state.industryTrends = trends
+    }
+
     // ── Fleet acquisition (GDD §4.1): new order / used / lease ──────────
 
     /// Loyalty: factory-new orders from the same manufacturer earn 3% off
@@ -874,10 +942,12 @@ final class GameEngine {
             Double(state.sellerOrders[seller] ?? 0) * Balance.loyaltyDiscountPerOrder)
     }
 
-    /// What a factory-new order actually costs right now, loyalty included.
+    /// What a factory-new order actually costs right now: loyalty plus the
+    /// aircraft-price trend in force (cheap credit, order boom…).
     func discountedPrice(for type: AircraftType) -> Double {
         let spec = Balance.specs[type]!
         return spec.purchasePrice * (1 - loyaltyDiscount(seller: spec.seller))
+            * aircraftPriceMultiplier
     }
 
     /// Buying new is an ORDER: cash up front, plane arrives after the
@@ -950,7 +1020,9 @@ final class GameEngine {
         let spec = Balance.specs[type]!
         state.fleet.append(Aircraft(id: UUID(), type: type, nickname: nickname,
             status: .idle, acquisition: .leased,
-            weeklyLeaseCost: spec.purchasePrice * Balance.leaseRatePerWeek,
+            // The trend prices the signing; the rate then stays locked.
+            weeklyLeaseCost: spec.purchasePrice * Balance.leaseRatePerWeek
+                * aircraftPriceMultiplier,
             deliveryWeeksRemaining: 0,
             cabin: .standard(abreast: spec.seatsAbreast), wear: 0, condition: 100,
             ageYears: 0, assignedRouteID: nil, groundedWeeksRemaining: 0))

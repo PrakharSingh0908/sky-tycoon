@@ -286,7 +286,7 @@ struct DashboardView: View {
         } label: {
             GameCard {
                 HStack {
-                    SectionHeader(title: "Industry standing", icon: "chart.bar.xaxis", accent: accent)
+                    SectionHeader(title: "Industry", icon: "chart.bar.xaxis", accent: accent)
                     Image(systemName: "chevron.right")
                         .font(.caption2.weight(.semibold)).foregroundStyle(Theme.textSecondary)
                 }
@@ -329,10 +329,46 @@ struct DashboardView: View {
                     Text("India's largest carrier. The sky is yours.")
                         .font(.game(.caption2, weight: .medium)).foregroundStyle(Theme.profit)
                 }
+                // The market's weather (GDD §14): the standing regime and
+                // any short shocks, each with its live lever effect.
+                if !engine.industryTrends.isEmpty {
+                    Divider().overlay(Theme.hairline)
+                    ForEach(engine.industryTrends.sorted {
+                        ($0.horizon == .long ? 0 : 1) < ($1.horizon == .long ? 0 : 1)
+                    }) { trend in
+                        trendRow(trend)
+                    }
+                }
             }
         }
         .buttonStyle(.plain)
         .sheet(isPresented: $showingIndustry) { IndustrySheet() }
+    }
+
+    private func trendRow(_ trend: IndustryTrend) -> some View {
+        let pct = Int(((trend.multiplier - 1) * 100).rounded())
+        return HStack(spacing: 8) {
+            Text(trend.horizon == .long ? "LONG" : "SHORT")
+                .font(.data(.caption2)).tracking(0.85)
+                .foregroundStyle(trend.horizon == .long ? Theme.cornflower : Theme.warn)
+                .frame(width: 44, alignment: .leading)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(trend.name)
+                    .font(.game(.subheadline, weight: .medium))
+                    .foregroundStyle(Theme.textPrimary)
+                Text(trend.detail)
+                    .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 8)
+            VStack(alignment: .trailing, spacing: 1) {
+                Text("\(pct >= 0 ? "+" : "")\(pct)% \(trend.kind.label)")
+                    .font(.data(.caption2, weight: .semibold))
+                    .foregroundStyle(trend.favorsPlayer ? Theme.profit : Theme.loss)
+                Text("\(trend.weeksRemaining) wk")
+                    .font(.game(.caption2)).foregroundStyle(Theme.textTertiary)
+            }
+        }
     }
 
     // ── Trends ───────────────────────────────────────────────────────────

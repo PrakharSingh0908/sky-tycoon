@@ -421,6 +421,44 @@ struct TimedEffect: Codable, Identifiable, Equatable {
     enum Kind: String, Codable { case fuelPrice, demand }
 }
 
+// ── Industry trends (GDD §14) ────────────────────────────────────────────
+// The market breathes on two horizons: one LONG economic regime is always
+// in force (expansion, slowdown, oil supercycle…), and up to two SHORT
+// shocks (fuel spike, travel rush, pilot shortage…) come and go. Each
+// multiplies one lever of the economy while it runs.
+
+struct IndustryTrend: Codable, Identifiable, Equatable {
+    let id: UUID
+    var key: String            // template key (dedup on respawn)
+    var name: String           // "Economic expansion"
+    var detail: String         // one-line story for the UI
+    var kind: Kind             // which lever it moves
+    var horizon: Horizon
+    var multiplier: Double     // applied to that lever while active
+    var weeksRemaining: Int
+
+    enum Kind: String, Codable {
+        case demand            // route demand
+        case fuel              // fuel price
+        case wages             // wage bill (labor market premium)
+        case aircraftPrices    // new orders, lease signings, used listings
+
+        var label: String {
+            switch self {
+            case .demand: "demand"; case .fuel: "fuel"
+            case .wages: "wages"; case .aircraftPrices: "aircraft prices"
+            }
+        }
+    }
+    enum Horizon: String, Codable { case short, long }
+
+    /// Whether this trend helps the player (colors the UI): more demand is
+    /// good; pricier fuel, wages, or metal is not.
+    var favorsPlayer: Bool {
+        kind == .demand ? multiplier >= 1 : multiplier < 1
+    }
+}
+
 /// A card template in the deck (lives in Balance as data; eligibility
 /// closures keep it out of the save — only fired GameEvents persist).
 struct EventCard: Identifiable {
@@ -612,6 +650,9 @@ struct GameState: Codable {
     /// Running timed modifiers from resolved events (fuel spikes, demand
     /// surges) — applied every tick, aged in bookkeeping.
     var activeEffects: [TimedEffect]
+    /// Industry trends in force (GDD §14). Optional for save-compat:
+    /// pre-feature saves decode nil and the first settle seeds the regime.
+    var industryTrends: [IndustryTrend]? = nil
     /// Guard rail: never two negative events in consecutive weeks in year 1.
     var lastNegativeEventTotalWeek: Int
     var reports: [WeeklyReport]       // capped ring buffer (last 52)
