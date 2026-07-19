@@ -47,17 +47,19 @@ enum Theme {
     static let peach = card
     static let sienna = cornflower
 
-    // ── Data palette: blue ramp into grays (one chromatic family) ───────
+    // ── Data palette: anodized metals — DISTINCT hues at a machined
+    // saturation, ordered so neighbors contrast (v3.1.2: categorical
+    // slices need separation; the one-accent rule holds for strokes).
     static let chartPalette: [Color] = [
-        cornflower,
-        Color(red: 0.29, green: 0.43, blue: 0.74),
-        Color(red: 0.66, green: 0.76, blue: 1.0),
-        Color(red: 0.20, green: 0.28, blue: 0.47),
-        Color.white,
-        textSecondary,
-        textTertiary,
-        graphite,
-        hairline,
+        cornflower,                                    // steel blue
+        Color(red: 0.83, green: 0.62, blue: 0.36),     // bronze
+        Color(red: 0.42, green: 0.78, blue: 0.71),     // anodized teal
+        Color(red: 0.71, green: 0.56, blue: 1.00),     // anodized violet
+        Color(red: 0.92, green: 0.78, blue: 0.44),     // gold
+        Color(red: 0.87, green: 0.52, blue: 0.44),     // copper rose
+        Color(white: 0.82),                            // polished silver
+        Color(red: 0.47, green: 0.55, blue: 0.67),     // slate steel
+        Color(white: 0.38),                            // graphite
     ]
 
     // ── Shape & space (compact, engineered: 8px system) ─────────────────

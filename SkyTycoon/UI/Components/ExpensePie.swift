@@ -24,10 +24,10 @@ extension WeeklyReport {
             ExpenseSlice(label: "Wages", amount: wageCost, color: Theme.chartPalette[1]),
             ExpenseSlice(label: "Maintenance", amount: maintenanceCost, color: Theme.chartPalette[2]),
             ExpenseSlice(label: "Loans", amount: loanCost, color: Theme.chartPalette[3]),
-            ExpenseSlice(label: "Leases", amount: leaseCost, color: Theme.chartPalette[5]),
-            ExpenseSlice(label: "Cabin & catering", amount: cabinCost, color: Theme.chartPalette[6]),
-            ExpenseSlice(label: "Marketing", amount: marketingCost, color: Theme.chartPalette[7]),
-            ExpenseSlice(label: "Overhead", amount: overheadCost, color: Theme.chartPalette[8]),
+            ExpenseSlice(label: "Leases", amount: leaseCost, color: Theme.chartPalette[4]),
+            ExpenseSlice(label: "Cabin & catering", amount: cabinCost, color: Theme.chartPalette[5]),
+            ExpenseSlice(label: "Marketing", amount: marketingCost, color: Theme.chartPalette[6]),
+            ExpenseSlice(label: "Overhead", amount: overheadCost, color: Theme.chartPalette[7]),
         ]
         .filter { $0.amount > 0 }
         .sorted { $0.amount > $1.amount }
@@ -141,11 +141,11 @@ struct ExpensePie: View {
 #Preview {
     GameCard {
         ExpensePie(slices: [
-            ExpenseSlice(label: "Fuel", amount: 42_000, color: Theme.orange),
-            ExpenseSlice(label: "Wages", amount: 31_000, color: Theme.violet),
-            ExpenseSlice(label: "Maintenance", amount: 18_000, color: Theme.warn),
-            ExpenseSlice(label: "Leases", amount: 12_000, color: Theme.teal),
-            ExpenseSlice(label: "Overhead", amount: 8_000, color: Theme.textSecondary),
+            ExpenseSlice(label: "Fuel", amount: 42_000, color: Theme.chartPalette[0]),
+            ExpenseSlice(label: "Wages", amount: 31_000, color: Theme.chartPalette[1]),
+            ExpenseSlice(label: "Maintenance", amount: 18_000, color: Theme.chartPalette[2]),
+            ExpenseSlice(label: "Leases", amount: 12_000, color: Theme.chartPalette[4]),
+            ExpenseSlice(label: "Overhead", amount: 8_000, color: Theme.chartPalette[7]),
         ])
     }
     .padding()

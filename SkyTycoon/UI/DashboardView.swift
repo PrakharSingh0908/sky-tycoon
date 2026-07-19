@@ -133,32 +133,13 @@ struct DashboardView: View {
     // engraved labels, and the supporting stats sunk into instrument wells.
     private var heroCard: some View {
         MetalPanel(highlight: settleFlash ? Theme.profit : accent) {
-            HStack(alignment: .top, spacing: 12) {
-                VStack(alignment: .leading, spacing: 5) {
-                    engravedLabel("Net worth")
-                    TickerText(text: engine.netWorth.money,
-                               font: .display(.largeTitle),
-                               color: engine.netWorth >= 0 ? Theme.textPrimary : Theme.loss)
-                }
-                Spacer(minLength: 8)
-                InstrumentWell(alignment: .trailing) {
-                    VStack(alignment: .trailing, spacing: 5) {
-                        StarRating(rating: engine.state.reputation, size: 12)
-                        HStack(spacing: 4) {
-                            TickerText(text: String(format: "%.1f", engine.state.reputation),
-                                       font: .data(.caption, weight: .semibold),
-                                       color: Theme.textPrimary)
-                            engravedLabel("Reputation")
-                        }
-                    }
-                    .fixedSize()
-                }
-                .fixedSize()
+            VStack(alignment: .leading, spacing: 5) {
+                engravedLabel("Net worth")
+                netWorthText
             }
             PanelGroove()
             HStack(spacing: 8) {
-                heroWell("Cash", engine.state.cash.money,
-                         engine.state.cash >= 0 ? Theme.profit : Theme.loss)
+                reputationTile
                 if let report = engine.latestReport {
                     heroWell("Last wk",
                              (report.profit >= 0 ? "+" : "") + report.profit.money,
@@ -170,6 +151,53 @@ struct DashboardView: View {
         }
     }
 
+    /// The score in extruded 3D metal type: stacked dark extrusion layers
+    /// under a lit gradient face, dropped onto the panel.
+    private var netWorthText: some View {
+        let value = engine.netWorth.money
+        let negative = engine.netWorth < 0
+        let faceTop: Color = negative ? Color(red: 1.00, green: 0.66, blue: 0.60) : .white
+        let faceBottom: Color = negative ? Color(red: 0.70, green: 0.29, blue: 0.25) : Color(white: 0.60)
+        let depth: Color = negative ? Color(red: 0.32, green: 0.11, blue: 0.09) : Color(white: 0.16)
+        let font = Font.system(size: 40, weight: .semibold)
+        return ZStack(alignment: .leading) {
+            ForEach(1..<4, id: \.self) { i in
+                Text(value).font(font).monospacedDigit()
+                    .foregroundStyle(depth)
+                    .offset(y: CGFloat(i) * 1.2)
+            }
+            Text(value).font(font).monospacedDigit()
+                .foregroundStyle(LinearGradient(colors: [faceTop, faceBottom],
+                                                startPoint: .top, endPoint: .bottom))
+        }
+        .shadow(color: .black.opacity(0.5), radius: 3, y: 3)
+        .lineLimit(1).minimumScaleFactor(0.6)
+        .contentTransition(.numericText())
+        .animation(.snappy, value: value)
+    }
+
+    /// Reputation's board tile: the numeral with a single gold star, in the
+    /// row with its peers (the score line above stays net worth alone).
+    private var reputationTile: some View {
+        InstrumentWell {
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 4) {
+                    TickerText(text: String(format: "%.1f", engine.state.reputation),
+                               font: .data(.subheadline, weight: .semibold),
+                               color: Theme.textPrimary)
+                        .overlay {
+                            Rectangle().fill(Color.black.opacity(0.38)).frame(height: 1)
+                        }
+                    if let star = UIImage(named: "gold_star") {
+                        Image(uiImage: star).resizable().scaledToFit()
+                            .frame(height: 12)
+                    }
+                }
+                engravedLabel("Rating")
+            }
+        }
+    }
+
     /// Engraved console label: mono caps, cut into the metal (dark under-edge).
     private func engravedLabel(_ text: String) -> some View {
         Text(text.uppercased())
@@ -177,6 +205,7 @@ struct DashboardView: View {
             .foregroundStyle(Color.white.opacity(0.55))
             .shadow(color: .black.opacity(0.8), radius: 0, y: 1)
             .lineLimit(1)
+            .minimumScaleFactor(0.8)
     }
 
     /// A split-flap board tile: mono caps value glowing in its semantic

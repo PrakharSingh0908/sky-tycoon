@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Anodized chart palette + hero restructure
+
+- `Theme.chartPalette` replaced: the blue-ramp-into-grays made turbine pie slices indistinguishable. Now nine anodized-metal hues (steel blue, bronze, teal, violet, gold, copper rose, silver, slate, graphite) ordered so neighbors contrast; the blade root-to-tip shading keeps them metallic. Expense pie and industry share turbine both pick it up; ExpensePie slice indices are sequential now.
+- Hero: net worth is extruded 3D metal type (stacked dark extrusion under a lit gradient face, red when negative) spanning the panel; reputation dropped into the four-tile board row as "3.5 ★ RATING", replacing the cash tile that duplicated the headline number.
+
+*Why:* one chromatic family is right for strokes but wrong for categorical slices — an 80% leases week read as a gray disc; distinct anodized hues keep the machined look while making shares legible. The cash tile echoed net worth almost verbatim in normal play, so reputation earns the slot and the score line stands alone.
+
+
 ## Departure-board hero (dark console)
 
 - Hero console re-darkened per feedback, restyled after a split-flap departure board: `MetalPanel` housing back to near-black with a faint sheen; `InstrumentWell` floors are black board tiles (the saturated anodized washes are dialed to a whisper and unused on the hero).
