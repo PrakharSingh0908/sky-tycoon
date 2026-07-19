@@ -453,59 +453,59 @@ struct RouteDetailView: View {
 
     // ── Catering (GDD §18): choose the service, mind the hardware ────────
 
+    // The tray picker mirrors the cabin architect's seat tiles: the art IS
+    // the swatch, evenly distributed, accent stroke on the chosen one.
     @ViewBuilder private func cateringRow(_ route: Route) -> some View {
         let level = route.catering ?? .none
         let planes = engine.state.fleet.filter { route.assignedAircraftIDs.contains($0.id) }
         let ovens = planes.filter { $0.hasGalleyOven ?? false }.count
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text("Catering")
-                    .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
-                Spacer()
-                Menu {
-                    ForEach(CateringLevel.allCases) { option in
-                        Button {
-                            engine.setCatering(routeID: route.id, level: option)
-                        } label: {
-                            if option == level {
-                                Label(cateringLabel(option), systemImage: "checkmark")
-                            } else {
-                                Text(cateringLabel(option))
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Catering")
+                .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
+            HStack(spacing: 0) {
+                ForEach(CateringLevel.allCases) { option in
+                    Button {
+                        engine.setCatering(routeID: route.id, level: option)
+                    } label: {
+                        VStack(spacing: 4) {
+                            Group {
+                                if let name = option.assetName,
+                                   let tray = UIImage(named: name) {
+                                    Image(uiImage: tray).resizable().scaledToFit()
+                                } else {
+                                    Image(systemName: option.icon)
+                                        .font(.system(size: 18))
+                                        .foregroundStyle(Theme.textTertiary)
+                                }
                             }
+                            .frame(width: 48, height: 48)
+                            .padding(4)
+                            .background(
+                                RoundedRectangle(cornerRadius: Theme.corner - 2)
+                                    .fill(level == option
+                                          ? accent.opacity(0.18) : Color.white.opacity(0.04))
+                            )
+                            .overlay(RoundedRectangle(cornerRadius: Theme.corner - 2)
+                                .strokeBorder(level == option ? accent : .clear,
+                                              lineWidth: 1.5))
+                            Text(option == .none ? "None" : option.displayName)
+                                .font(.game(.caption2,
+                                            weight: level == option ? .bold : .regular))
+                                .foregroundStyle(level == option ? accent : Theme.textSecondary)
+                                .lineLimit(1).minimumScaleFactor(0.75)
+                            Text(option == .none ? " " : "\(option.costPerPax.money)/pax")
+                                .font(.data(.caption2)).foregroundStyle(Theme.textTertiary)
                         }
+                        .frame(maxWidth: .infinity)
                     }
-                } label: {
-                    HStack(spacing: 5) {
-                        cateringIcon(level)
-                        Text(level.displayName)
-                    }
-                    .font(.game(.subheadline, weight: .medium))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 12).padding(.vertical, 6)
-                    .metalKey(.obsidian, pressed: false)
+                    .buttonStyle(.plain)
+                    .sensoryFeedback(.selection, trigger: level)
                 }
             }
             if level.requiresOven && ovens < planes.count {
                 Text("\(planes.count - ovens) of \(planes.count) aircraft here have no galley oven — sandwiches board cold and customers get frustrated. Fit ovens via Fleet → Service.")
                     .font(.game(.caption2)).foregroundStyle(Theme.loss)
-            } else if level != .none {
-                Text("\(level.costPerPax.money)/passenger, on the cabin & catering line.")
-                    .font(.game(.caption2)).foregroundStyle(Theme.textTertiary)
             }
-        }
-    }
-
-    private func cateringLabel(_ level: CateringLevel) -> String {
-        level == .none ? level.displayName
-            : "\(level.displayName) · \(level.costPerPax.money)/pax"
-    }
-
-    /// The tray art (Resources/Food), SF fallback if an asset is missing.
-    @ViewBuilder private func cateringIcon(_ level: CateringLevel) -> some View {
-        if let name = level.assetName, let ui = UIImage(named: name) {
-            Image(uiImage: ui).resizable().scaledToFit().frame(width: 22, height: 22)
-        } else {
-            Image(systemName: level.icon).font(.caption2)
         }
     }
 

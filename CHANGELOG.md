@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Tray picker matches the seat picker
+
+- The route detail's catering control is now a swatch row like the cabin architect's seat tiers: the four options (None + three trays) sit side by side with the tray art as the swatch, teal fill + stroke on the selection, and the per-pax price under each. The compact menu is gone; the cold-sandwich warning stays.
+
+*Why:* per request — one selection grammar for visual options everywhere; the art was hidden inside a menu nobody would open.
+
+
 ## The three trays (catering art + rebalance)
 
 - Catering tiers are now the user's tray set with real art (Resources/Food): Sandwich box ($2/pax, +4 — but −8 served cold without galley ovens on every aircraft), Fruit platter ($5/pax, +6, oven-agnostic), Asian bento ($9/pax, +10, the premium tray). The route-detail menu shows the tray renders.
