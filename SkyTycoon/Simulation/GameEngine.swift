@@ -935,20 +935,42 @@ final class GameEngine {
 
     /// Fires a card (internal so tests can force specific cards).
     func present(_ card: EventCard) {
-        // Lawsuit incidents (GDD §19) name a real roster member — the card
-        // reads their record, and the verdict will weigh it.
+        // Lawsuit incidents (GDD §19) name a real roster member; recalls
+        // (GDD §20) name a real model in your fleet. The card reads the
+        // facts, and the resolution weighs exactly those.
         let incident = incidentContext(for: card)
+        let recall = recallContext(for: card)
         state.pendingEvent = GameEvent(
             id: UUID(), cardID: card.id, category: card.category,
             isNegative: card.isNegative, title: card.title,
-            body: incident?.body ?? card.body,
+            body: incident?.body ?? recall?.body ?? card.body,
             options: card.options, firedOn: state.date,
-            subjectID: incident?.subjectID)
+            subjectID: incident?.subjectID,
+            subjectAircraftType: recall?.type)
         state.lastEventTotalWeek = state.date.totalWeeks
         logEvent(title: card.title, isNegative: card.isNegative)
         if card.isNegative {
             state.lastNegativeEventTotalWeek = state.date.totalWeeks
         }
+    }
+
+    /// Picks the recalled model: the delivered type you operate MOST of —
+    /// a recall should sting, that's the drama.
+    private func recallContext(for card: EventCard) -> (body: String, type: AircraftType)? {
+        guard card.id == "fleetRecall" else { return nil }
+        let delivered = state.fleet.filter { $0.status != .onOrder }
+        guard !delivered.isEmpty else { return nil }
+        var counts: [AircraftType: Int] = [:]
+        for plane in delivered { counts[plane.type, default: 0] += 1 }
+        let maxCount = counts.values.max()!
+        // Deterministic tie-break through the seeded RNG.
+        let top = counts.filter { $0.value == maxCount }.keys
+            .sorted { $0.rawValue < $1.rawValue }
+        let type = top[Int.random(in: 0..<top.count, using: &state.seedRNG)]
+        let spec = Balance.specs[type]!
+        let n = counts[type]!
+        let body = "\(spec.seller) has issued a mandatory recall of the \(spec.displayName): a fuel-line clamp defect found in airframes worldwide. You operate \(n). The maker covers parts — the downtime and the choice are yours: send them in now, or negotiate a deferral and fly on with the defect aboard."
+        return (body, type)
     }
 
     /// Picks the accused for a lawsuit card and writes their record into
@@ -1026,6 +1048,31 @@ final class GameEngine {
             state.fleet[pick].wear = min(100, state.fleet[pick].wear + amount)
         case .courtVerdict(let baseFee):
             resolveCourtCase(baseFee: baseFee)
+        case .recallGround(let weeks, let costPerPlane):
+            guard let type = eventSubjectAircraftType else { return }
+            var grounded = 0
+            for i in state.fleet.indices
+            where state.fleet[i].type == type && state.fleet[i].status != .onOrder {
+                state.fleet[i].status = .inMaintenance
+                state.fleet[i].groundedWeeksRemaining =
+                    max(state.fleet[i].groundedWeeksRemaining, weeks)
+                // The retrofit is a shop visit — wear freshens while it's in.
+                state.fleet[i].wear = max(0, state.fleet[i].wear - 15)
+                grounded += 1
+            }
+            state.cash -= Double(grounded) * costPerPlane
+            logEvent(title: "Recall: \(grounded) aircraft sent in", isNegative: true)
+        case .recallDefer(let finePerPlane, let wearPerPlane):
+            guard let type = eventSubjectAircraftType else { return }
+            var deferred = 0
+            for i in state.fleet.indices
+            where state.fleet[i].type == type && state.fleet[i].status != .onOrder {
+                state.fleet[i].wear = min(100, state.fleet[i].wear + wearPerPlane)
+                deferred += 1
+            }
+            state.cash -= Double(deferred) * finePerPlane
+            state.reputation = max(0.5, state.reputation - 0.1)
+            logEvent(title: "Recall deferred: defect still flying", isNegative: true)
         }
     }
 
@@ -1086,16 +1133,20 @@ final class GameEngine {
         // Clear FIRST: a courtVerdict effect may present the verdict card,
         // which must survive this resolution. The subject rides alongside.
         eventSubjectID = event.subjectID
+        eventSubjectAircraftType = event.subjectAircraftType
         state.pendingEvent = nil
         for effect in option.effects {
             apply(effect)
         }
         eventSubjectID = nil
+        eventSubjectAircraftType = nil
         save()
     }
 
-    /// The roster member the event being resolved is about (GDD §19).
+    /// The roster member / aircraft model the event being resolved is
+    /// about (GDD §19, §20).
     private var eventSubjectID: UUID?
+    private var eventSubjectAircraftType: AircraftType?
 
     // ── Industry trends (GDD §14) ────────────────────────────────────────
     // One LONG economic regime is always in force; up to two SHORT shocks

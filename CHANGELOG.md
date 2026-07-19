@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Manufacturer recall (GDD §20)
+
+- New technical event: the maker recalls the model you operate most of (named with seller and count in the card). Comply — all airframes of the type grounded 2 weeks, $10K logistics each, retrofit freshens wear −15 — or negotiate a deferral: $25K fines per airframe, +12 wear each, −0.1 reputation, and you keep flying a defect into the compounding-fatigue/hull-loss system.
+- Recall events carry the subject model on the GameEvent (save-compat), mirroring the lawsuit cards' subject member; both choices log to the event history and chart rules.
+
+*Why:* the classic fleet crisis — and the deferral option is priced exactly against the airworthiness rules, so it's a real gamble, not a discount.
+
+
 ## Campaign-leak audit: milestones localized
 
 - The flag-carrier milestone read "Connect 6 of India's cities" in every campaign. Milestone titles now support a {nation} placeholder resolved through `Country.adjective` ("Connect 6 American cities" in a US game), applied in both the Milestones card and the celebration banner.

@@ -490,3 +490,25 @@ Two ways out:
 a 5★ veteran is a defense you can take to trial, a green 2★ hire is a
 settlement waiting to happen — and the settle-vs-fight call is a clean
 risk decision with hidden information priced in.
+
+## 20. Amendment — Manufacturer recall (2026-07-19)
+
+A technical event card recalls a MODEL you actually operate — chosen at
+present() as the delivered type you have most of (a recall should
+sting). The maker covers parts; the decision is downtime versus risk:
+
+- SEND THEM IN NOW: every delivered airframe of the type is grounded
+  2 weeks for the retrofit ($10K logistics each). The shop visit also
+  freshens wear (−15) — compliance has a silver lining.
+- NEGOTIATE A DEFERRAL: fly on. $25K in fines per airframe, +12 wear
+  each (the defect is real), and a −0.1 regulatory reputation scratch.
+  With compounding fatigue and the hull-loss rules, deferring on a
+  worn fleet is playing with fire — deliberately.
+
+Both paths log to the event history/charts. The subject type rides on
+the GameEvent (save-compat optional), mirroring the lawsuit cards'
+subject member.
+
+*Why:* recalls are aviation's most recognizable fleet crisis, and the
+choice connects three systems — cash, route capacity (grounded planes),
+and the wear/airworthiness danger curve.

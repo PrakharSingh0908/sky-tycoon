@@ -702,6 +702,19 @@ enum Balance {
                             effects: [.courtVerdict(baseFee: 180_000)]),
             ],
             isEligible: { !$0.routes.isEmpty && $0.staff[.cabinCrew]?.members.isEmpty == false }),
+        // ── Manufacturer recall (GDD §20): comply or fly the defect.
+        // The model is chosen at present() — the type you operate most of.
+        EventCard(id: "fleetRecall", category: .technical,
+            title: "Manufacturer Recall",
+            body: "A manufacturer has recalled one of your fleet's models over a defect.",
+            baseWeight: 0.5, isNegative: true, minTotalWeek: 16,
+            options: [
+                EventOption(label: "Send them in now (−$10,000 each · grounded 2 wk · retrofit freshens wear)",
+                            effects: [.recallGround(weeks: 2, costPerPlane: 10_000)]),
+                EventOption(label: "Negotiate a deferral (−$25,000 fines each · +12 wear each · fly on)",
+                            effects: [.recallDefer(finePerPlane: 25_000, wearPerPlane: 12)]),
+            ],
+            isEligible: { state in state.fleet.contains { $0.status != .onOrder } }),
         EventCard(id: "hardLanding", category: .pr,
             title: "Hard Landing, Injured Passenger",
             body: "A hard landing injured an elderly passenger's spine. The family's lawyers are circling.",

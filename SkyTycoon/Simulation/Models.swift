@@ -494,6 +494,13 @@ enum EventEffect: Codable, Equatable {
     /// time: cleared = legal costs only and the press runs your side;
     /// liable = 1.5× the fee and a public reputation bruise.
     case courtVerdict(baseFee: Double)
+    /// Manufacturer recall, complied (GDD §20): every delivered airframe of
+    /// the event's subject type is grounded for the retrofit; the shop
+    /// visit also freshens wear. Cost is logistics per airframe.
+    case recallGround(weeks: Int, costPerPlane: Double)
+    /// Manufacturer recall, deferred: fly on with the defect — fines per
+    /// airframe, wear added to each, and a regulatory reputation scratch.
+    case recallDefer(finePerPlane: Double, wearPerPlane: Double)
 }
 
 /// A running timed modifier ("Fuel +30% · 4 wk"), applied each tick.
@@ -576,6 +583,9 @@ struct GameEvent: Codable, Identifiable {
     /// The roster member at the center of the incident, when there is one
     /// (lawsuit cards, GDD §19). Optional for save-compat.
     var subjectID: UUID? = nil
+    /// The aircraft model at the center of the incident, when there is one
+    /// (recall cards, GDD §20). Optional for save-compat.
+    var subjectAircraftType: AircraftType? = nil
 }
 
 struct EventOption: Codable, Identifiable {
