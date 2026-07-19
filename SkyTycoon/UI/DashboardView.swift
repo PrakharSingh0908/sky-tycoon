@@ -487,7 +487,11 @@ struct DashboardView: View {
                 Divider().overlay(Theme.hairline)
                 ForEach(engine.state.routes.sorted { $0.lastWeeklyProfit > $1.lastWeeklyProfit }) { route in
                     HStack {
-                        Text("\(route.originID) ⇄ \(route.destinationID)")
+                        (Text(route.originID)
+                            + Text("  \(Image(systemName: "airplane"))  ")
+                                .font(.system(size: 11))
+                                .foregroundStyle(Theme.textSecondary)
+                            + Text(route.destinationID))
                             .font(.game(.subheadline, weight: .semibold))
                             .foregroundStyle(Theme.textPrimary)
                         Text("LF \(Int(route.lastLoadFactor * 100))%")

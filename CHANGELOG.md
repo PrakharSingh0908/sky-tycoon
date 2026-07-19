@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Plane glyph in route P&L rows
+
+- The Last Week card's per-route rows now show a small airplane between the airport codes (DEL ✈ BLR) instead of the ⇄ exchange arrows.
+
+*Why:* the exchange glyph read as a currency/swap symbol, not a flight; the airplane matches the boarding-pass header's plane motif.
+
+
 ## Hero polish: no standing stroke, uniform tiles
 
 - Removed the standing cornflower rim from the hero panel — the machined housing carries the hierarchy on its own; the rim still flashes profit-green on the weekly settle.
