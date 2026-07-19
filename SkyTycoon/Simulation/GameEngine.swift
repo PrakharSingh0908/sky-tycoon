@@ -385,16 +385,16 @@ final class GameEngine {
             let cabinAdequacy = cabinU <= 1 ? 1.0 : 1.0 / cabinU   // understaffed cabin = worse service
             let service = (cabinSkill / 5.0) * cabinAdequacy
             let incidents = 1.0
-            // Catering moves the target: snacks please a little, hot meals
-            // more — unless a plane on the route lacks a galley oven, in
-            // which case the promised meal arrives cold and passengers
-            // are dissuaded (GDD §18).
+            // Catering moves the target (GDD §18): the sandwich box needs
+            // ovens aboard or it boards cold and frustrates customers; the
+            // fruit platter is oven-agnostic; the bento lifts the most.
             let ovensReady = activePlanes.allSatisfy { $0.hasGalleyOven ?? false }
             let cateringDelta: Double = switch catering {
             case .none: 0
-            case .snacks: Balance.cateringSnacksDelta
-            case .hotMeals: ovensReady ? Balance.cateringHotDelta
-                                       : Balance.cateringColdMealPenalty
+            case .sandwichBox: ovensReady ? Balance.cateringSandwichDelta
+                                          : Balance.cateringSandwichColdPenalty
+            case .fruitPlatter: Balance.cateringFruitDelta
+            case .asianBento: Balance.cateringBentoDelta
             }
             let target = min(100, max(0,
                 (punctuality * 0.35 + avgComfort * 0.25 + service * 0.20

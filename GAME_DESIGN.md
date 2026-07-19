@@ -450,17 +450,19 @@ warned, once, where an operator would look.
 
 ## 18. Amendment — Catering (2026-07-19)
 
-Per-route in-flight service (`CateringLevel`): none / snacks & drinks
-($2/pax) / hot meals ($6/pax), set from the route detail's economics
-card, charged weekly on the cabin & catering P&L line. Snacks nudge the
-satisfaction target +3. Hot meals need a GALLEY OVEN on every aircraft
-flying the route ($40K one-time fit, instant, Fleet → Service): with
-ovens +8, without −10 — the promised meal boards cold and passengers
-are dissuaded, dragging satisfaction and (through the existing
-smoothing) reputation down. Save-compat optionals; the route detail
-warns when hardware is missing. Food art slots are wired
-(Resources/Food/food_snacks.png, food_hot_meals.png) with SF fallbacks
-until the assets land.
+Per-route in-flight service (`CateringLevel`), set from the route
+detail's economics card, charged weekly per passenger on the cabin &
+catering P&L line. Three trays (art in Resources/Food):
+- SANDWICH BOX — $2/pax, the budget tray, but it needs a GALLEY OVEN
+  ($40K one-time fit, instant, Fleet → Service) on EVERY aircraft
+  flying the route: with ovens +4 satisfaction, without −8 — the
+  toasted sandwich boards cold and customers get frustrated.
+- FRUIT PLATTER — $5/pax, delicate and pricier, oven-agnostic: +6.
+- ASIAN BENTO — $9/pax, the premium tray, the biggest lift: +10.
+Satisfaction feeds reputation through the existing smoothing, so a
+cold-sandwich route drags the brand. Save-compat optionals; the route
+detail warns when hardware is missing; the short-lived snacks/hotMeals
+tiers decode into platter/bento.
 
 *Why:* service depth with a hardware dependency — a promise you can
 make before you can keep it, which is exactly the tycoon trap.

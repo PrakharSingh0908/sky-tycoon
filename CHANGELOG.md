@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## The three trays (catering art + rebalance)
+
+- Catering tiers are now the user's tray set with real art (Resources/Food): Sandwich box ($2/pax, +4 — but −8 served cold without galley ovens on every aircraft), Fruit platter ($5/pax, +6, oven-agnostic), Asian bento ($9/pax, +10, the premium tray). The route-detail menu shows the tray renders.
+- The one-build-old snacks/hotMeals values decode into platter/bento, so no save breaks.
+
+*Why:* the trays make the trade triangle physical — cheap-but-hardware, safe-but-delicate, premium-but-pricey — and the art sells the fantasy better than an SF fork ever could.
+
+
 ## Catering (GDD §18) + event rules on the charts
 
 - Routes can now serve food: none / snacks ($2/pax, +3 satisfaction) / hot meals ($6/pax) from the route detail's economics card, charged on the cabin & catering line. Hot meals require a $40K galley oven on EVERY aircraft flying the route (Fleet → Service → "Fit galley oven"): with ovens +8 satisfaction, without −10 — cold meals dissuade passengers and reputation follows. The card warns which aircraft lack hardware. Food art slots are wired (Resources/Food/) with SF-symbol fallbacks until the assets arrive.

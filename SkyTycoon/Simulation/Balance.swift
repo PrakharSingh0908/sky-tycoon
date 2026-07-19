@@ -500,11 +500,12 @@ enum Balance {
     // ── Catering (GDD §18) ───────────────────────────────────────────────
     /// One-time galley oven fit per airframe (instant — immediacy rule).
     static let galleyOvenCost = 40_000.0
-    /// Satisfaction-target deltas: snacks always please a little; hot
-    /// meals please more — or backfire hard without ovens aboard.
-    static let cateringSnacksDelta = 3.0
-    static let cateringHotDelta = 8.0
-    static let cateringColdMealPenalty = -10.0
+    /// Satisfaction-target deltas per tray. The sandwich box backfires
+    /// without ovens aboard; the platter is safe; the bento lifts most.
+    static let cateringSandwichDelta = 4.0
+    static let cateringSandwichColdPenalty = -8.0
+    static let cateringFruitDelta = 6.0
+    static let cateringBentoDelta = 10.0
 
     /// Event pacing (2026-07-19): decisions are the game, so cards arrive
     /// on a designed rhythm, not a coin flip. The weekly chance starts at

@@ -485,8 +485,8 @@ struct RouteDetailView: View {
                     .metalKey(.obsidian, pressed: false)
                 }
             }
-            if level == .hotMeals && ovens < planes.count {
-                Text("\(planes.count - ovens) of \(planes.count) aircraft here have no galley oven — meals board cold and passengers are dissuaded. Fit ovens via Fleet → Service.")
+            if level.requiresOven && ovens < planes.count {
+                Text("\(planes.count - ovens) of \(planes.count) aircraft here have no galley oven — sandwiches board cold and customers get frustrated. Fit ovens via Fleet → Service.")
                     .font(.game(.caption2)).foregroundStyle(Theme.loss)
             } else if level != .none {
                 Text("\(level.costPerPax.money)/passenger, on the cabin & catering line.")
@@ -500,10 +500,10 @@ struct RouteDetailView: View {
             : "\(level.displayName) · \(level.costPerPax.money)/pax"
     }
 
-    /// Food art when it lands (Resources/Food/<asset>.png), SF until then.
+    /// The tray art (Resources/Food), SF fallback if an asset is missing.
     @ViewBuilder private func cateringIcon(_ level: CateringLevel) -> some View {
         if let name = level.assetName, let ui = UIImage(named: name) {
-            Image(uiImage: ui).resizable().scaledToFit().frame(width: 16, height: 16)
+            Image(uiImage: ui).resizable().scaledToFit().frame(width: 22, height: 22)
         } else {
             Image(systemName: level.icon).font(.caption2)
         }

@@ -298,37 +298,57 @@ struct UsedListing: Codable, Identifiable {
     var price: Double
 }
 
-/// In-flight catering per route (GDD §18). Hot meals need galley ovens on
-/// EVERY aircraft flying the route — promising them without the hardware
-/// dissuades passengers and drags satisfaction (and so reputation) down.
+/// In-flight catering per route (GDD §18): the three trays. The sandwich
+/// box is the budget option but needs a galley oven on EVERY aircraft
+/// flying the route — served cold, customers get frustrated. The fruit
+/// platter is delicate and pricier but oven-agnostic. The Asian bento is
+/// the premium tray with the biggest lift — at the biggest cost.
 enum CateringLevel: String, Codable, CaseIterable, Identifiable {
-    case none, snacks, hotMeals
+    case none, sandwichBox, fruitPlatter, asianBento
     var id: String { rawValue }
     var displayName: String {
         switch self {
         case .none: "No service"
-        case .snacks: "Snacks & drinks"
-        case .hotMeals: "Hot meals"
+        case .sandwichBox: "Sandwich box"
+        case .fruitPlatter: "Fruit platter"
+        case .asianBento: "Asian bento"
         }
     }
     /// Catering cost per passenger carried, charged weekly.
     var costPerPax: Double {
-        switch self { case .none: 0; case .snacks: 2.0; case .hotMeals: 6.0 }
+        switch self {
+        case .none: 0; case .sandwichBox: 2.0
+        case .fruitPlatter: 5.0; case .asianBento: 9.0
+        }
     }
-    /// SF fallback until the food art lands. Drop PNGs named
-    /// `assetName` into Resources/Food and the UI picks them up.
+    /// The tray that needs the hardware: toasted sandwiches board cold
+    /// without an oven, and it shows in satisfaction.
+    var requiresOven: Bool { self == .sandwichBox }
+    /// SF fallback if an asset ever fails to load (Resources/Food).
     var icon: String {
         switch self {
         case .none: "nosign"
-        case .snacks: "cup.and.saucer.fill"
-        case .hotMeals: "fork.knife"
+        case .sandwichBox: "takeoutbag.and.cup.and.straw.fill"
+        case .fruitPlatter: "leaf.fill"
+        case .asianBento: "fork.knife"
         }
     }
     var assetName: String? {
         switch self {
         case .none: nil
-        case .snacks: "food_snacks"
-        case .hotMeals: "food_hot_meals"
+        case .sandwichBox: "food_sandwich_box"
+        case .fruitPlatter: "food_fruit_platter"
+        case .asianBento: "food_asian_bento"
+        }
+    }
+
+    /// Decode-compat with the short-lived snacks/hotMeals tiers.
+    init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        switch raw {
+        case "snacks": self = .fruitPlatter
+        case "hotMeals": self = .asianBento
+        default: self = CateringLevel(rawValue: raw) ?? .none
         }
     }
 }
