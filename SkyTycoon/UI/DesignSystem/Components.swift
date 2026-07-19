@@ -321,16 +321,20 @@ struct StatusBadge: View {
 struct GameButtonStyle: ButtonStyle {
     var color: Color = Theme.sky
     var prominent = false
+    /// Explicit material override; when set, `color`/`prominent` are ignored
+    /// (e.g. `.bronze` confirm / `.obsidian` cancel pairs).
+    var finish: MetalFinish? = nil
 
     func makeBody(configuration: Configuration) -> some View {
+        let material = finish ?? (prominent ? .chrome : .gunmetal)
         configuration.label
             .font(.game(.subheadline, weight: .medium))
             .lineLimit(1)
             .padding(.horizontal, 16).padding(.vertical, 8)
             .frame(minHeight: 36)
-            .foregroundStyle(prominent ? Theme.bg : Color.white)
-            .metalKey(prominent: prominent, pressed: configuration.isPressed,
-                      tint: prominent ? nil : color)
+            .foregroundStyle(material.ink)
+            .metalKey(material, pressed: configuration.isPressed,
+                      tint: finish == nil && !prominent ? color : nil)
             .sensoryFeedback(.impact(weight: .light),
                              trigger: configuration.isPressed) { old, new in
                 !old && new
@@ -344,55 +348,94 @@ struct GameButtonStyle: ButtonStyle {
 // press-travel. Sized by its CONTENT (the lip is a background, never a
 // greedy sibling). Reused by GameButtonStyle and PillStepper.
 
+/// The stock of metal a key is machined from. Each finish owns its face
+/// gradient, rim, base lip, and legible label ink.
+enum MetalFinish {
+    case chrome     // white primary key (the one bright CTA per screen)
+    case gunmetal   // quiet dark key; accepts an anodized tint wash
+    case bronze     // warm machined bronze — the gold-star family; confirms
+    case obsidian   // polished near-black; cancels and destructive exits
+
+    func face(pressed: Bool) -> [Color] {
+        switch self {
+        case .chrome:
+            pressed ? [Color(white: 0.80), Color(white: 0.68)]
+                    : [Color(white: 1.00), Color(white: 0.80)]
+        case .gunmetal:
+            pressed ? [Color(white: 0.16), Color(white: 0.11)]
+                    : [Color(white: 0.30), Color(white: 0.15)]
+        case .bronze:
+            pressed ? [Color(red: 0.60, green: 0.42, blue: 0.23),
+                       Color(red: 0.40, green: 0.26, blue: 0.12)]
+                    : [Color(red: 0.83, green: 0.61, blue: 0.36),
+                       Color(red: 0.53, green: 0.35, blue: 0.16)]
+        case .obsidian:
+            pressed ? [Color(white: 0.07), Color(white: 0.02)]
+                    : [Color(white: 0.14), Color(white: 0.04)]
+        }
+    }
+
+    var rim: [Color] {
+        switch self {
+        case .chrome:   [Color.white, Color(white: 0.45)]
+        case .gunmetal: [Color.white.opacity(0.35), Color.black.opacity(0.55)]
+        case .bronze:   [Color(red: 1.0, green: 0.88, blue: 0.66),
+                         Color(red: 0.30, green: 0.18, blue: 0.06)]
+        case .obsidian: [Color.white.opacity(0.28), Color.black.opacity(0.70)]
+        }
+    }
+
+    /// The base the key travels onto.
+    var lip: Color {
+        switch self {
+        case .chrome:   Color(white: 0.30)
+        case .gunmetal: Color.black.opacity(0.85)
+        case .bronze:   Color(red: 0.26, green: 0.16, blue: 0.06)
+        case .obsidian: Color.black
+        }
+    }
+
+    /// Label color that reads on this face.
+    var ink: Color {
+        switch self {
+        case .chrome: Theme.bg
+        case .bronze: Color(red: 0.13, green: 0.07, blue: 0.01)
+        case .gunmetal, .obsidian: Color.white
+        }
+    }
+}
+
 struct MetalKeyModifier: ViewModifier {
-    var prominent: Bool
+    var finish: MetalFinish
     var pressed: Bool
     var cornerRadius: CGFloat = Theme.corner
-    /// Anodized finish: a colored wash over the gunmetal face (quiet keys
-    /// only — the white primary key stays plain metal).
+    /// Anodized wash: a colored tint over the gunmetal face (gunmetal only —
+    /// chrome, bronze, and obsidian are already their own material).
     var tint: Color? = nil
 
     private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: cornerRadius) }
     private let travel: CGFloat = 2.5
 
-    private var face: LinearGradient {
-        prominent
-            ? LinearGradient(colors: pressed
-                ? [Color(white: 0.80), Color(white: 0.68)]
-                : [Color(white: 1.00), Color(white: 0.80)],
-                startPoint: .top, endPoint: .bottom)
-            : LinearGradient(colors: pressed
-                ? [Color(white: 0.16), Color(white: 0.11)]
-                : [Color(white: 0.30), Color(white: 0.15)],
-                startPoint: .top, endPoint: .bottom)
-    }
-
-    private var rim: LinearGradient {
-        LinearGradient(colors: prominent
-            ? [Color.white, Color(white: 0.45)]
-            : [Color.white.opacity(0.35), Color.black.opacity(0.55)],
-            startPoint: .top, endPoint: .bottom)
-    }
-
     func body(content: Content) -> some View {
         content
             .background {
-                shape.fill(face)
-                if let tint, !prominent {
+                shape.fill(LinearGradient(colors: finish.face(pressed: pressed),
+                                          startPoint: .top, endPoint: .bottom))
+                if let tint, finish == .gunmetal {
                     shape.fill(LinearGradient(
                         colors: [tint.opacity(pressed ? 0.30 : 0.45),
                                  tint.opacity(pressed ? 0.14 : 0.22)],
                         startPoint: .top, endPoint: .bottom))
                 }
             }
-            .overlay(shape.strokeBorder(rim, lineWidth: 1))
+            .overlay(shape.strokeBorder(
+                LinearGradient(colors: finish.rim,
+                               startPoint: .top, endPoint: .bottom),
+                lineWidth: 1))
             .offset(y: pressed ? travel : 0)
             // The base the key travels onto — a background, so it takes the
             // key's own size instead of stretching the row.
-            .background(
-                shape.fill(prominent ? Color(white: 0.30) : Color.black.opacity(0.85))
-                    .offset(y: travel)
-            )
+            .background(shape.fill(finish.lip).offset(y: travel))
             .compositingGroup()
             .shadow(color: .black.opacity(pressed ? 0.15 : 0.35),
                     radius: pressed ? 2 : 5, y: pressed ? 1 : 4)
@@ -401,11 +444,19 @@ struct MetalKeyModifier: ViewModifier {
 }
 
 extension View {
+    func metalKey(_ finish: MetalFinish, pressed: Bool,
+                  cornerRadius: CGFloat = Theme.corner,
+                  tint: Color? = nil) -> some View {
+        modifier(MetalKeyModifier(finish: finish, pressed: pressed,
+                                  cornerRadius: cornerRadius, tint: tint))
+    }
+
+    /// Legacy entry point (v3.1.1): prominent → chrome, quiet → gunmetal.
     func metalKey(prominent: Bool, pressed: Bool,
                   cornerRadius: CGFloat = Theme.corner,
                   tint: Color? = nil) -> some View {
-        modifier(MetalKeyModifier(prominent: prominent, pressed: pressed,
-                                  cornerRadius: cornerRadius, tint: tint))
+        metalKey(prominent ? .chrome : .gunmetal, pressed: pressed,
+                 cornerRadius: cornerRadius, tint: tint)
     }
 }
 
@@ -550,10 +601,13 @@ struct GameScreen<Content: View>: View {
 #Preview("Metal keys") {
     VStack(spacing: 20) {
         HStack(spacing: 12) {
-            Button("Set up route") {}.buttonStyle(GameButtonStyle(color: Theme.sky, prominent: true))
-            Button("Cancel route") {}.buttonStyle(GameButtonStyle(color: Theme.loss))
+            Button("Set up route") {}.buttonStyle(GameButtonStyle(finish: .bronze))
+            Button("Cancel route") {}.buttonStyle(GameButtonStyle(finish: .obsidian))
         }
-        Button("Post job ad · $2.0K") {}.buttonStyle(GameButtonStyle(color: Theme.sky))
+        HStack(spacing: 12) {
+            Button("Buy · $4.2M") {}.buttonStyle(GameButtonStyle(color: Theme.sky, prominent: true))
+            Button("Post job ad · $2.0K") {}.buttonStyle(GameButtonStyle(color: Theme.sky))
+        }
         PillStepper(label: "Weekly wage", value: "$1.5K", onDecrement: {}, onIncrement: {})
             .padding(.horizontal, 24)
     }

@@ -7,6 +7,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Bronze and obsidian metal keys
+
+- `MetalFinish` enum (chrome / gunmetal / bronze / obsidian) now owns each key's face gradient, rim, base lip, and label ink; `MetalKeyModifier` and `GameButtonStyle` are built on it. `GameButtonStyle(finish:)` selects a material directly; the legacy `prominent:`/`tint:` API still works (chrome/gunmetal).
+- Route boarding-pass stub: "Set up route" is now a bronze key (dark-bronze ink), "Cancel route" an obsidian black key — replacing the white chrome + red-tinted pair.
+- Design-system doc and the "Metal keys" preview updated with the four finishes.
+
+*Why:* per request for black-and-bronze buttons on the route card — bronze ties the commit action to the gold-star material family while obsidian recedes for the destructive exit; making finishes a first-class enum turns the pair into a reusable component instead of one-off colors.
+
+
 ## Gold-star rating asset
 
 - `StarRating` now renders the metallic gold-star photo (`Resources/Icons/gold_star.png`) instead of SF Symbol stars, everywhere ratings appear: staff skill (People, Hiring, Negotiation) and reputation (Dashboard hero, quarter report).

@@ -250,11 +250,11 @@ private struct BoardingPassCard: View {
                     } label: {
                         Text("Set up route").frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(GameButtonStyle(color: accent, prominent: true))
+                    .buttonStyle(GameButtonStyle(finish: .bronze))
                     Button("Cancel route", role: .destructive) {
                         confirmingCancel = true
                     }
-                    .buttonStyle(GameButtonStyle(color: Theme.loss))
+                    .buttonStyle(GameButtonStyle(finish: .obsidian))
                 }
             }
             .padding(.horizontal, Theme.cardPadding)
