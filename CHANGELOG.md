@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Fleet action bank on bronze/obsidian
+
+- The Fleet card's Route / Cabin / Service keys now use the same materials as the route card's action pair: bronze for the leading Route key, obsidian for Cabin and Service. The per-system anodized hues (blue/violet/amber) are gone; `menuChip` takes a `MetalFinish` directly.
+
+*Why:* per request — one material grammar for action rows everywhere (bronze leads, obsidian supports) instead of a second color-coding system that only existed on this card.
+
+
 ## Flap row drops the currency cell
 
 - The split-flap net-worth row no longer shows a $ cell — just sign, digits, and magnitude (− 4.74 M).

@@ -157,17 +157,14 @@ private struct AircraftCard: View {
         }
     }
 
-    /// Anodized key colors for the action bank — one hue per system.
-    private static let routeKey = Color(red: 0.404, green: 0.596, blue: 1.0)   // blue
-    private static let cabinKey = Color(red: 0.690, green: 0.549, blue: 1.0)   // violet
-    private static let serviceKey = Color(red: 0.89, green: 0.68, blue: 0.34)  // amber
-
     private var actions: some View {
+        // Same materials as the route card's action pair: bronze leads,
+        // obsidian for the rest of the bank.
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 routeMenu
                 Button("Cabin") { onArchitect(plane) }
-                    .buttonStyle(GameButtonStyle(color: Self.cabinKey))
+                    .buttonStyle(GameButtonStyle(finish: .obsidian))
                 serviceMenu
             }
         }
@@ -198,7 +195,7 @@ private struct AircraftCard: View {
                 }
             }
         } label: {
-            menuChip("Service", icon: "wrench.and.screwdriver.fill", color: Self.serviceKey)
+            menuChip("Service", icon: "wrench.and.screwdriver.fill", finish: .obsidian)
         }
     }
 
@@ -231,23 +228,23 @@ private struct AircraftCard: View {
             }
         } label: {
             menuChip("Route", icon: "point.topleft.down.to.point.bottomright.curvepath",
-                     color: Self.routeKey)
+                     finish: .bronze)
         }
     }
 
     /// Menu chips wear the same machined key surface as real buttons, so
     /// the action row reads as one bank of console keys.
-    private func menuChip(_ title: String, icon: String, color: Color) -> some View {
+    private func menuChip(_ title: String, icon: String, finish: MetalFinish) -> some View {
         HStack(spacing: 5) {
             Image(systemName: icon).font(.caption2.weight(.medium))
             Text(title)
         }
-        .foregroundStyle(Color.white)
+        .foregroundStyle(finish.ink)
         .font(.game(.subheadline, weight: .medium))
         .lineLimit(1)
         .padding(.horizontal, 16).padding(.vertical, 8)
         .frame(minHeight: 36)
-        .metalKey(prominent: false, pressed: false, tint: color)
+        .metalKey(finish, pressed: false)
     }
 
     private func routeLabel(_ route: Route, spec: AircraftSpec) -> String {
