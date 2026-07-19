@@ -46,6 +46,7 @@ struct QuarterReportCard: View {
     let quarterProfit: Double
     let streak: Int
     let reputation: Double
+    var auntName: String = "Meera"
 
     private var grade: (mark: String, color: Color) {
         switch (quarterProfit > 0, streak) {
@@ -89,7 +90,7 @@ struct QuarterReportCard: View {
             .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.corner))
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("From Aunt Meera · \(letter.date.description)")
+                Text("From Aunt \(auntName) · \(letter.date.description)")
                     .font(.data(.caption2)).tracking(0.85)
                     .foregroundStyle(Theme.textSecondary)
                 Text(letter.body)

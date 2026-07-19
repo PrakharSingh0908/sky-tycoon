@@ -32,6 +32,14 @@ enum Country: String, Codable, CaseIterable, Identifiable {
         case .china: "China"; case .australia: "Australia"
         }
     }
+    /// The trust fund's voice belongs to the campaign's market: the aunt
+    /// writing the quarterly letters is local (GDD §3).
+    var auntName: String {
+        switch self {
+        case .india: "Meera"; case .us: "Margaret"; case .uk: "Beatrice"
+        case .china: "Mei"; case .australia: "Maggie"
+        }
+    }
 }
 
 /// Country coefficient set — one economy, five flavors (GDD §5).

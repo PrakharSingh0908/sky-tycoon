@@ -452,28 +452,30 @@ struct DashboardView: View {
                        format: trendMetric == .reputation
                            ? { String(format: "%.1f★", $0) } : { $0.money })
 
-            // The rules on the chart, expandable into the history book.
+            // The rules on the chart, expandable into the history book:
+            // latest 8, one strict line each — date column, title, sign dot.
             if !(engine.state.eventLog ?? []).isEmpty {
                 DisclosureGroup(isExpanded: $eventsExpanded) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        ForEach((engine.state.eventLog ?? []).suffix(10).reversed()) { entry in
-                            HStack(spacing: 8) {
-                                Circle()
-                                    .fill(entry.isNegative ? Theme.loss : Theme.profit)
-                                    .frame(width: 6, height: 6)
-                                Text("Y\((entry.totalWeek - 1) / 52 + 1) W\((entry.totalWeek - 1) % 52 + 1)")
+                    VStack(alignment: .leading, spacing: 7) {
+                        ForEach((engine.state.eventLog ?? []).suffix(8).reversed()) { entry in
+                            HStack(spacing: 10) {
+                                Text("Y\((entry.totalWeek - 1) / 52 + 1) W\(String(format: "%02d", (entry.totalWeek - 1) % 52 + 1))")
                                     .font(.data(.caption2)).tracking(0.85)
                                     .foregroundStyle(Theme.textTertiary)
+                                    .frame(width: 58, alignment: .leading)
                                 Text(entry.title)
                                     .font(.game(.caption)).foregroundStyle(Theme.textPrimary)
                                     .lineLimit(1)
-                                Spacer(minLength: 0)
+                                Spacer(minLength: 8)
+                                Circle()
+                                    .fill(entry.isNegative ? Theme.loss : Theme.profit)
+                                    .frame(width: 6, height: 6)
                             }
                         }
                     }
-                    .padding(.top, 6)
+                    .padding(.top, 8)
                 } label: {
-                    Text("Major events")
+                    Text("MAJOR EVENTS")
                         .font(.data(.caption2)).tracking(0.85)
                         .foregroundStyle(Theme.textSecondary)
                 }

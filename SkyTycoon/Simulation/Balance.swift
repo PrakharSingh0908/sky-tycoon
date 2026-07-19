@@ -436,19 +436,28 @@ enum Balance {
     static let lettersKept = 16
 
     static func auntLetter(tone: QuarterlyLetter.Tone, quarterProfit: Double,
-                           streak: Int, quartersLeft: Int) -> String {
+                           streak: Int, quartersLeft: Int,
+                           country: Country = .india) -> String {
         let profit = abs(quarterProfit)
+        // Her voice is local: grandfather's trade, the endearment, the units.
+        let (granddad, dear, unit): (String, String, String) = switch country {
+        case .us: ("pumped gas and counted pennies his whole life", "kiddo", "mile")
+        case .uk: ("kept a corner shop his whole life", "love", "mile")
+        case .australia: ("drove road trains his whole life", "mate", "kilometer")
+        case .china: ("ran a market stall his whole life", "child", "kilometer")
+        case .india: ("haggled over rickshaw fares his whole life", "beta", "kilometer")
+        }
         switch tone {
         case .proud:
-            return "My dear, \(streak) profitable quarters in a row. I read the numbers twice to be sure. Your grandfather haggled over rickshaw fares his whole life; you're out here running an airline in the black. Keep the streak alive. Only \(max(0, 4 - streak)) more and the fund is yours properly."
+            return "My dear, \(streak) profitable quarters in a row. I read the numbers twice to be sure. Your grandfather \(granddad); you're out here running an airline in the black. Keep the streak alive. Only \(max(0, 4 - streak)) more and the fund is yours properly."
         case .encouraging:
             return "A profit of \(profit.money) this quarter! I won't pretend I understood every line of the report you sent, but I understood the color green. Don't get cocky: one good quarter is weather, four is climate. \(quartersLeft) quarters left before my accountants get twitchy."
         case .worried:
-            return "I saw the quarter's numbers: \(profit.money) in the red. I'm not angry, I'm worried. Planes on the ground don't pay for themselves, beta. Look at your fares, look at your crews, and for goodness' sake do the maintenance BEFORE things break. \(quartersLeft) quarters remain."
+            return "I saw the quarter's numbers: \(profit.money) in the red. I'm not angry, I'm worried. Planes on the ground don't pay for themselves, \(dear). Look at your fares, look at your crews, and for goodness' sake do the maintenance BEFORE things break. \(quartersLeft) quarters remain."
         case .stern:
             return "We need to speak plainly. Another loss, \(profit.money), and the streak reset to nothing. The fund was not a wedding present; it came with conditions and a deadline, and both are approaching faster than you seem to believe. Show me four consecutive profitable quarters. \(quartersLeft) remain. Do not make me write the next letter."
         case .triumphant:
-            return "Four profitable quarters. FOUR. I have already called the lawyers. The fund is yours, converted to a gift, with a little extra from me because I am, despite appearances, sentimental. Your grandfather would have pretended not to cry. I will not pretend. Fly far, my dear. You've earned every kilometer."
+            return "Four profitable quarters. FOUR. I have already called the lawyers. The fund is yours, converted to a gift, with a little extra from me because I am, despite appearances, sentimental. Your grandfather would have pretended not to cry. I will not pretend. Fly far, my dear. You've earned every \(unit)."
         case .heartbroken:
             return "The deadline passed this week. You know what that means and so do I: the accountants have withdrawn what remained of the fund. I want you to hear this from me and not from them: I am not disappointed in you, I am disappointed for you. What you build from here is truly yours alone. Prove the old woman wrong. I would love nothing more."
         }

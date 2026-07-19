@@ -784,7 +784,8 @@ final class GameEngine {
             id: UUID(), date: state.date, tone: tone, quarterProfit: quarterProfit,
             body: Balance.auntLetter(tone: tone, quarterProfit: quarterProfit,
                                      streak: state.consecutiveProfitableQuarters,
-                                     quartersLeft: quartersLeft)))
+                                     quartersLeft: quartersLeft,
+                                     country: state.country)))
         if state.letters.count > Balance.lettersKept { state.letters.removeFirst() }
     }
 

@@ -112,7 +112,8 @@ struct RootView: View {
             QuarterReportCard(letter: letter,
                               quarterProfit: letter.quarterProfit,
                               streak: engine.state.consecutiveProfitableQuarters,
-                              reputation: engine.state.reputation)
+                              reputation: engine.state.reputation,
+                              auntName: engine.state.country.auntName)
         }
     }
 

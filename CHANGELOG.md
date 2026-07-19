@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## The aunt is local; Major events tightened
+
+- The trust fund's voice matches the campaign: Aunt Meera (India), Margaret (US), Beatrice (UK), Mei (China), Maggie (Australia) — headers, signatures, and the quarter report card all follow, and her letters localize the flavor lines (grandfather's trade, the endearment, miles vs kilometers).
+- Major events list: latest 8 entries, one strict line each — fixed mono date column (Y1 W07), single-line title, red/green sign dot on the right; MAJOR EVENTS eyebrow on the disclosure.
+
+*Why:* an American campaign scolded in "beta" by Aunt Meera broke the fiction the same way the staff names did; and the events list needed the same grid discipline as the trend rows — a column for each fact, nothing wrapping.
+
+
 ## Industry rows aligned; wear escalates and surfaces in Ops
 
 - Industry trend rows rebuilt on a strict grid: tag column, single-line name, and ONE mono readout per trend ("−12% aircraft · 37wk", green/red by favor); the story line runs full-width beneath instead of truncating mid-word. The NEXT rival line no longer wraps (name scales, readout holds).

@@ -115,7 +115,7 @@ struct MoneyView: View {
     private var lettersCard: some View {
         let letters = engine.state.letters.reversed()
         return GameCard {
-            SectionHeader(title: "Letters from Aunt Meera", icon: "envelope.open.fill",
+            SectionHeader(title: "Letters from Aunt \(engine.state.country.auntName)", icon: "envelope.open.fill",
                           accent: Theme.warn)
             // Collapsed to a one-line teaser; the archive opens on demand.
             if let latest = letters.first {
@@ -156,7 +156,7 @@ struct MoneyView: View {
                 .font(.system(.subheadline, design: .serif))
                 .italic()
                 .foregroundStyle(Theme.textPrimary.opacity(0.9))
-            Text("Aunt Meera")
+            Text("Aunt \(engine.state.country.auntName)")
                 .font(.system(.caption, design: .serif).italic())
                 .foregroundStyle(Theme.textSecondary)
                 .frame(maxWidth: .infinity, alignment: .trailing)
