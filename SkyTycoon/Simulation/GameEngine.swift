@@ -49,6 +49,38 @@ final class GameEngine {
     init(state: GameState) {
         self.state = state
         backfillAvatars()
+        retagFleet()
+    }
+
+    // ── Fleet registration prefix (2026-07-19) ───────────────────────────
+    // Tail codes carry the airline's initials ("Blue Dart" → BD-A, BD-B…).
+
+    /// Two letters from the airline name: initials of the first two words,
+    /// or the first two letters of a single-word name. Fallback "VT".
+    var fleetPrefix: String {
+        let words = state.airlineName.split(separator: " ").filter { !$0.isEmpty }
+        let letters: String
+        if words.count >= 2 {
+            letters = words.prefix(2).compactMap(\.first).map(String.init).joined()
+        } else if let word = words.first {
+            letters = String(word.prefix(2))
+        } else {
+            letters = "VT"
+        }
+        return letters.uppercased()
+    }
+
+    /// Re-registers auto-issued tail codes (XX-A pattern) under the current
+    /// prefix — pre-feature saves carried the fixed "VT" prefix.
+    private func retagFleet() {
+        let prefix = fleetPrefix
+        for i in state.fleet.indices {
+            let nick = state.fleet[i].nickname
+            guard let dash = nick.firstIndex(of: "-"),
+                  nick[..<dash].allSatisfy(\.isLetter),
+                  nick[..<dash] != Substring(prefix) else { continue }
+            state.fleet[i].nickname = prefix + nick[dash...]
+        }
     }
 
     // ── Avatar backfill for pre-portrait saves (2026-07-19) ──────────────

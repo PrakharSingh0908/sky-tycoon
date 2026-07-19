@@ -24,7 +24,7 @@ enum Balance {
     //   runway = jets need class 3 (metros); windows ≥ 24 need class 2
     //   "II"   = newer variant of the same airframe: 4% less burn, 6% dearer
     static func makeSpec(windows: Int, engine: EngineKind, variantII: Bool = false,
-                         maker: String? = nil) -> AircraftSpec {
+                         maker: String? = nil, name: String? = nil) -> AircraftSpec {
         let seats = Int((Double(windows) * (2.0 + 0.04 * Double(windows))).rounded())
 
         let cruise: Double
@@ -55,7 +55,7 @@ enum Balance {
         let price = 150_000.0 * Double(seats) * (1.0 + Double(seats) / 80.0) * priceFactor
         let burn = burnBase - Double(seats) * burnPerSeat
         return AircraftSpec(
-            displayName: "\(windows) \(engine.label)\(variantII ? " II" : "")",
+            displayName: name ?? "\(windows) \(engine.label)\(variantII ? " II" : "")",
             windowCount: windows,
             engine: engine,
             seller: seller,
@@ -75,34 +75,38 @@ enum Balance {
                                : (windows >= 14 ? 2 : 1))
     }
 
+    // Model names follow real-world conventions: Vayu numbers its utility
+    // line like Cessna (205/208/210), Northline names regionals for seat
+    // count like ATR, Meridian's M-series tracks seats like the E-jets,
+    // and Kestrel's KD/KJ lines are its Dash/CRJ-style competitors.
     static let specs: [AircraftType: AircraftSpec] = [
-        .turboprop5: makeSpec(windows: 5, engine: .turboprop),
-        .turboprop8: makeSpec(windows: 8, engine: .turboprop),
-        .turboprop10: makeSpec(windows: 10, engine: .turboprop),
-        .turboprop12: makeSpec(windows: 12, engine: .turboprop),
-        .propeller24: makeSpec(windows: 24, engine: .propeller),
-        .propeller24II: makeSpec(windows: 24, engine: .propeller, variantII: true),
-        .propeller28: makeSpec(windows: 28, engine: .propeller),
-        .propeller28II: makeSpec(windows: 28, engine: .propeller, variantII: true),
-        .propeller30: makeSpec(windows: 30, engine: .propeller),
-        .propeller30II: makeSpec(windows: 30, engine: .propeller, variantII: true),
-        .propeller32: makeSpec(windows: 32, engine: .propeller),
-        .propeller35: makeSpec(windows: 35, engine: .propeller),
+        .turboprop5: makeSpec(windows: 5, engine: .turboprop, name: "Vayu 205"),
+        .turboprop8: makeSpec(windows: 8, engine: .turboprop, name: "Vayu 208"),
+        .turboprop10: makeSpec(windows: 10, engine: .turboprop, name: "Vayu 210"),
+        .turboprop12: makeSpec(windows: 12, engine: .turboprop, name: "Vayu 212"),
+        .propeller24: makeSpec(windows: 24, engine: .propeller, name: "Northline NR-70"),
+        .propeller24II: makeSpec(windows: 24, engine: .propeller, variantII: true, name: "Kestrel KD-72"),
+        .propeller28: makeSpec(windows: 28, engine: .propeller, name: "Northline NR-85"),
+        .propeller28II: makeSpec(windows: 28, engine: .propeller, variantII: true, name: "Kestrel KD-88"),
+        .propeller30: makeSpec(windows: 30, engine: .propeller, name: "Northline NR-95"),
+        .propeller30II: makeSpec(windows: 30, engine: .propeller, variantII: true, name: "Kestrel KD-98"),
+        .propeller32: makeSpec(windows: 32, engine: .propeller, name: "Northline NR-105"),
+        .propeller35: makeSpec(windows: 35, engine: .propeller, name: "Northline NR-120"),
         // Regional jets: Meridian's ladder (18/24/32/42) with Kestrel's
         // wedge sizes (26/29) competing between the rungs.
-        .jet18: makeSpec(windows: 18, engine: .jet),
-        .jet24: makeSpec(windows: 24, engine: .jet),
-        .jet26: makeSpec(windows: 26, engine: .jet, maker: "Kestrel Aeronautics"),
-        .jet29: makeSpec(windows: 29, engine: .jet, maker: "Kestrel Aeronautics"),
-        .jet32: makeSpec(windows: 32, engine: .jet),
-        .jet42: makeSpec(windows: 42, engine: .jet),
-        .jet50: makeSpec(windows: 50, engine: .jet),
-        .jet60: makeSpec(windows: 60, engine: .jet),
-        .jet60II: makeSpec(windows: 60, engine: .jet, variantII: true),
+        .jet18: makeSpec(windows: 18, engine: .jet, name: "Meridian M50"),
+        .jet24: makeSpec(windows: 24, engine: .jet, name: "Meridian M70"),
+        .jet26: makeSpec(windows: 26, engine: .jet, maker: "Kestrel Aeronautics", name: "Kestrel KJ-80"),
+        .jet29: makeSpec(windows: 29, engine: .jet, maker: "Kestrel Aeronautics", name: "Kestrel KJ-90"),
+        .jet32: makeSpec(windows: 32, engine: .jet, name: "Meridian M105"),
+        .jet42: makeSpec(windows: 42, engine: .jet, name: "Meridian M155"),
+        .jet50: makeSpec(windows: 50, engine: .jet, name: "Meridian M200"),
+        .jet60: makeSpec(windows: 60, engine: .jet, name: "Meridian M260"),
+        .jet60II: makeSpec(windows: 60, engine: .jet, variantII: true, name: "Kestrel KJ-265"),
         // Widebodies: the international era's heavies.
-        .widebody55: makeSpec(windows: 55, engine: .widebody),
-        .widebody65: makeSpec(windows: 65, engine: .widebody),
-        .widebody75: makeSpec(windows: 75, engine: .widebody),
+        .widebody55: makeSpec(windows: 55, engine: .widebody, name: "Meridian M230"),
+        .widebody65: makeSpec(windows: 65, engine: .widebody, name: "Meridian M300"),
+        .widebody75: makeSpec(windows: 75, engine: .widebody, name: "Meridian M375"),
     ]
 
     static let countryProfiles: [Country: CountryProfile] = [

@@ -245,12 +245,13 @@ struct ShowroomView: View {
         }
     }
 
-    /// Registration-style nicknames: VT-A, VT-B, ... (VT = India prefix).
+    /// Registration-style nicknames from the airline's initials:
+    /// "Blue Dart" → BD-A, BD-B, …
     private func nextNickname() -> String {
         let letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         let n = engine.state.fleet.count
         let letter = letters[letters.index(letters.startIndex, offsetBy: n % 26)]
-        return "VT-\(letter)\(n / 26 == 0 ? "" : String(n / 26))"
+        return "\(engine.fleetPrefix)-\(letter)\(n / 26 == 0 ? "" : String(n / 26))"
     }
 }
 

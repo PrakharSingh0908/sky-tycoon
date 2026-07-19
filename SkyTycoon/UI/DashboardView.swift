@@ -136,7 +136,12 @@ struct DashboardView: View {
         // hierarchy; only the weekly settle still flashes the rim green.
         MetalPanel(highlight: settleFlash ? Theme.profit : nil) {
             VStack(alignment: .leading, spacing: 5) {
-                engravedLabel("Net worth")
+                HStack {
+                    engravedLabel("Net worth")
+                    Spacer()
+                    // The carrier's nameplate on its own board.
+                    engravedLabel("✈︎ \(engine.state.airlineName)")
+                }
                 netWorthText
             }
             PanelGroove()

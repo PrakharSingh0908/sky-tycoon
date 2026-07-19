@@ -7,6 +7,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Realistic aircraft names, airline tail codes, nameplate
+
+- Every airframe now carries a real-world-style designation from its maker: Vayu's utility line numbers like Cessna (Vayu 205/208/210/212), Northline's regionals name for seat count like ATR (NR-70…NR-120), Meridian's M-series tracks seats like the E-jets (M50…M260, widebodies M230/M300/M375), and Kestrel's KD/KJ lines are its Dash/CRJ-style competitors (KD-72…, KJ-80/90/265). Specs and photos unchanged — `makeSpec` just takes an explicit name.
+- Tail codes now carry the airline's initials: "Blue Dart" registers BD-A, BD-B… (`GameEngine.fleetPrefix`; single-word names use their first two letters). New purchases use it, and a load-time retag re-registers auto-issued codes on existing saves.
+- The hero board shows the carrier's nameplate: "✈︎ <AIRLINE>" engraved opposite the NET WORTH eyebrow.
+
+*Why:* "5 Turboprop" read as a placeholder, not a product — maker-branded model numbers make the showroom feel like a real market with real rivalries; initialed registrations and the nameplate make the fleet and the board feel owned.
+
+
 ## Fleet action bank on bronze/obsidian
 
 - The Fleet card's Route / Cabin / Service keys now use the same materials as the route card's action pair: bronze for the leading Route key, obsidian for Cabin and Service. The per-system anodized hues (blue/violet/amber) are gone; `menuChip` takes a `MetalFinish` directly.
