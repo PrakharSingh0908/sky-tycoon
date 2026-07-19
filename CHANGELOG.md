@@ -7,6 +7,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Event card: self-sizing, centered, truncation-proof
+
+- The event card sheet now sizes to its content (the receipt pattern: measured height → .height detent, capped 720, scroll fallback) — long lawsuit bodies render in full instead of compressing to "…" in the fixed medium detent.
+- Titles center-align when they wrap; body text is fixedSize-vertical; option keys wrap to two centered lines (GameButtonStyle gains a `lines` parameter) instead of truncating mid-sentence.
+- Added a sheet-presented lawsuit-card preview as the regression pin.
+
+*Why:* repeated feedback — text may never truncate in bodies or buttons, and a wrapped heading must center. The medium detent hid all three; sizing to content removes the class of bug.
+
+
 ## 52-week P&L pads left at zero
 
 - The Money tab's P&L chart now left-pads missing weeks at ZERO (both the revenue line and profit bars) and pins its x-domain — the blue line runs the full width along $0 until real history begins, instead of starting mid-air with a phantom -60 gap.

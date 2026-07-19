@@ -349,12 +349,16 @@ struct GameButtonStyle: ButtonStyle {
     /// Explicit material override; when set, `color`/`prominent` are ignored
     /// (e.g. `.bronze` confirm / `.obsidian` cancel pairs).
     var finish: MetalFinish? = nil
+    /// Label lines before scaling kicks in — event cards pass 2 so long
+    /// option labels wrap instead of truncating.
+    var lines: Int = 1
 
     func makeBody(configuration: Configuration) -> some View {
         let material = finish ?? (prominent ? .chrome : .gunmetal)
         configuration.label
             .font(.game(.subheadline, weight: .medium))
-            .lineLimit(1)
+            .lineLimit(lines)
+            .multilineTextAlignment(.center)
             // Long labels scale down inside the key — never overflow it.
             .minimumScaleFactor(0.8)
             .padding(.horizontal, 16).padding(.vertical, 8)
