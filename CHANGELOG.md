@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Fleet keys no longer clipped
+
+- The Fleet action bank's horizontal scroller now reserves 12pt below (2pt above) the keys, so the extruded base lip and drop shadow render instead of being cut by the scroll bounds and trailing fade mask.
+
+*Why:* device testing — the keys read as flat-bottomed slabs with their machined depth sheared off.
+
+
 ## Hiring sheet declutter
 
 - Applicant cards restructured: avatar + name + single-line meta (stars · asking wage · patience window) on top, then the patience meter when relevant, then a full-width key row — obsidian "Negotiate" and bronze "Hire · $4.2K/wk" splitting the width evenly.

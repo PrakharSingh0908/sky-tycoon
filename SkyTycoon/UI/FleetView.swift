@@ -167,6 +167,11 @@ private struct AircraftCard: View {
                     .buttonStyle(GameButtonStyle(finish: .obsidian))
                 serviceMenu
             }
+            // Room for the keys' metalwork: the extruded base lip and drop
+            // shadow extend below the face and were clipped by the scroll
+            // bounds + fade mask.
+            .padding(.top, 2)
+            .padding(.bottom, 12)
         }
         .fadeEdge(.trailing, length: 16)
         .disabled(plane.groundedWeeksRemaining > 0)
