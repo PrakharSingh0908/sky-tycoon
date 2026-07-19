@@ -8,6 +8,7 @@
 //
 
 import SwiftUI
+import CoreText
 
 /// The one object allowed to swap the running engine between save slots.
 @Observable
@@ -61,6 +62,7 @@ struct SkyTycoonApp: App {
     @State private var session = GameSession()
 
     init() {
+        // Bundled fonts register lazily via Font.handwriting (Theme.swift).
         #if DEBUG
         // Hot reload: if the InjectionIII app is running, this bundle watches
         // the project and swaps recompiled code into the live simulator app.

@@ -97,8 +97,14 @@ struct QuarterReportCard: View {
                     .font(.system(.caption, design: .serif)).italic()
                     .foregroundStyle(Theme.textPrimary.opacity(0.85))
                     .lineLimit(3)
-                Text("Full letter on the Money tab")
-                    .font(.game(.caption2)).foregroundStyle(Theme.cornflower)
+                HStack(alignment: .lastTextBaseline) {
+                    Text("Full letter on the Money tab")
+                        .font(.game(.caption2)).foregroundStyle(Theme.cornflower)
+                    Spacer()
+                    // She signs it while you watch.
+                    HandwrittenSignature(name: "Aunt \(auntName)", size: 24,
+                                         color: Theme.textPrimary.opacity(0.85))
+                }
             }
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)

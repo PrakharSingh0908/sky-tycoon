@@ -10,6 +10,7 @@
 //
 
 import SwiftUI
+import CoreText
 
 enum Theme {
     // ── Surfaces (tone hierarchy: ink → coal → carbon → steel) ──────────
@@ -107,6 +108,50 @@ extension Font {
     static func data(_ style: TextStyle, weight: Weight = .regular) -> Font {
         .system(style, design: .monospaced).weight(weight)
     }
+
+    /// The human hand: Caveat (SIL OFL, see CREDITS.md) for the aunt's
+    /// signature and other handwritten touches. Registered lazily on
+    /// first use — works in app AND previews, no Info.plist entry.
+    /// Serif-italic fallback if the face ever fails to register.
+    static func handwriting(_ size: CGFloat) -> Font {
+        _ = HandwritingFont.registered
+        return UIFont(name: "Caveat", size: size) != nil
+            || UIFont(name: "Caveat-Regular", size: size) != nil
+            ? .custom("Caveat", size: size)
+            : .system(size: size, design: .serif).italic()
+    }
+}
+
+private enum HandwritingFont {
+    static let registered: Void = {
+        guard let url = Bundle.main.url(forResource: "Caveat-Variable",
+                                        withExtension: "ttf") else { return }
+        CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
+    }()
+}
+
+/// A signature being written: the name in the handwriting face, revealed
+/// left to right like ink following the nib.
+struct HandwrittenSignature: View {
+    let name: String
+    var size: CGFloat = 28
+    var color: Color = Theme.textPrimary
+    @State private var inked = false
+
+    var body: some View {
+        Text(name)
+            .font(.handwriting(size))
+            .foregroundStyle(color)
+            .mask(alignment: .leading) {
+                GeometryReader { geo in
+                    Rectangle().frame(width: geo.size.width * (inked ? 1 : 0))
+                }
+            }
+            .onAppear {
+                inked = false
+                withAnimation(.easeInOut(duration: 1.3).delay(0.3)) { inked = true }
+            }
+    }
 }
 
 // ── LiveryColor ⇄ Color bridging (UI layer only; sim stores plain RGB) ───
@@ -123,4 +168,14 @@ extension LiveryColor {
         UIColor(color).getRed(&r, green: &g, blue: &b, alpha: &a)
         self.init(red: Double(r), green: Double(g), blue: Double(b))
     }
+}
+
+#Preview("Handwriting") {
+    VStack(spacing: 14) {
+        Text("Aunt Margaret").font(.handwriting(38)).foregroundStyle(.white)
+        HandwrittenSignature(name: "Aunt Meera", size: 38)
+    }
+    .padding(30)
+    .background(Theme.bg)
+    .preferredColorScheme(.dark)
 }

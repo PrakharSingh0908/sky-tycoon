@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## The aunt signs her letters
+
+- Bundled Caveat (SIL OFL, credited) as the game's handwriting face, registered lazily at first use — no project-file changes, works in previews too. `Font.handwriting(size:)` is available for future handwritten touches.
+- New `HandwrittenSignature` component: the aunt's name in her own hand, written on with a left-to-right ink reveal (1.3s). It signs the letter archive on the Money tab and the quarter report card — Aunt Margaret, Meera, or whoever your campaign's matriarch is.
+
+*Why:* the letters are the game's one human relationship; a typed sign-off undercut them. A real hand — animated like ink following the nib — makes each quarter's letter feel touched.
+
+
 ## Stub line trimmed; key labels never overflow
 
 - The boarding-pass stub's meta line is just "on-time 35%" — "projected" and the sat score are gone (satisfaction has its own meter one screen deeper).

@@ -39,3 +39,11 @@ poly.pizza — removed 2026-07-16 when the photography replaced them.)*
   bathymetry, 5400×2700) — the Routes map base layer
   (`bluemarble_world.jpg`). NASA Visible Earth imagery is in the
   **public domain**; credit: NASA Earth Observatory / Reto Stöckli.
+
+## Caveat (handwriting font)
+
+- The aunt's signature and handwritten touches use Caveat by Pablo
+  Impallari, © 2014 The Caveat Project Authors
+  (https://github.com/googlefonts/caveat).
+- Licensed under the SIL Open Font License 1.1 — free for commercial
+  use. Bundled as Resources/Fonts/Caveat-Variable.ttf.

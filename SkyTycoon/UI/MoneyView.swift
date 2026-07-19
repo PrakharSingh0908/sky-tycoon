@@ -156,9 +156,9 @@ struct MoneyView: View {
                 .font(.system(.subheadline, design: .serif))
                 .italic()
                 .foregroundStyle(Theme.textPrimary.opacity(0.9))
-            Text("Aunt \(engine.state.country.auntName)")
-                .font(.system(.caption, design: .serif).italic())
-                .foregroundStyle(Theme.textSecondary)
+            HandwrittenSignature(name: "Aunt \(engine.state.country.auntName)",
+                                 size: 26,
+                                 color: Theme.textPrimary.opacity(0.85))
                 .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .padding(10)
