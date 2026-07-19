@@ -31,12 +31,39 @@ struct PeopleView: View {
         .preferredColorScheme(.dark)
 }
 
+#Preview("Roster rows") {
+    RosterRowsPreview()
+}
+
+private struct RosterRowsPreview: View {
+    private let engine = GameEngine.previewGame()
+    var body: some View {
+        ScrollView {
+            StaffPoolCard(role: .pilots, pool: engine.state.staff[.pilots]!,
+                          accent: Theme.violet, onHiring: { _ in }, expanded: true)
+                .padding()
+        }
+        .background(Theme.bg)
+        .environment(engine)
+        .preferredColorScheme(.dark)
+    }
+}
+
 private struct StaffPoolCard: View {
     @Environment(GameEngine.self) private var engine
     let role: StaffRole
     let pool: StaffPool
     let accent: Color
     let onHiring: (StaffRole) -> Void
+
+    init(role: StaffRole, pool: StaffPool, accent: Color,
+         onHiring: @escaping (StaffRole) -> Void, expanded: Bool = false) {
+        self.role = role
+        self.pool = pool
+        self.accent = accent
+        self.onHiring = onHiring
+        _rosterExpanded = State(initialValue: expanded)
+    }
     @State private var rosterExpanded = false
 
     private var roleApplicants: [JobApplicant] {
@@ -132,26 +159,29 @@ private struct StaffPoolCard: View {
 
     private func memberRow(_ member: StaffMember) -> some View {
         // Hired mid-week: on the roster now, on the job from the next
-        // settle — say so instead of leaving the lag unexplained.
+        // settle. That fact lives on the meta line — a badge here made
+        // the row fight for width and wrap.
         let justJoined = member.hiredOn == engine.state.date
-        return HStack(spacing: 8) {
+        return HStack(spacing: 10) {
             PersonAvatar(avatar: member.avatar, name: member.name, size: 34)
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(member.name)
                     .font(.game(.subheadline, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
-                HStack(spacing: 4) {
+                    .lineLimit(1)
+                HStack(spacing: 5) {
                     StarRating(rating: member.skill, size: 8)
-                    Text("\(member.weeklyWage.money)/wk · since \(member.hiredOn.description)")
-                        .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                    Text(justJoined
+                         ? "\(member.weeklyWage.money)/wk · on duty next wk"
+                         : "\(member.weeklyWage.money)/wk · since \(member.hiredOn.description)")
+                        .font(.game(.caption2))
+                        .foregroundStyle(justJoined ? Theme.cornflower : Theme.textSecondary)
+                        .lineLimit(1)
                 }
             }
-            Spacer()
-            if justJoined {
-                StatusBadge(text: "On duty next wk", color: Theme.teal)
-            }
+            Spacer(minLength: 12)
             Button("Fire") { engine.fireStaff(role: role, memberID: member.id) }
-                .buttonStyle(GameButtonStyle(color: Theme.loss))
+                .buttonStyle(GameButtonStyle(finish: .obsidian))
         }
         .padding(.vertical, 4)
     }

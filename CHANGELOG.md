@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Roster row cleanup
+
+- The staff roster row no longer wraps: the "On duty next wk" badge is gone — that fact now lives on the meta line ("$440/wk · on duty next wk", cornflower while pending); name and meta are both single-line; Fire is a quiet obsidian key instead of a red-tinted one.
+- Added a "Roster rows" preview with the disclosure expanded so the row has a regression pin.
+
+*Why:* three competitors for one row's width (two-line badge, wrapping meta, wide button) made every roster entry three lines tall; the joining status is information, not a state that needs a stamped tag.
+
+
 ## US map expansion, map pinch fix, the cabin-window moment
 
 - 12 more US airports (Houston, Philadelphia, Detroit, Charlotte, Orlando, San Diego, Tampa, St. Louis, Portland, Nashville, Salt Lake City, New Orleans) — the US market now has 26 fields spanning both coasts, the Gulf, and the mountain west. Distances come from the existing haversine fallback.
