@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Brighter gold-star asset
+
+- Replaced `Resources/Icons/gold_star.png` with a new 1024px version — brighter, more saturated gold with cleaner facets. No code changes; every `StarRating` picks it up.
+
+*Why:* the first star read bronze-brown at 12pt on the dark UI; the brighter gold keeps ratings legible at small sizes and separates the star iconography from the new bronze button keys.
+
+
 ## Bronze and obsidian metal keys
 
 - `MetalFinish` enum (chrome / gunmetal / bronze / obsidian) now owns each key's face gradient, rim, base lip, and label ink; `MetalKeyModifier` and `GameButtonStyle` are built on it. `GameButtonStyle(finish:)` selects a material directly; the legacy `prominent:`/`tint:` API still works (chrome/gunmetal).
