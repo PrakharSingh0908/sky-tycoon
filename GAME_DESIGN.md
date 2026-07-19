@@ -390,3 +390,20 @@ forever. Regimes give eras a personality ("the cheap-credit years were
 when we built the fleet"), shocks create short tactical windows (buy
 into a metal glut, shrink into a safety scare), and both explain
 themselves on the dashboard instead of moving numbers silently.
+
+## 15. Amendment — Contractor overflow (2026-07-19)
+
+Staff overtime has a practical ceiling: a pool absorbs at most +20% of
+its roster capacity at 1.5× pay (`overtimeCapFactor`). Demand beyond
+that is flown by CONTRACTORS at market hourly × 1.8
+(`contractorPremium`) — flights still operate, but the money bleeds.
+`lastUtilization` now reports the EMPLOYEES' load (capped at 120%);
+`lastContractorShare` reports how much of the schedule contractors
+flew, and the People card says so explicitly. Happiness pressure
+tracks the staff's own load; punctuality strain still tracks total
+under-roster (contractors are unreliable). Understaffing is now an
+economic problem instead of an impossible 979%-overtime week.
+
+*Why:* one pilot "working 979% over roster" broke believability and
+muddied the signal — the player needs "hire more people or pay the
+premium," not a cartoon number.

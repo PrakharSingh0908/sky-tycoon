@@ -359,6 +359,12 @@ enum Balance {
     static let hqHoursPerRoute = 10.0
     /// Hours beyond roster capacity are paid at this multiple.
     static let overtimeMultiplier = 1.5
+    /// Staff absorb at most this fraction of capacity as overtime (a
+    /// practical +20%); demand beyond it goes to contractors — nobody
+    /// works a 979% week (2026-07-19).
+    static let overtimeCapFactor = 0.20
+    /// Contractor hourly = market hourly × this premium.
+    static let contractorPremium = 1.8
     /// A pool's over-roster strain is capped here (200% over = as bad as it gets).
     static let maxStrainPerPool = 1.5
     /// How much each pool's overwork drives flight delays (HQ doesn't

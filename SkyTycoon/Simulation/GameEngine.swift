@@ -395,23 +395,34 @@ final class GameEngine {
             let capacity = Double(pool.headcount) * Balance.weeklyHoursPerStaff
             report.wageCost += Double(pool.headcount) * pool.weeklyWage * wageTrendMult
 
-            // Hours beyond capacity are worked anyway — at 1.5×. An empty
-            // pool means contractors at market rate: flights still fly, but
-            // expensively and badly (the punctuality hit above).
+            // Hours beyond capacity: staff absorb up to +20% as overtime at
+            // 1.5×; everything past that practical ceiling is flown by
+            // CONTRACTORS at premium market rates — nobody works a 979%
+            // week, the airline just bleeds money instead (2026-07-19).
             let marketRate = role.marketWage * profile.laborCost
-            let overtimeHours = max(0, demand - capacity)
+            let excessHours = max(0, demand - capacity)
+            let overtimeHours = min(excessHours, capacity * Balance.overtimeCapFactor)
+            let contractorHours = excessHours - overtimeHours
             if overtimeHours > 0 {
-                let hourly = (pool.headcount > 0 ? pool.weeklyWage : marketRate)
-                    / Balance.weeklyHoursPerStaff
+                let hourly = pool.weeklyWage / Balance.weeklyHoursPerStaff
                 report.wageCost += overtimeHours * hourly * Balance.overtimeMultiplier
                     * wageTrendMult
             }
+            if contractorHours > 0 {
+                let marketHourly = marketRate / Balance.weeklyHoursPerStaff
+                report.wageCost += contractorHours * marketHourly
+                    * Balance.contractorPremium * wageTrendMult
+            }
+            // What the EMPLOYEES actually bear: never past the ceiling.
+            let staffLoad = capacity > 0
+                ? min(u, 1 + Balance.overtimeCapFactor) : 0
 
             // Happiness target: pay vs market, minus overwork (GDD §4.4 —
-            // an overworked pool drifts down even at market wage).
+            // an overworked pool drifts down even at market wage). The
+            // penalty tracks the staff's own load, not contractor volume.
             let payFactor = pool.weeklyWage / max(marketRate, 1)   // >1 = generous
             let workloadPenalty = Balance.workloadHappinessPenalty
-                * min(Balance.maxStrainPerPool, max(0, u - 1))
+                * min(Balance.maxStrainPerPool, max(0, staffLoad - 1))
             let target = min(100, max(0, 50 + (payFactor - 1) * 120 - workloadPenalty))
             pool.happiness += (target - pool.happiness) * 0.08
 
@@ -438,7 +449,8 @@ final class GameEngine {
             // Skill creeps up slowly with tenure.
             for i in pool.members.indices { pool.members[i].skill = min(5, pool.members[i].skill + 0.005) }
             pool.skill = min(5, pool.skill + 0.005)
-            pool.lastUtilization = u
+            pool.lastUtilization = staffLoad
+            pool.lastContractorShare = demand > 0 ? contractorHours / demand : 0
             state.staff[role] = pool
         }
 

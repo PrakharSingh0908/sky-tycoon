@@ -371,8 +371,12 @@ struct StaffPool: Codable {
     var weeklyWage: Double        // pool average — kept in sync with members
     var happiness: Double         // 0...100
     var skill: Double             // pool average — kept in sync with members
-    /// Last week's demand ÷ roster capacity (1.0 = fully used, >1 = overworked).
+    /// Last week's EMPLOYEE workload ÷ capacity, capped at the overtime
+    /// ceiling (1.2): contractors absorb the rest.
     var lastUtilization: Double
+    /// Share of last week's demand flown by contractors (0…1). Optional
+    /// for save-compat with pre-contractor saves.
+    var lastContractorShare: Double? = nil
     /// The individuals (invariant: members.count == headcount).
     var members: [StaffMember]
 }

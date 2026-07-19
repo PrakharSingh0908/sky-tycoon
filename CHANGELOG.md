@@ -7,6 +7,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Contractor overflow (GDD §15)
+
+- Staff overtime is capped at a practical +20% of roster capacity (paid at 1.5×); all demand beyond it is flown by contractors at market hourly × 1.8. Flights keep operating — understaffing now costs money instead of producing impossible workloads.
+- Workload meter reports the employees' actual load (caps at 120%); a new `lastContractorShare` drives honest card copy: "Roster maxed out: contractors cover 62% of pilots hours at premium rates. Hire to bring it in-house."
+- Happiness pressure follows the staff's own load; punctuality strain still follows total under-roster (contractors are unreliable). Save-compat via optional field.
+
+*Why:* "your pilots are working 979% over roster" was a cartoon number that hid the real decision — hire or pay the premium.
+
+
 ## Country-flavored people and rivals
 
 - Staff and applicant names now draw from the campaign country's pools: US (also UK/Australia for now) games generate names like Tyler Bennett and Madison Cooper; India keeps Rohan Iyer and Priya Sharma. Surnames are per-country too.

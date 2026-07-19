@@ -201,16 +201,23 @@ private struct StaffPoolCard: View {
         } else if pool.headcount > 0 && pool.happiness < Balance.attritionHappinessThreshold {
             warningLabel("Unhappy. People are quitting each week.",
                          icon: "person.fill.xmark", color: Theme.warn)
+        } else if (pool.lastContractorShare ?? 0) > 0.02 {
+            warningLabel(contractorText, icon: "person.badge.clock.fill", color: Theme.warn)
         } else if pool.lastUtilization > 1.0 {
             warningLabel(overworkText, icon: "exclamationmark.triangle.fill", color: Theme.warn)
         }
     }
 
-    private var overworkText: String {
+    private var contractorText: String {
+        let share = Int(((pool.lastContractorShare ?? 0) * 100).rounded())
         if pool.headcount == 0 {
-            return "Nobody hired. Contractors cover \(role.displayName.lowercased()) at 1.5× rates, and it shows in delays."
+            return "Nobody hired. Contractors fly all your \(role.displayName.lowercased()) hours at premium rates — and it shows in delays."
         }
-        return "Your \(role.displayName.lowercased()) are working \(Int((pool.lastUtilization - 1) * 100))% over roster. Expect delays and overtime pay."
+        return "Roster maxed out: contractors cover \(share)% of \(role.displayName.lowercased()) hours at premium rates. Hire to bring it in-house."
+    }
+
+    private var overworkText: String {
+        "Your \(role.displayName.lowercased()) are working \(Int((pool.lastUtilization - 1) * 100))% over roster. Expect delays and overtime pay."
     }
 
     private func warningLabel(_ text: String, icon: String, color: Color) -> some View {
