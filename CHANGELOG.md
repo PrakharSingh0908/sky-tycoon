@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Skill number dropped from staff cards
+
+- The "2.0 skill" readout beside the stars on the People staff cards is gone; the gold-star rating carries the skill on its own.
+
+*Why:* per direction. The stars already say it; the decimal restated them in smaller type and added noise to the card header.
+
+
 ## Full-width job ad button
 
 - "Post job ad" on the People staff cards now spans the full card width with a centered label, instead of hugging its text at the leading edge.

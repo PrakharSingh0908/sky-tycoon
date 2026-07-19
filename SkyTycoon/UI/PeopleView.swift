@@ -75,11 +75,7 @@ private struct StaffPoolCard: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(role.displayName).font(.game(.headline, weight: .bold))
-                    HStack(spacing: 4) {
-                        StarRating(rating: pool.skill, size: 9)
-                        Text(String(format: "%.1f skill", pool.skill))
-                            .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
-                    }
+                    StarRating(rating: pool.skill, size: 9)
                 }
                 Spacer()
                 let joining = pool.members.filter { $0.hiredOn == engine.state.date }.count
