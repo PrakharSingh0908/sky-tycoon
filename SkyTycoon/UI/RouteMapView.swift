@@ -43,6 +43,11 @@ private struct GlobeCamera: Equatable {
 
 private struct GlobeSceneView: UIViewRepresentable {
     var camera: GlobeCamera
+    /// The view's size from SwiftUI geometry — NOT view.bounds, which is
+    /// zero at makeUIView/first-update time and left the terrain at a
+    /// wrong scale until the first pan (dots drifted off their airports
+    /// on first load).
+    var size: CGSize
 
     func makeUIView(context: Context) -> SCNView {
         let view = SCNView()
@@ -111,12 +116,12 @@ private struct GlobeSceneView: UIViewRepresentable {
         let pitch = simd_quatf(angle: lat, axis: SIMD3(1, 0, 0))
         globe.simdOrientation = pitch * yaw
         // Orthographic scale: world-unit half-height of the view such that
-        // the unit sphere projects to min(w,h)/2 × zoom points.
-        let bounds = view.bounds
-        guard bounds.height > 0 else { return }
-        let minSide = min(bounds.width, bounds.height)
+        // the unit sphere projects to min(w,h)/2 × zoom points. Sized from
+        // SwiftUI geometry so the very first frame matches the overlay.
+        guard size.height > 0 else { return }
+        let minSide = min(size.width, size.height)
         cameraNode.camera?.orthographicScale =
-            Double(bounds.height) / (Double(minSide) * camera.zoom)
+            Double(size.height) / (Double(minSide) * camera.zoom)
     }
 
     /// Unit sphere with our own equirect UVs. Index-limited well below
@@ -173,7 +178,7 @@ struct RouteMapView: View {
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                GlobeSceneView(camera: camera)
+                GlobeSceneView(camera: camera, size: geo.size)
                 Canvas { ctx, size in
                     drawOverlay(ctx: &ctx, size: size)
                 }

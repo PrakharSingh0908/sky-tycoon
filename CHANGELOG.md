@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Map first-load alignment fix
+
+- Airport dots no longer drift off the terrain on first load. The SceneKit camera's orthographic scale was computed from view.bounds, which is zero before layout, so the globe rendered at the wrong zoom until the first pan recomputed it. The scale now comes from SwiftUI geometry, so the very first frame matches the Canvas overlay's math.
+
+*Why:* the overlay and terrain are only ever in sync if both derive from the same size; UIKit bounds during representable setup are not that size.
+
+
 ## The Foundation Era (GDD §0 charter + §22)
 
 - Every game now starts with a flat $200K seed (difficulty-scaled). No airplane is affordable on day one: the opening move is a leased Orion feeder and one route that has to work. HQ overhead scales with fleet size ($2.5K + $1.4K per aircraft) instead of a flat $15K, and the reference fare is squeezed to 0.120 $/km.
