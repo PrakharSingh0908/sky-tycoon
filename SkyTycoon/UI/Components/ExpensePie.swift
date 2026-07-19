@@ -22,6 +22,7 @@ extension WeeklyReport {
         [
             ExpenseSlice(label: "Fuel", amount: fuelCost, color: Theme.chartPalette[0]),
             ExpenseSlice(label: "Wages", amount: wageCost, color: Theme.chartPalette[1]),
+            ExpenseSlice(label: "Contractors", amount: contractorCost ?? 0, color: Theme.chartPalette[8]),
             ExpenseSlice(label: "Maintenance", amount: maintenanceCost, color: Theme.chartPalette[2]),
             ExpenseSlice(label: "Loans", amount: loanCost, color: Theme.chartPalette[3]),
             ExpenseSlice(label: "Leases", amount: leaseCost, color: Theme.chartPalette[4]),

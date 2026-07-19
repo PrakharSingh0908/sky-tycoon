@@ -513,7 +513,8 @@ final class GameEngine {
             }
             if contractorHours > 0 {
                 let marketHourly = marketRate / Balance.weeklyHoursPerStaff
-                report.wageCost += contractorHours * marketHourly
+                report.contractorCost = (report.contractorCost ?? 0)
+                    + contractorHours * marketHourly
                     * Balance.contractorPremium * wageTrendMult
             }
             // What the EMPLOYEES actually bear: never past the ceiling.

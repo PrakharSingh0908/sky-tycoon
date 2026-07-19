@@ -181,6 +181,7 @@ struct MoneyView: View {
             Divider().overlay(Theme.hairline)
             statementRow("Fuel", -r.fuelCost) { fuelExplanation(r) }
             statementRow("Wages", -r.wageCost) { wagesExplanation(r) }
+            statementRow("Contractors", -(r.contractorCost ?? 0)) { contractorsExplanation(r) }
             statementRow("Maintenance", -r.maintenanceCost) { maintenanceExplanation(r) }
             statementRow("Loan payments", -r.loanCost) { loansExplanation(r) }
             statementRow("Lease payments", -r.leaseCost) { leaseExplanation(r) }
@@ -254,10 +255,24 @@ struct MoneyView: View {
             return ("\(role.displayName) · \(pool.headcount) × \(pool.weeklyWage.money)",
                     (Double(pool.headcount) * pool.weeklyWage).money)
         }
-        rows.append(("Total incl. overtime/contractors", r.wageCost.money))
+        rows.append(("Total incl. overtime", r.wageCost.money))
         return Explanation(title: "Wages", subtitle: "Base pay plus 1.5× beyond roster hours",
                            rows: rows,
                            formula: "wages = Σ headcount × wage\n      + overtime hours × hourly × 1.5")
+    }
+
+    private func contractorsExplanation(_ r: WeeklyReport) -> Explanation {
+        var rows: [(String, String)] = StaffRole.allCases.compactMap { role in
+            guard let pool = engine.state.staff[role],
+                  let share = pool.lastContractorShare, share > 0.001 else { return nil }
+            return (role.displayName, "\(Int(share * 100))% of hours")
+        }
+        if rows.isEmpty { rows.append(("No overflow this week", "$0")) }
+        rows.append(("Total", (r.contractorCost ?? 0).money))
+        return Explanation(title: "Contractors",
+                           subtitle: "Overflow hours your own team could not fly",
+                           rows: rows,
+                           formula: "contractors = excess hours × market hourly × 1.8\nHiring staff moves this spend to wages at 1×")
     }
 
     private func maintenanceExplanation(_ r: WeeklyReport) -> Explanation {

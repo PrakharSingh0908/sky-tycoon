@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Contractors split out of the wage line
+
+- Contractor overflow spend (excess hours flown at market rate × 1.8) now books to its own WeeklyReport line, P&L statement row, and graphite pie slice instead of hiding inside Wages. The Contractors row explains itself: which pools overflowed and by what share of hours, with the formula noting that hiring staff moves this spend to wages at 1×. The wage explanation now reads "Total incl. overtime" only. Old saves decode with a nil contractor line, so past reports are unchanged.
+
+*Why:* per playtest feedback, building your own team never visibly paid off because the wage line lumped salaries, overtime, and contractor premiums into one number. The economics were already right (own staff cost 1× per hour, contractors 1.8×); the ledger just could not show the trade. Now staffing up visibly drains the Contractors line into the cheaper Wages line.
+
+
 ## Machined meters (v3.1.4)
 
 - MeterBar, the progress bar behind Happiness, Workload, Load factor, Condition and every other 0 to 1 readout, is now a machined instrument channel: a recessed groove with a dark cut above and a catch-light below, quarter graduations engraved in the floor, and a milled metal slug of the semantic color riding 1pt inside it with a rolled specular top, shaded underside, polished end bevel, and a faint color bleed out of the groove. At zero the slug rests as a pilot-light dot; at 100% the channel lip stays visible around the metal. One component, every meter in the game inherits it. A "Meters" preview pins all fill levels and colors; design doc updated.
