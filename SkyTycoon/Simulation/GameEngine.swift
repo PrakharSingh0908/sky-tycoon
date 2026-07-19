@@ -330,23 +330,8 @@ final class GameEngine {
             }
         }
 
-        var crewDemandHours: [StaffRole: Double] = [:]
-        for r in state.routes.indices {
-            let route = state.routes[r]
-            for plane in activePlanesByRoute[r] {
-                let spec = Balance.specs[plane.type]!
-                // A round trip = two legs of cruise plus turnaround duty.
-                let blockHours = 2 * (route.distanceKm / spec.cruiseKmh + Balance.turnaroundHoursPerLeg)
-                let trips = Double(route.weeklyFrequency)
-                crewDemandHours[.pilots, default: 0] += Double(spec.pilotsPerFlight) * blockHours * trips
-                crewDemandHours[.cabinCrew, default: 0] += Double(spec.cabinCrewPerFlight) * blockHours * trips
-                crewDemandHours[.ground, default: 0] += Balance.groundHoursPerDeparture * 2 * trips
-            }
-        }
-        let deliveredFleet = state.fleet.filter { $0.status != .onOrder }.count
-        crewDemandHours[.hq] = Balance.hqBaseHours
-            + Balance.hqHoursPerAircraft * Double(deliveredFleet)
-            + Balance.hqHoursPerRoute * Double(state.routes.count)
+        // ONE formula for the tick and the UI projection (pillar 4).
+        let crewDemandHours = liveCrewDemandHours()
 
         var utilization: [StaffRole: Double] = [:]
         for role in StaffRole.allCases {
@@ -690,6 +675,44 @@ final class GameEngine {
         // M0 fix: autosave. The GDD promises autosave every tick; the tick
         // never called save(). Persist at the end of every week.
         save()
+    }
+
+    // ── Crew hours: ONE formula for the tick and the UI ─────────────────
+
+    /// Crew demand hours by role from the CURRENT routes and assignments —
+    /// the weekly tick runs on this, and the live workload projection
+    /// reads it so the meter moves the moment a hire signs on.
+    func liveCrewDemandHours() -> [StaffRole: Double] {
+        var hours: [StaffRole: Double] = [:]
+        for route in state.routes where route.weeklyFrequency > 0 {
+            let activePlanes = state.fleet.filter {
+                route.assignedAircraftIDs.contains($0.id) && $0.groundedWeeksRemaining == 0
+            }
+            for plane in activePlanes {
+                let spec = Balance.specs[plane.type]!
+                // A round trip = two legs of cruise plus turnaround duty.
+                let blockHours = 2 * (route.distanceKm / spec.cruiseKmh + Balance.turnaroundHoursPerLeg)
+                let trips = Double(route.weeklyFrequency)
+                hours[.pilots, default: 0] += Double(spec.pilotsPerFlight) * blockHours * trips
+                hours[.cabinCrew, default: 0] += Double(spec.cabinCrewPerFlight) * blockHours * trips
+                hours[.ground, default: 0] += Balance.groundHoursPerDeparture * 2 * trips
+            }
+        }
+        let deliveredFleet = state.fleet.filter { $0.status != .onOrder }.count
+        hours[.hq] = Balance.hqBaseHours
+            + Balance.hqHoursPerAircraft * Double(deliveredFleet)
+            + Balance.hqHoursPerRoute * Double(state.routes.count)
+        return hours
+    }
+
+    /// Live workload for the UI (immediacy rule): hires, assignments, and
+    /// frequency changes move the meter NOW; money still settles weekly.
+    /// Same cap as the settle's staffLoad, so the meter never disagrees
+    /// with what next week will book.
+    func projectedUtilization(role: StaffRole) -> Double {
+        let demand = liveCrewDemandHours()[role] ?? 0
+        let capacity = Double(state.staff[role]?.headcount ?? 0) * Balance.weeklyHoursPerStaff
+        return capacity > 0 ? min(demand / capacity, 1 + Balance.overtimeCapFactor) : 0
     }
 
     // ── Route economics: ONE formula for the tick and the UI ────────────

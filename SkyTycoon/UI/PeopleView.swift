@@ -81,13 +81,16 @@ private struct StaffPoolCard: View {
                 StatusBadge(text: "\(pool.headcount) staff", color: accent)
             }
 
+            // Workload is a LIVE projection (immediacy rule): a hire or an
+            // assignment change moves this meter the moment it happens.
+            let workload = engine.projectedUtilization(role: role)
             HStack(spacing: 14) {
                 MeterRow(label: "Happiness", value: pool.happiness / 100,
                          display: "\(Int(pool.happiness))",
                          color: Theme.health(pool.happiness / 100))
-                MeterRow(label: "Workload", value: min(pool.lastUtilization, 1.0),
-                         display: "\(Int(pool.lastUtilization * 100))%",
-                         color: workloadColor)
+                MeterRow(label: "Workload", value: min(workload, 1.0),
+                         display: "\(Int(workload * 100))%",
+                         color: workloadColor(workload))
             }
 
             warningView
@@ -171,8 +174,8 @@ private struct StaffPoolCard: View {
         .padding(.vertical, 4)
     }
 
-    private var workloadColor: Color {
-        switch pool.lastUtilization {
+    private func workloadColor(_ utilization: Double) -> Color {
+        switch utilization {
         case ..<0.85: Theme.profit
         case ..<1.0: Theme.warn
         default: Theme.loss
@@ -188,7 +191,7 @@ private struct StaffPoolCard: View {
                          icon: "person.fill.xmark", color: Theme.warn)
         } else if (pool.lastContractorShare ?? 0) > 0.02 {
             warningLabel(contractorText, icon: "person.badge.clock.fill", color: Theme.warn)
-        } else if pool.lastUtilization > 1.0 {
+        } else if engine.projectedUtilization(role: role) > 1.0 {
             warningLabel(overworkText, icon: "exclamationmark.triangle.fill", color: Theme.warn)
         }
     }
@@ -202,7 +205,7 @@ private struct StaffPoolCard: View {
     }
 
     private var overworkText: String {
-        "Your \(role.displayName.lowercased()) are working \(Int((pool.lastUtilization - 1) * 100))% over roster. Expect delays and overtime pay."
+        "Your \(role.displayName.lowercased()) are working \(Int((engine.projectedUtilization(role: role) - 1) * 100))% over roster. Expect delays and overtime pay."
     }
 
     private func warningLabel(_ text: String, icon: String, color: Color) -> some View {

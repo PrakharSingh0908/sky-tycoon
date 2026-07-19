@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Workload meter moves the moment you hire
+
+- The Workload meter on the People cards (and the overwork warning) now reads a live projection instead of last week's settled value: crew demand hours from the current routes and assignments over current headcount. Hire someone and the meter drops before the sheet closes; assign a plane or bump frequency and it rises. The demand-hours formula is extracted into liveCrewDemandHours(), which the weekly tick runs on too, so the projection can never disagree with what next week books.
+
+*Why:* per direction, joins are instant now, so a meter frozen on last week's number read as a bug. Same immediacy rule as fares and load factor: touch a lever and the instruments move NOW; money still settles weekly.
+
+
 ## Instant joins and the contract-signing moment
 
 - New hires are on the job the moment the contract inks. The "+N joining", "joins next wk", and "on duty next wk" treatments are gone (the sim always counted hires immediately; the copy claimed otherwise). Fresh hires read "just joined" on the roster for their first week.
