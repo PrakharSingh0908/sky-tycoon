@@ -9,6 +9,21 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased — design-system branch]
 
+### 2026-07-19 — MetalKey extracted as a component; sizing bug fixed
+
+**Fixed**
+- Quiet metal keys stretched to full row width: the extruded base lip
+  was a greedy RoundedRectangle sibling in a ZStack, which expanded
+  every button. The lip is now a background of the key face, so keys
+  size to their content again.
+
+**Changed**
+- The metal treatment lives in a reusable MetalKeyModifier
+  (.metalKey(prominent:pressed:)) shared by GameButtonStyle and
+  PillStepper, with a component preview covering both variants, the
+  destructive label, and the stepper keys.
+
+
 ### 2026-07-19 — Buttons become machined metal keys
 
 **Changed**

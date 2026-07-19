@@ -307,56 +307,81 @@ struct GameButtonStyle: ButtonStyle {
     var prominent = false
 
     func makeBody(configuration: Configuration) -> some View {
-        // Blueprint keys (v3.1.1): machined METAL buttons — the one
-        // sanctioned exception to zero elevation, because a console's
-        // buttons are physical. Gradient face, bright top rim, extruded
-        // base lip, and real press-travel: the key sinks into the panel.
-        let pressed = configuration.isPressed
         let functional = color == Theme.loss || color == Theme.warn || color == Theme.profit
-        let shape = RoundedRectangle(cornerRadius: Theme.corner)
-        let travel: CGFloat = 2.5
+        return configuration.label
+            .font(.game(.subheadline, weight: .medium))
+            .lineLimit(1)
+            .padding(.horizontal, 16).padding(.vertical, 8)
+            .frame(minHeight: 36)
+            .foregroundStyle(prominent ? Theme.bg
+                             : (functional ? color : Color.white))
+            .metalKey(prominent: prominent, pressed: configuration.isPressed)
+            .sensoryFeedback(.impact(weight: .light),
+                             trigger: configuration.isPressed) { old, new in
+                !old && new
+            }
+    }
+}
 
-        // Face: brushed white metal (primary) or dark gunmetal (secondary).
-        let face: LinearGradient = prominent
+// ── MetalKey — the machined console key surface (v3.1.1) ─────────────────
+// Blueprint's one sanctioned elevation: a console's buttons are physical.
+// Gradient face, light-catching top rim, extruded base lip, and 2.5pt
+// press-travel. Sized by its CONTENT (the lip is a background, never a
+// greedy sibling). Reused by GameButtonStyle and PillStepper.
+
+struct MetalKeyModifier: ViewModifier {
+    var prominent: Bool
+    var pressed: Bool
+    var cornerRadius: CGFloat = Theme.corner
+
+    private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: cornerRadius) }
+    private let travel: CGFloat = 2.5
+
+    private var face: LinearGradient {
+        prominent
             ? LinearGradient(colors: pressed
                 ? [Color(white: 0.80), Color(white: 0.68)]
                 : [Color(white: 1.00), Color(white: 0.80)],
                 startPoint: .top, endPoint: .bottom)
             : LinearGradient(colors: pressed
-                ? [Color(white: 0.13), Color(white: 0.09)]
-                : [Color(white: 0.24), Color(white: 0.12)],
+                ? [Color(white: 0.16), Color(white: 0.11)]
+                : [Color(white: 0.30), Color(white: 0.15)],
                 startPoint: .top, endPoint: .bottom)
-        // Rim: light catches the machined top edge, falls off below.
-        let rim = LinearGradient(colors: prominent
-            ? [Color.white, Color(white: 0.45)]
-            : [Color.white.opacity(0.30), Color.black.opacity(0.55)],
-            startPoint: .top, endPoint: .bottom)
-        let lip: Color = prominent ? Color(white: 0.30) : Color.black.opacity(0.85)
+    }
 
-        return ZStack {
-            // The extruded base the key travels onto.
-            shape.fill(lip)
-                .offset(y: travel)
-            configuration.label
-                .font(.game(.subheadline, weight: .medium))
-                .lineLimit(1)
-                .padding(.horizontal, 16).padding(.vertical, 8)
-                .frame(minHeight: 36)
-                .background(face, in: shape)
-                .overlay(shape.strokeBorder(rim, lineWidth: 1))
-                .foregroundStyle(prominent ? Theme.bg
-                                 : (functional ? color : Color.white))
-                .offset(y: pressed ? travel : 0)
-        }
-        .compositingGroup()
-        .shadow(color: .black.opacity(pressed ? 0.15 : 0.35),
-                radius: pressed ? 2 : 5, y: pressed ? 1 : 4)
-        .animation(.snappy(duration: 0.12), value: pressed)
-        .sensoryFeedback(.impact(weight: .light), trigger: pressed) { old, new in
-            !old && new
-        }
+    private var rim: LinearGradient {
+        LinearGradient(colors: prominent
+            ? [Color.white, Color(white: 0.45)]
+            : [Color.white.opacity(0.35), Color.black.opacity(0.55)],
+            startPoint: .top, endPoint: .bottom)
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .background(face, in: shape)
+            .overlay(shape.strokeBorder(rim, lineWidth: 1))
+            .offset(y: pressed ? travel : 0)
+            // The base the key travels onto — a background, so it takes the
+            // key's own size instead of stretching the row.
+            .background(
+                shape.fill(prominent ? Color(white: 0.30) : Color.black.opacity(0.85))
+                    .offset(y: travel)
+            )
+            .compositingGroup()
+            .shadow(color: .black.opacity(pressed ? 0.15 : 0.35),
+                    radius: pressed ? 2 : 5, y: pressed ? 1 : 4)
+            .animation(.snappy(duration: 0.12), value: pressed)
     }
 }
+
+extension View {
+    func metalKey(prominent: Bool, pressed: Bool,
+                  cornerRadius: CGFloat = Theme.corner) -> some View {
+        modifier(MetalKeyModifier(prominent: prominent, pressed: pressed,
+                                  cornerRadius: cornerRadius))
+    }
+}
+
 
 // ── PillStepper — player-set numbers ─────────────────────────────────────
 
@@ -390,17 +415,8 @@ struct PillStepper: View {
             Image(systemName: symbol)
                 .font(.system(size: 13, weight: .medium))
                 .frame(width: 30, height: 30)
-                .background(
-                    LinearGradient(colors: [Color(white: 0.24), Color(white: 0.12)],
-                                   startPoint: .top, endPoint: .bottom),
-                    in: RoundedRectangle(cornerRadius: Theme.corner))
-                .overlay(RoundedRectangle(cornerRadius: Theme.corner)
-                    .strokeBorder(LinearGradient(colors: [.white.opacity(0.30),
-                                                          .black.opacity(0.55)],
-                                                 startPoint: .top, endPoint: .bottom),
-                                  lineWidth: 1))
                 .foregroundStyle(Color.white)
-                .shadow(color: .black.opacity(0.35), radius: 3, y: 2)
+                .metalKey(prominent: false, pressed: false)
         }
         .buttonStyle(.plain)
     }
@@ -501,4 +517,21 @@ struct GameScreen<Content: View>: View {
         .background(Theme.bg)
         .scrollIndicators(.hidden)
     }
+}
+
+
+#Preview("Metal keys") {
+    VStack(spacing: 20) {
+        HStack(spacing: 12) {
+            Button("Set up route") {}.buttonStyle(GameButtonStyle(color: Theme.sky, prominent: true))
+            Button("Cancel route") {}.buttonStyle(GameButtonStyle(color: Theme.loss))
+        }
+        Button("Post job ad · $2.0K") {}.buttonStyle(GameButtonStyle(color: Theme.sky))
+        PillStepper(label: "Weekly wage", value: "$1.5K", onDecrement: {}, onIncrement: {})
+            .padding(.horizontal, 24)
+    }
+    .padding(24)
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .background(Theme.card)
+    .preferredColorScheme(.dark)
 }
