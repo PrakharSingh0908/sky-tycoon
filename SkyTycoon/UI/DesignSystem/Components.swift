@@ -580,6 +580,97 @@ struct InstrumentWell<Content: View>: View {
     }
 }
 
+// ── SlideKey — slide-to-commit (v3.1.3) ──────────────────────────────────
+// Signing a lease is a contract, not a tap: a bronze key travels a
+// recessed groove and the deal executes only at the end of the throw.
+
+struct SlideKey: View {
+    let label: String
+    var enabled = true
+    let onCommit: () -> Void
+
+    @State private var offset: CGFloat = 0
+    @State private var committed = false
+
+    private let thumbWidth: CGFloat = 60
+    private let height: CGFloat = 46
+    private let bronzeTop = Color(red: 0.83, green: 0.61, blue: 0.36)
+    private let bronzeBottom = Color(red: 0.53, green: 0.35, blue: 0.16)
+
+    var body: some View {
+        GeometryReader { geo in
+            let travel = max(1, geo.size.width - thumbWidth - 4)
+            ZStack(alignment: .leading) {
+                // The groove: a recessed instrument track.
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color.black.opacity(0.45))
+                    .overlay(RoundedRectangle(cornerRadius: 10)
+                        .strokeBorder(LinearGradient(
+                            colors: [.black.opacity(0.65), .white.opacity(0.12)],
+                            startPoint: .top, endPoint: .bottom), lineWidth: 1))
+                // Bronze trail fills behind the key.
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(LinearGradient(colors: [bronzeTop.opacity(0.30),
+                                                  bronzeBottom.opacity(0.16)],
+                                         startPoint: .top, endPoint: .bottom))
+                    .frame(width: offset + thumbWidth + 2)
+                Text(label)
+                    .font(.game(.subheadline, weight: .medium))
+                    .foregroundStyle(Theme.textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .opacity(max(0, 1 - (offset / travel) * 1.8))
+                // The key itself: bronze metal, chevrons pointing the way.
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(LinearGradient(colors: [bronzeTop, bronzeBottom],
+                                         startPoint: .top, endPoint: .bottom))
+                    .overlay(RoundedRectangle(cornerRadius: 8)
+                        .strokeBorder(LinearGradient(
+                            colors: [Color(red: 1.0, green: 0.88, blue: 0.66),
+                                     Color(red: 0.30, green: 0.18, blue: 0.06)],
+                            startPoint: .top, endPoint: .bottom), lineWidth: 1))
+                    .overlay(
+                        HStack(spacing: -3) {
+                            Image(systemName: "chevron.right")
+                            Image(systemName: "chevron.right")
+                        }
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(Color(red: 0.13, green: 0.07, blue: 0.01))
+                    )
+                    .frame(width: thumbWidth, height: height - 8)
+                    .shadow(color: .black.opacity(0.4), radius: 2, y: 1)
+                    .offset(x: 2 + offset)
+                    .gesture(
+                        DragGesture()
+                            .onChanged { value in
+                                guard enabled, !committed else { return }
+                                offset = min(max(0, value.translation.width), travel)
+                            }
+                            .onEnded { _ in
+                                guard enabled, !committed else { return }
+                                if offset > travel * 0.85 {
+                                    committed = true
+                                    withAnimation(.snappy(duration: 0.15)) { offset = travel }
+                                    onCommit()
+                                    // Re-arm after the receipt moment.
+                                    Task {
+                                        try? await Task.sleep(for: .seconds(0.8))
+                                        withAnimation(.spring(duration: 0.4)) { offset = 0 }
+                                        committed = false
+                                    }
+                                } else {
+                                    withAnimation(.spring(duration: 0.35)) { offset = 0 }
+                                }
+                            }
+                    )
+            }
+        }
+        .frame(height: height)
+        .opacity(enabled ? 1 : 0.4)
+        .allowsHitTesting(enabled)
+        .sensoryFeedback(.success, trigger: committed) { _, new in new }
+    }
+}
+
 /// An engraved groove line — dark cut above, light catch below.
 struct PanelGroove: View {
     var body: some View {

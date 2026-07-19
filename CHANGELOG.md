@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Slide to lease
+
+- The Lease button in the showroom's lease cards is now a SlideKey, a new design-system control: a bronze machined key travels a recessed groove past the engraved "Slide to lease" label, and the contract signs only at the end of the throw. Short pulls spring back; a full pull fires the success haptic and the receipt. Locked tiers keep the lock plate over the whole card. A "Lease tab" preview pins the control.
+
+*Why:* a lease is a weekly obligation forever, not an impulse buy; a deliberate gesture makes signing feel like signing and stops accidental taps from adding a plane.
+
+
 ## Silver glow header icons everywhere (v3.1.3)
 
 - All SectionHeader icons app-wide now wear the polished-silver gradient with the soft white glow, replacing the cornflower accent icons. One component change covers every card; the accent keeps its role for active states, selection, and data strokes. Design doc updated.

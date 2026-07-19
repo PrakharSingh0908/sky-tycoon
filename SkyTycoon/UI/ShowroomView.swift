@@ -216,20 +216,14 @@ struct ShowroomView: View {
                     ("Return fee", (weekly * Balance.leaseTerminationWeeks).money),
                     ("Delivery", "Now"),
                 ])
-                HStack(alignment: .firstTextBaseline) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        TickerText(text: "\(weekly.money)/wk",
-                                   font: .game(.title3, weight: .semibold))
+                TickerText(text: "\(weekly.money)/wk",
+                           font: .game(.title3, weight: .semibold))
+                SlideKey(label: "Slide to lease") {
+                    let nickname = nextNickname()
+                    if engine.leaseAircraft(type: type, nickname: nickname) {
+                        receipt = AcquisitionReceipt(kind: .leased, type: type,
+                            nickname: nickname, amount: weekly, deliveryWeeks: nil)
                     }
-                    Spacer()
-                    Button("Lease") {
-                        let nickname = nextNickname()
-                        if engine.leaseAircraft(type: type, nickname: nickname) {
-                            receipt = AcquisitionReceipt(kind: .leased, type: type,
-                                nickname: nickname, amount: weekly, deliveryWeeks: nil)
-                        }
-                    }
-                    .buttonStyle(GameButtonStyle(color: accent, prominent: true))
                 }
             }
             .overlay { if locked { lockPlate(for: type) } }
@@ -446,6 +440,16 @@ private struct AcquisitionReceiptView: View {
         }
         .environment(GameEngine.previewGame())
         .preferredColorScheme(.dark)
+}
+
+// Slide-to-commit pin: the lease deal signs with a throw, not a tap.
+#Preview("Lease tab") {
+    NavigationStack {
+        ShowroomView(initialTab: .lease)
+            .environment(GameEngine.newGame(airlineName: "Foundation Air",
+                                            country: .us, seed: 7))
+    }
+    .preferredColorScheme(.dark)
 }
 
 // §22 regression pin: tier 0 sees the metal but not the buy path.
