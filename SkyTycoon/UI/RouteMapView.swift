@@ -84,6 +84,12 @@ private struct GlobeSceneView: UIViewRepresentable {
         guard let globe = view.scene?.rootNode.childNode(withName: "globe", recursively: false),
               let cameraNode = view.scene?.rootNode.childNode(withName: "camera", recursively: false)
         else { return }
+        // Kill SceneKit's implicit 0.25s ease: the Canvas overlay moves
+        // instantly, so ANY animation here makes dots slide off the
+        // terrain during drags (glaring at device frame rates).
+        SCNTransaction.begin()
+        SCNTransaction.animationDuration = 0
+        defer { SCNTransaction.commit() }
         // Rotate so (centerLon, centerLat) faces the camera on +Z. Built
         // as an explicit quaternion product (pitch AFTER yaw, in world
         // space) so SceneKit's euler order can't surprise us.
@@ -162,31 +168,39 @@ struct RouteMapView: View {
             }
             .background(Color(red: 0.043, green: 0.071, blue: 0.125))
             .onAppear { frameFocusRoute() }
-            .gesture(
-                DragGesture()
-                    .onChanged { value in
-                        let start = dragStart ?? camera
-                        dragStart = start
-                        let radius = min(geo.size.width, geo.size.height) / 2 * camera.zoom
-                        let degreesPerPoint = 60.0 / radius
-                        camera.centerLon = start.centerLon - value.translation.width * degreesPerPoint
-                        camera.centerLat = min(80, max(-80,
-                            start.centerLat + value.translation.height * degreesPerPoint))
-                    }
-                    .onEnded { _ in dragStart = nil }
-            )
-            // High priority so the enclosing ScrollView never steals the
-            // pinch; range widened for a comfortable in/out sweep.
-            .highPriorityGesture(
-                MagnifyGesture()
-                    .onChanged { value in
-                        let start = zoomStart ?? camera.zoom
-                        zoomStart = start
-                        camera.zoom = min(12, max(0.85, start * value.magnification))
-                    }
-                    .onEnded { _ in zoomStart = nil }
-            )
+            // ONE high-priority simultaneous pair: the map owns every touch
+            // that starts on it. Splitting pan/pinch across .gesture and
+            // .highPriorityGesture let the page ScrollView win vertical
+            // drags — the globe would pan a few points, then snap back as
+            // the scroll stole the touch.
+            .highPriorityGesture(pan(in: geo.size).simultaneously(with: pinch))
         }
+    }
+
+    private func pan(in size: CGSize) -> some Gesture {
+        DragGesture()
+            .onChanged { value in
+                let start = dragStart ?? camera
+                dragStart = start
+                // Pan speed from the gesture-start zoom, so a simultaneous
+                // pinch can't warp the pan mid-drag.
+                let radius = min(size.width, size.height) / 2 * start.zoom
+                let degreesPerPoint = 60.0 / radius
+                camera.centerLon = start.centerLon - value.translation.width * degreesPerPoint
+                camera.centerLat = min(80, max(-80,
+                    start.centerLat + value.translation.height * degreesPerPoint))
+            }
+            .onEnded { _ in dragStart = nil }
+    }
+
+    private var pinch: some Gesture {
+        MagnifyGesture()
+            .onChanged { value in
+                let start = zoomStart ?? camera.zoom
+                zoomStart = start
+                camera.zoom = min(12, max(0.85, start * value.magnification))
+            }
+            .onEnded { _ in zoomStart = nil }
     }
 
     /// Centers between the focused route's endpoints, zoomed so the pair

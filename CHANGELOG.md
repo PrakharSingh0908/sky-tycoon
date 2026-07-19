@@ -7,6 +7,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Globe map: device gesture + sync fixes
+
+- Killed SceneKit's implicit 0.25s ease on camera changes (`SCNTransaction.animationDuration = 0` in the representable's apply): the Canvas overlay draws instantly, so the eased globe lagged behind it — dots and arcs visibly slid off the terrain during every pan on device.
+- Pan and pinch are now ONE high-priority simultaneous gesture pair owned by the map. Previously pan sat on `.gesture` while pinch was high-priority: the page ScrollView won vertical drags, cancelling the pan mid-gesture (globe snapped back), and the split arbitration made pinches stutter.
+- Pan speed now derives from the gesture-start zoom, so pinching mid-drag can't warp the pan rate.
+
+*Why:* first real-device session — both problems are invisible in the simulator workflow (no fingers, screenshots between interactions) but made the map feel broken in the hand.
+
+
 ## Industry trends (GDD §14)
 
 - New two-horizon trend system: one long economic regime is always in force (expansion/slowdown, oil supercycle, cheap credit, labor squeeze; 52–104 wk) plus up to two short shocks (fuel spike, travel rush, business surge, safety scare, pilot shortage, used-metal glut, order boom; 3–12 wk, ~10%/wk spawn). All seeded-RNG deterministic.
