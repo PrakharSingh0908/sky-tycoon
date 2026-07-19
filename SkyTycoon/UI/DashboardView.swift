@@ -136,10 +136,11 @@ struct DashboardView: View {
             ForEach(wornAircraft) { plane in
                 let critical = plane.wear >= Balance.wearDangerThreshold
                 HStack {
-                    StatusBadge(text: "\(plane.nickname) · \(Int(plane.wear))% wear",
+                    StatusBadge(text: plane.nickname,
                                 color: critical ? Theme.loss : Theme.warn)
                     Spacer()
-                    Text(critical ? "Hull-loss risk — ground it" : "Service soon")
+                    Text(critical ? "\(Int(plane.wear))% wear — ground it"
+                                  : "\(Int(plane.wear))% wear · service soon")
                         .font(.game(.caption))
                         .foregroundStyle(critical ? Theme.loss : Theme.textSecondary)
                 }

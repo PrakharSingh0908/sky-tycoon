@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Ops wear row: tag holds the tail code only
+
+- The Ops conditions wear row's stamped tag now shows just the tail code (PA-C); the wear percentage joins the right-hand action text ("100% wear — ground it" / "84% wear · service soon").
+
+*Why:* the tag wrapped to two lines carrying both facts; a dog tag holds a name.
+
+
 ## The aunt is local; Major events tightened
 
 - The trust fund's voice matches the campaign: Aunt Meera (India), Margaret (US), Beatrice (UK), Mei (China), Maggie (Australia) — headers, signatures, and the quarter report card all follow, and her letters localize the flavor lines (grandfather's trade, the endearment, miles vs kilometers).
