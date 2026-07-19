@@ -108,19 +108,19 @@ struct ExpensePie: View {
             // Nacelle ring.
             ctx.stroke(Path(ellipseIn: CGRect(x: center.x - R, y: center.y - R,
                                               width: R * 2, height: R * 2)),
-                       with: .color(Color.white.opacity(0.16)), lineWidth: 1.5)
+                       with: .color(Color.black.opacity(0.12)), lineWidth: 1.5)
             // Spinner hub.
             let rHub = rInner - 3
             ctx.fill(Path(ellipseIn: CGRect(x: center.x - rHub, y: center.y - rHub,
                                             width: rHub * 2, height: rHub * 2)),
-                     with: .color(Color.white.opacity(0.06)))
+                     with: .color(Color.black.opacity(0.04)))
             ctx.stroke(Path(ellipseIn: CGRect(x: center.x - rHub, y: center.y - rHub,
                                               width: rHub * 2, height: rHub * 2)),
-                       with: .color(Color.white.opacity(0.12)), lineWidth: 1)
+                       with: .color(Color.black.opacity(0.10)), lineWidth: 1)
             let rDot: Double = 2.5
             ctx.fill(Path(ellipseIn: CGRect(x: center.x - rDot, y: center.y - rDot,
                                             width: rDot * 2, height: rDot * 2)),
-                     with: .color(Color.white.opacity(0.30)))
+                     with: .color(Color.black.opacity(0.25)))
         }
     }
 
@@ -151,5 +151,5 @@ struct ExpensePie: View {
     .padding()
     .frame(maxHeight: .infinity)
     .background(Theme.bg)
-    .preferredColorScheme(.dark)
+    .preferredColorScheme(.light)
 }

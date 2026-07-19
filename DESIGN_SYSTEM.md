@@ -1,5 +1,5 @@
 # SkyTycoon — UI Design System
-### "Blueprint" (v3.1, design-system branch) — dark command center (Dovetail reference)
+### "Toy Store" (v3.2, playdate-style branch) — sunlit product catalog (Playdate reference)
 
 Companion to [GAME_DESIGN.md](GAME_DESIGN.md) §7. This is the living contract
 for how SkyTycoon looks, moves, and feels. Every screen and component follows
@@ -8,33 +8,32 @@ Implemented in `SkyTycoon/UI/DesignSystem/`.
 
 ---
 
-## 0. v3.1 "Blueprint" — the Dovetail translation (2026-07-18)
+## 0. v3.2 "Toy Store" — the Playdate translation (2026-07-19)
 
-Adopted from the Dovetail reference ("blueprint control room at
-midnight"), translated from web to the game. Supersedes the same-day
-Warm Paper experiment (v3.0, rejected on sight).
+Adopted from the Playdate reference ("a yellow Game Boy under museum
+lights"), on its own branch beside Blueprint (v3.1, design-system).
 
-- **Surfaces:** tone-stacked, never elevated — ink #0A0A0A canvas,
-  coal #141414 insets/sheets, carbon #1E1E1E cards, steel #313131
-  hairlines, graphite #454545 outlined controls. ZERO shadows and
-  ZERO gradients anywhere; separation is tone + 1px hairline.
-- **Type:** SF (Inter-equivalent) everywhere — 400 body, 500 labels,
-  600 headings; nothing heavier (capped centrally in Font.game).
-  Screen titles take tight negative tracking (engineered, not
-  editorial). MONO is the instrument voice: section eyebrows, tags,
-  and formula/data codes, with POSITIVE 0.85pt tracking.
-- **One accent:** cornflower #6798FF for icons, active states, the
-  hero's highlight stroke, and data strokes — NEVER a button fill.
-  Buttons: primary = WHITE filled 8px rect with ink text; secondary =
-  graphite outline; destructive keeps its functional red on the
-  outline variant. Muted functional green/red/amber survive for
-  P&L/health semantics only.
-- **Shape:** 8px on everything (4px tags). Pills are gone.
-- **Data:** chart strokes cornflower; slices/bars use a blue ramp
-  into grays (one chromatic family). Tags/badges are mono hairline
-  outlines, not filled chips.
-- The satellite map keeps its own imagery palette and sits behind a
-  steel hairline like a product-preview card.
+- **Surfaces:** light. Fog #EFEFEF canvas; flat paper-white cards at
+  the near-square 3pt signature radius — no borders, no card shadows;
+  sand #E9E4D9 is the callout voice (highlights, banners, formula
+  chips); slate #788086 is a stage color for imagery moments.
+- **The brand band:** sunbeam yellow #FFC500 belongs to BAND moments
+  only — the Dashboard hero wears it with carbon ink. Never a small
+  accent fill.
+- **One interactive accent:** electric violet #7700FF on everything
+  tappable — pills, links, selected states, the clock's segments —
+  and nowhere else. CTAs are Capsule pills carrying the system's ONLY
+  shadows (0 2 8 @15%). Quiet buttons are sand pills with violet text.
+- **Type:** SF Rounded everywhere (the Roobert stand-in): 400 body,
+  700 anchors, HEAVY display. Screen titles render lowercase — the
+  wordmark signature. Eyebrows are lowercase bold captions in carbon;
+  the mono voice is retired with Blueprint.
+- **Text:** warm carbon #312F27, never pure black; warm-gray
+  secondary; ash tertiary.
+- **Data:** charts stroke violet only where interactive context makes
+  sense; slices/bars use a warm carbon/yellow/ochre ramp (violet stays
+  interactive-only). Functional green/red/amber survive muted for P&L.
+- The dark satellite map remains a framed artifact.
 
 ## 1. Creative direction
 
@@ -279,6 +278,14 @@ and their chosen speed resumes on dismissal. The clock pill shows a pause
 glyph during holds.
 
 ## 5. Iteration log
+
+- **v3.2 (2026-07-19, playdate-style branch): "Toy Store."** Playdate
+  translation; see §0. Mechanics: light fog/paper/sand tokens; yellow
+  hero band; ALL legacy accents → electric violet; buttons → violet
+  pills with the system's only shadows, quiet = sand pills; cards flat
+  at 3pt; SF Rounded with heavy lowercase display titles and lowercase
+  eyebrows; warm chart ramp; clock pill floats white with violet
+  segments. Verified by renders: Dashboard, Routes.
 
 - **v3.1 (2026-07-18, design-system branch): "Blueprint."** Dovetail
   re-theme, same day as (and replacing) v3.0 Warm Paper — the light

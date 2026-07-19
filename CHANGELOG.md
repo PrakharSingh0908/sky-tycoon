@@ -7,7 +7,25 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
-## [Unreleased — design-system branch]
+## [Unreleased — playdate-style branch]
+
+### 2026-07-19 — "Toy Store" v3.2: the Playdate re-theme
+
+**Changed (everything visual, on its own branch)**
+- Sunlit catalog look: fog canvas, flat paper-white cards at the
+  near-square 3pt radius (no borders/shadows), sand callouts, and the
+  Dashboard hero as a full sunbeam-yellow band with carbon ink.
+- One interactive accent: electric violet on every tappable thing —
+  prominent CTAs are violet Capsule pills wearing the system's only
+  drop shadows; quiet actions are sand pills with violet text.
+- SF Rounded everywhere; screen titles render lowercase in heavy
+  weight (the wordmark signature); eyebrows are lowercase bold
+  captions; Blueprint's mono voice retired.
+- Warm carbon text (never pure black); charts use a carbon/yellow/
+  ochre ramp with violet reserved for interactive contexts; muted
+  functional P&L colors retained; the satellite map stays a dark
+  framed artifact.
+
 
 ### 2026-07-19 — Portraits displayed open, not cropped
 

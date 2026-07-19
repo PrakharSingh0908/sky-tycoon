@@ -67,7 +67,7 @@ struct RootView: View {
                 .padding(.bottom, 56)
         }
         .background(Theme.bg)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
         .sheet(item: Binding(
             get: { engine.state.pendingEvent },
             set: { _ in }   // dismissal only via choosing an option

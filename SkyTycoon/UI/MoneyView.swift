@@ -86,7 +86,7 @@ struct MoneyView: View {
                     ForEach(0..<4, id: \.self) { i in
                         Circle()
                             .fill(i < engine.state.consecutiveProfitableQuarters
-                                  ? Theme.profit : Color.white.opacity(0.08))
+                                  ? Theme.profit : Color.black.opacity(0.05))
                             .frame(width: 16, height: 16)
                             .overlay(
                                 Circle().strokeBorder(Color.white.opacity(0.15), lineWidth: 1)
@@ -361,5 +361,5 @@ struct MoneyView: View {
 
 #Preview {
     MoneyView().environment(GameEngine.previewGame())
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
 }

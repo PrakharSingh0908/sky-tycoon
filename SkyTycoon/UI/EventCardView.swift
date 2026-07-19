@@ -68,6 +68,6 @@ struct EventCardView: View {
         .background(Theme.bgElevated)
         .presentationDetents([.medium])
         .presentationBackground(Theme.bgElevated)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
     }
 }

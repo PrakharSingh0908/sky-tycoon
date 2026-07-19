@@ -129,8 +129,19 @@ struct DashboardView: View {
     // The one standing gradient border (v2.1: borders are hierarchy, and
     // the score IS the hierarchy). Flashes profit-green on weekly settle.
 
+    // The hero is the page's yellow band: carbon ink on sunbeam, the
+    // brand moment of every session. Settle flash borrows the profit tint.
     private var heroCard: some View {
-        GameCard(highlight: settleFlash ? Theme.profit : accent) {
+        VStack(alignment: .leading, spacing: 12) {
+            heroContent
+        }
+        .padding(Theme.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(settleFlash ? Theme.yellow.opacity(0.75) : Theme.yellow,
+                    in: RoundedRectangle(cornerRadius: Theme.corner))
+    }
+
+    @ViewBuilder private var heroContent: some View {
             HStack(alignment: .top) {
                 StatTile(label: "Net worth", value: engine.netWorth.money,
                          color: engine.netWorth >= 0 ? Theme.textPrimary : Theme.loss,
@@ -154,7 +165,6 @@ struct DashboardView: View {
                 StatTile(label: "Fleet", value: "\(engine.state.fleet.count)")
                 StatTile(label: "Routes", value: "\(engine.state.routes.count)")
             }
-        }
     }
 
     // ── Saved games: the three slots, one tap away ───────────────────────
@@ -334,16 +344,16 @@ struct DashboardView: View {
                     Text(range.rawValue)
                         .font(.data(.caption2, weight: .medium))
                         .frame(width: 24, height: 20)
-                        .background(financeRange == range ? AnyShapeStyle(Color.white)
+                        .background(financeRange == range ? AnyShapeStyle(Theme.violet)
                                     : AnyShapeStyle(.clear),
-                                    in: RoundedRectangle(cornerRadius: 5))
-                        .foregroundStyle(financeRange == range ? Theme.bg : Theme.textSecondary)
+                                    in: Capsule())
+                        .foregroundStyle(financeRange == range ? Color.white : Theme.textSecondary)
                 }
                 .buttonStyle(.plain)
             }
         }
         .padding(2)
-        .background(Theme.bg, in: RoundedRectangle(cornerRadius: Theme.corner))
+        .background(Theme.fog, in: Capsule())
         .sensoryFeedback(.selection, trigger: financeRange)
     }
 
@@ -478,7 +488,7 @@ private struct IndustrySheet: View {
         .background(Theme.bgElevated)
         .presentationDetents([.large])
         .presentationBackground(Theme.bgElevated)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
         .holdsSimClock()
     }
 
@@ -522,8 +532,8 @@ private struct IndustrySheet: View {
                 GeometryReader { geo in
                     Capsule()
                         .fill(carrier.isPlayer
-                              ? AnyShapeStyle(Theme.cornflower)
-                              : AnyShapeStyle(Color.white.opacity(0.14)))
+                              ? AnyShapeStyle(Theme.violet)
+                              : AnyShapeStyle(Color.black.opacity(0.10)))
                         .frame(width: geo.size.width * fraction)
                 }
                 .frame(height: 6)
@@ -534,11 +544,11 @@ private struct IndustrySheet: View {
 
 #Preview {
     DashboardView().environment(GameEngine.previewGame())
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
 }
 
 #Preview("Industry sheet") {
     IndustrySheet()
         .environment(GameEngine.previewGame())
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
 }

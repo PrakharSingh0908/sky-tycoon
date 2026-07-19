@@ -119,7 +119,7 @@ private struct NewRouteSheet: View {
         .background(Theme.bgElevated)
         .presentationDetents([.large])
         .presentationBackground(Theme.bgElevated)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
         .holdsSimClock()
     }
 
@@ -169,7 +169,7 @@ private struct NewRouteSheet: View {
         RouteDetailView(routeID: engine.state.routes[1].id)
     }
     .environment(engine)
-    .preferredColorScheme(.dark)
+    .preferredColorScheme(.light)
 }
 
 #Preview("Assign, empty fleet") {
@@ -179,12 +179,12 @@ private struct NewRouteSheet: View {
         RouteDetailView(routeID: route.id)
     }
     .environment(engine)
-    .preferredColorScheme(.dark)
+    .preferredColorScheme(.light)
 }
 
 #Preview {
     RoutesView().environment(GameEngine.previewGame())
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
 }
 
 #Preview("Route detail") {
@@ -193,7 +193,7 @@ private struct NewRouteSheet: View {
         RouteDetailView(routeID: engine.state.routes[0].id)
     }
     .environment(engine)
-    .preferredColorScheme(.dark)
+    .preferredColorScheme(.light)
 }
 
 /// A route rendered as a flight ticket (DESIGN_SYSTEM.md v1.1): big airport
@@ -521,5 +521,5 @@ struct RouteDetailView: View {
 #Preview("New route desk") {
     NewRouteSheet()
         .environment(GameEngine.previewGame())
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
 }

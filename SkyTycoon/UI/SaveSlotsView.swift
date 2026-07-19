@@ -39,7 +39,7 @@ struct SaveSlotsView: View {
         .background(Theme.bgElevated)
         .presentationDetents([.large])
         .presentationBackground(Theme.bgElevated)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
         .holdsSimClock()
         .confirmationDialog("Delete this saved game? There is no undo.",
                             isPresented: Binding(get: { deletingSlot != nil },
@@ -119,5 +119,5 @@ struct SaveSlotsView: View {
     SaveSlotsView()
         .environment(GameSession())
         .environment(GameEngine.previewGame())
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
 }

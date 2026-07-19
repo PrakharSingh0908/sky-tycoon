@@ -85,9 +85,8 @@ struct SimClockPill: View {
         .padding(.leading, 12)
         .padding(.trailing, 6)
         .padding(.vertical, 6)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.corner))
-        .overlay(RoundedRectangle(cornerRadius: Theme.corner)
-            .strokeBorder(Theme.hairline, lineWidth: 1))
+        .background(.white, in: Capsule())
+        .shadow(color: .black.opacity(0.15), radius: 8, y: 2)
     }
 
     // ── Expanded: the full time console ──────────────────────────────────
@@ -126,9 +125,8 @@ struct SimClockPill: View {
         }
         .padding(12)
         .frame(width: 268)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.corner))
-        .overlay(RoundedRectangle(cornerRadius: Theme.corner)
-            .strokeBorder(Theme.hairline, lineWidth: 1))
+        .background(.white, in: Capsule())
+        .shadow(color: .black.opacity(0.15), radius: 8, y: 2)
     }
 
     /// Seven segments, one per day: filled = elapsed, cornflower = today.
@@ -141,14 +139,14 @@ struct SimClockPill: View {
             ForEach(0..<7, id: \.self) { i in
                 VStack(spacing: 3) {
                     RoundedRectangle(cornerRadius: 1.5)
-                        .fill(i < dayIndex ? Color.white.opacity(0.45)
-                              : i == dayIndex ? Theme.cornflower
-                              : Color.white.opacity(0.10))
+                        .fill(i < dayIndex ? Color.black.opacity(0.25)
+                              : i == dayIndex ? Theme.violet
+                              : Color.black.opacity(0.07))
                         .frame(height: height)
                     if labeled {
                         Text(days[i])
                             .font(.data(.caption2))
-                            .foregroundStyle(i == dayIndex ? Theme.cornflower
+                            .foregroundStyle(i == dayIndex ? Theme.violet
                                              : Theme.textTertiary)
                     }
                 }
@@ -170,16 +168,16 @@ struct SpeedControl: View {
                     glyph(for: speed)
                         .frame(width: 28, height: 26)
                         .background(
-                            engine.speed == speed ? AnyShapeStyle(Color.white) : AnyShapeStyle(.clear),
-                            in: RoundedRectangle(cornerRadius: 6)
+                            engine.speed == speed ? AnyShapeStyle(Theme.violet) : AnyShapeStyle(.clear),
+                            in: Capsule()
                         )
-                        .foregroundStyle(engine.speed == speed ? Theme.bg : Theme.textSecondary)
+                        .foregroundStyle(engine.speed == speed ? Color.white : Theme.textSecondary)
                 }
                 .buttonStyle(.plain)
             }
         }
         .padding(3)
-        .background(Theme.bg, in: RoundedRectangle(cornerRadius: Theme.corner))
+        .background(Theme.fog, in: Capsule())
         .sensoryFeedback(.selection, trigger: engine.speed)
         .animation(.snappy(duration: 0.2), value: engine.speed)
     }
@@ -214,5 +212,5 @@ struct SpeedControl: View {
     }
     .background(Theme.bg)
     .environment(GameEngine.previewGame())
-    .preferredColorScheme(.dark)
+    .preferredColorScheme(.light)
 }

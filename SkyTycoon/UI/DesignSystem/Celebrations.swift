@@ -20,20 +20,19 @@ struct CelebrationBanner: View {
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: icon)
-                .font(.title3).foregroundStyle(Theme.cornflower)
+                .font(.title3).foregroundStyle(Theme.violet)
             VStack(alignment: .leading, spacing: 1) {
                 Text(title)
-                    .font(.game(.subheadline, weight: .medium))
-                    .foregroundStyle(Color.white)
+                    .font(.game(.subheadline, weight: .bold))
+                    .foregroundStyle(Theme.textPrimary)
                 Text(subtitle)
                     .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
             }
             Spacer(minLength: 0)
         }
         .padding(14)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.corner))
-        .overlay(RoundedRectangle(cornerRadius: Theme.corner)
-            .strokeBorder(Theme.cornflower.opacity(0.8), lineWidth: 1))
+        .background(Theme.sand, in: RoundedRectangle(cornerRadius: 10))
+        .shadow(color: .black.opacity(0.12), radius: 8, y: 2)
         .padding(.horizontal, Theme.gutter)
     }
 }
@@ -97,11 +96,11 @@ struct QuarterReportCard: View {
                     .foregroundStyle(Theme.textPrimary.opacity(0.85))
                     .lineLimit(3)
                 Text("Full letter on the Money tab")
-                    .font(.game(.caption2)).foregroundStyle(Theme.cornflower)
+                    .font(.game(.caption2)).foregroundStyle(Theme.violet)
             }
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.bg, in: RoundedRectangle(cornerRadius: Theme.corner))
+            .background(Theme.sand.opacity(0.6), in: RoundedRectangle(cornerRadius: 8))
 
             Button {
                 dismiss()
@@ -115,7 +114,7 @@ struct QuarterReportCard: View {
         .background(Theme.bgElevated)
         .presentationDetents([.medium, .large])
         .presentationBackground(Theme.bgElevated)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
         .holdsSimClock()
     }
 
@@ -136,5 +135,5 @@ struct QuarterReportCard: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(Theme.bg)
-    .preferredColorScheme(.dark)
+    .preferredColorScheme(.light)
 }

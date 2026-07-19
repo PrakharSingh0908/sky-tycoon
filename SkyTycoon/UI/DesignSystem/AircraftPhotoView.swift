@@ -45,5 +45,5 @@ struct AircraftPhotoView: View {
         .padding(24)
     }
     .background(Theme.bg)
-    .preferredColorScheme(.dark)
+    .preferredColorScheme(.light)
 }

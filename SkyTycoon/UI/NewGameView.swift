@@ -57,7 +57,7 @@ struct NewGameView: View {
                         .focused($nameFocused)
                         .submitLabel(.done)
                         .padding(12)
-                        .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 12))
+                        .background(Color.black.opacity(0.04), in: RoundedRectangle(cornerRadius: 12))
                 }
 
                 GameCard {
@@ -82,7 +82,7 @@ struct NewGameView: View {
         .background(Theme.bg)
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) { foundButton }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
         .onAppear { nameFocused = true }
     }
 
