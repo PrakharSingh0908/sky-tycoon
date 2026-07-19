@@ -106,18 +106,21 @@ private struct StaffPoolCard: View {
                 onIncrement: { engine.setWage(role: role, wage: pool.weeklyWage + 50) })
 
             // ── Recruitment: hiring happens through job ads ──────────────
-            HStack {
-                if let weeksLeft = engine.state.jobPostings[role] {
+            if let weeksLeft = engine.state.jobPostings[role] {
+                HStack {
                     Label("Ad running · \(weeksLeft) wk left", systemImage: "megaphone.fill")
                         .font(.game(.caption, weight: .semibold)).foregroundStyle(accent)
-                } else {
-                    Button("Post job ad · \(Balance.jobAdFee.money)") {
-                        engine.postJobAd(role: role)
-                    }
-                    .buttonStyle(GameButtonStyle(color: accent))
-                    .disabled(engine.state.cash < Balance.jobAdFee)
+                    Spacer()
                 }
-                Spacer()
+            } else {
+                Button {
+                    engine.postJobAd(role: role)
+                } label: {
+                    Text("Post job ad · \(Balance.jobAdFee.money)")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(GameButtonStyle(color: accent))
+                .disabled(engine.state.cash < Balance.jobAdFee)
             }
 
             // ── The roster: every individual, with their own pink slip ───

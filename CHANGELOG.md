@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Full-width job ad button
+
+- "Post job ad" on the People staff cards now spans the full card width with a centered label, instead of hugging its text at the leading edge.
+
+*Why:* per direction. It is the card's one primary action, and edge-to-edge matches the Set up route and Cancel route keys elsewhere.
+
+
 ## Seattle stamp removed
 
 - The Seattle city stamp on boarding passes is gone: tried first franked beside the destination code, then as a ghost watermark behind it, and cut on review. The asset, the cityStamps map, and the preview pin are all removed; the pass is back to its clean pre-stamp layout.
