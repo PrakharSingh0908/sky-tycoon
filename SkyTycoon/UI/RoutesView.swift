@@ -433,7 +433,7 @@ struct RouteDetailView: View {
                     if let econ = engine.routeEconomics(routeID: routeID) {
                         // The fare↔satisfaction link, live: cheap fares
                         // please passengers, gouging costs goodwill.
-                        MeterRow(label: "Price fairness (feeds satisfaction)",
+                        MeterRow(label: "Price fairness",
                                  value: econ.fairness,
                                  display: fairnessLabel(econ),
                                  color: Theme.health(econ.fairness))
@@ -462,24 +462,25 @@ struct RouteDetailView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Catering")
                 .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
-            HStack(spacing: 0) {
+            HStack(spacing: 8) {
                 ForEach(CateringLevel.allCases) { option in
                     Button {
                         engine.setCatering(routeID: route.id, level: option)
                     } label: {
-                        VStack(spacing: 4) {
+                        VStack(spacing: 5) {
                             Group {
                                 if let name = option.assetName,
                                    let tray = UIImage(named: name) {
                                     Image(uiImage: tray).resizable().scaledToFit()
                                 } else {
                                     Image(systemName: option.icon)
-                                        .font(.system(size: 18))
+                                        .font(.system(size: 16))
                                         .foregroundStyle(Theme.textTertiary)
                                 }
                             }
-                            .frame(width: 48, height: 48)
-                            .padding(4)
+                            .frame(width: 44, height: 44)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 6)
                             .background(
                                 RoundedRectangle(cornerRadius: Theme.corner - 2)
                                     .fill(level == option
@@ -488,11 +489,11 @@ struct RouteDetailView: View {
                             .overlay(RoundedRectangle(cornerRadius: Theme.corner - 2)
                                 .strokeBorder(level == option ? accent : .clear,
                                               lineWidth: 1.5))
-                            Text(option == .none ? "None" : option.displayName)
+                            Text(trayShortName(option))
                                 .font(.game(.caption2,
                                             weight: level == option ? .bold : .regular))
                                 .foregroundStyle(level == option ? accent : Theme.textSecondary)
-                                .lineLimit(1).minimumScaleFactor(0.75)
+                                .lineLimit(1)
                             Text(option == .none ? " " : "\(option.costPerPax.money)/pax")
                                 .font(.data(.caption2)).foregroundStyle(Theme.textTertiary)
                         }
@@ -506,6 +507,16 @@ struct RouteDetailView: View {
                 Text("\(planes.count - ovens) of \(planes.count) aircraft here have no galley oven — \(level == .asianBento ? "bento mains" : "sandwiches") board cold and customers get frustrated. Fit ovens via Fleet → Service.")
                     .font(.game(.caption2)).foregroundStyle(Theme.loss)
             }
+        }
+    }
+
+    /// Tile-width names; the art carries the identity.
+    private func trayShortName(_ level: CateringLevel) -> String {
+        switch level {
+        case .none: "None"
+        case .sandwichBox: "Sandwich"
+        case .fruitPlatter: "Fruit"
+        case .asianBento: "Bento"
         }
     }
 

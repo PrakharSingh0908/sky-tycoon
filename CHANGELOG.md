@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Tray picker polish + fairness label trim
+
+- Catering tiles get an 8pt gutter, full-width swatch plates, and tile-width short names (None / Sandwich / Fruit / Bento) — the full tray names were colliding edge-to-edge across the row.
+- "Price fairness (feeds satisfaction)" is just "Price fairness" — the parenthetical wrapped the meter label to two lines.
+
+*Why:* device pass — the row read as one run-on string of text; short names let the art carry the identity.
+
+
 ## Bento needs the oven too
 
 - The Asian bento now shares the galley-oven requirement: +10 with ovens on every aircraft, −12 without (a cold premium main breaks a bigger promise than a cold sandwich). The fruit platter is now the only oven-agnostic tray, and the route-detail warning names the right dish.
