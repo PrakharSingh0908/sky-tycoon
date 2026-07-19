@@ -260,25 +260,41 @@ struct PersonAvatar: View {
 
 // ── StarRating ───────────────────────────────────────────────────────────
 
+/// Gold-star photo rating (Resources/Icons/gold_star.png): each star is
+/// the metallic asset, filled fractionally — bright gold over a dimmed
+/// base — so 3.4★ literally shows 40% of the fourth star.
 struct StarRating: View {
     let rating: Double         // 0...5
     var size: CGFloat = 12
-    var color: Color = Theme.warn
+    var color: Color = Theme.warn   // kept for call-site compatibility
 
     var body: some View {
         HStack(spacing: 2) {
             ForEach(0..<5, id: \.self) { i in
-                Image(systemName: symbol(at: i)).font(.system(size: size))
+                star(fill: min(1, max(0, rating - Double(i))))
             }
         }
-        .foregroundStyle(color)
     }
 
-    private func symbol(at index: Int) -> String {
-        let fill = rating - Double(index)
-        if fill >= 0.75 { return "star.fill" }
-        if fill >= 0.25 { return "star.leadinghalf.filled" }
-        return "star"
+    @ViewBuilder private func star(fill: Double) -> some View {
+        if let image = UIImage(named: "gold_star") {
+            ZStack {
+                Image(uiImage: image).resizable().scaledToFit()
+                    .grayscale(1).opacity(0.22)          // the empty socket
+                Image(uiImage: image).resizable().scaledToFit()
+                    .mask(alignment: .leading) {
+                        GeometryReader { geo in
+                            Rectangle().frame(width: geo.size.width * fill)
+                        }
+                    }
+            }
+            .frame(width: size + 2, height: size + 2)
+        } else {
+            Image(systemName: fill >= 0.75 ? "star.fill"
+                  : fill >= 0.25 ? "star.leadinghalf.filled" : "star")
+                .font(.system(size: size))
+                .foregroundStyle(color)
+        }
     }
 }
 

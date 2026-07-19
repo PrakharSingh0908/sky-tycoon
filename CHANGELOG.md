@@ -7,6 +7,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Gold-star rating asset
+
+- `StarRating` now renders the metallic gold-star photo (`Resources/Icons/gold_star.png`) instead of SF Symbol stars, everywhere ratings appear: staff skill (People, Hiring, Negotiation) and reputation (Dashboard hero, quarter report).
+- Fills are fractional, not stepped — the bright star is masked to the exact rating fraction over a desaturated 22%-opacity socket, so 3.4★ shows 40% of the fourth star.
+- SF Symbol path kept as a fallback if the asset ever fails to load.
+
+*Why:* the flat symbol stars were the last non-material iconography left after the v3.1.1 metal keys; a machined gold star matches the anodized-hardware direction, and the fractional mask makes small rating differences (2.2 vs 2.6) visible instead of rounding to the same half-star glyph.
+
+
 ## [Unreleased — design-system branch]
 
 ### 2026-07-19 — Anodized key tints; color-coded fleet action bank
