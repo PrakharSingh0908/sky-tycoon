@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Sim clock no longer covers bottom controls
+
+- `GameScreen`'s scroll content now reserves 92pt of bottom clearance (was 24), so the last row of buttons on every tab can scroll fully above the floating sim clock pill.
+
+*Why:* device testing — the pill overlaid the bottom-most keys (Fleet action bank, roster rows) with no way to reach them; scroll clearance is the standard floating-control fix and one change covers all screens.
+
+
 ## Lease copy + Orion rename
 
 - Lease screen no longer says "Payments never end" (both the tab intro and the per-card caption) — the /wk price and the Return fee spec already carry the terms; intro now reads "Instant delivery, no capital outlay."

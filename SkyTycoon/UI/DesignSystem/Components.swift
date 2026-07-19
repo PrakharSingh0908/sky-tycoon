@@ -709,7 +709,9 @@ struct GameScreen<Content: View>: View {
                 content
             }
             .padding(.horizontal, Theme.gutter)
-            .padding(.bottom, 24)
+            // Clearance for the floating sim clock: the last row of
+            // controls must be able to scroll fully above the pill.
+            .padding(.bottom, 92)
         }
         .background(Theme.bg)
         .scrollIndicators(.hidden)
