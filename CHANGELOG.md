@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Silver glow header icons everywhere (v3.1.3)
+
+- All SectionHeader icons app-wide now wear the polished-silver gradient with the soft white glow, replacing the cornflower accent icons. One component change covers every card; the accent keeps its role for active states, selection, and data strokes. Design doc updated.
+
+*Why:* per direction after First Flight - the silver instrument icons belong to the machined console language, and consistency is the premium.
+
+
 ## Silver glow icon on First Flight
 
 - SectionHeader gained a silverIcon option: polished silver gradient with a soft white glow, for headers that live on metal panels. First Flight's checklist icon uses it.

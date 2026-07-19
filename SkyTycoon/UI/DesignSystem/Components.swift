@@ -126,22 +126,18 @@ struct SectionHeader: View {
     let title: String
     var icon: String? = nil
     var accent: Color = Theme.sky
-    /// Metal-panel headers wear a polished silver icon with a soft glow
-    /// instead of the accent (First Flight, §22).
-    var silverIcon = false
 
     var body: some View {
         HStack(spacing: 8) {
             HStack(spacing: 6) {
                 if let icon {
+                    // Header icons are polished silver with a soft glow —
+                    // instruments on the console, not accent stickers.
                     Image(systemName: icon).font(.caption2.weight(.medium))
-                        .foregroundStyle(silverIcon
-                            ? AnyShapeStyle(LinearGradient(
-                                colors: [.white, Color(white: 0.58)],
-                                startPoint: .top, endPoint: .bottom))
-                            : AnyShapeStyle(Theme.cornflower))
-                        .shadow(color: silverIcon ? .white.opacity(0.6) : .clear,
-                                radius: silverIcon ? 4 : 0)
+                        .foregroundStyle(LinearGradient(
+                            colors: [.white, Color(white: 0.58)],
+                            startPoint: .top, endPoint: .bottom))
+                        .shadow(color: .white.opacity(0.6), radius: 4)
                 }
                 Text(title.uppercased())
                     .font(.data(.caption2))                  // mono eyebrow

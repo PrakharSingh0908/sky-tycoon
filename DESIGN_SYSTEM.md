@@ -23,8 +23,10 @@ Warm Paper experiment (v3.0, rejected on sight).
   Screen titles take tight negative tracking (engineered, not
   editorial). MONO is the instrument voice: section eyebrows, tags,
   and formula/data codes, with POSITIVE 0.85pt tracking.
-- **One accent:** cornflower #6798FF for icons, active states, the
-  hero's highlight stroke, and data strokes — NEVER a button fill.
+- **One accent:** cornflower #6798FF for active states, selection,
+  and data strokes — NEVER a button fill. Section-header icons are
+  POLISHED SILVER with a soft white glow (v3.1.3): instruments on the
+  console, not accent stickers.
   Buttons (v3.1.1): machined METAL keys — the one sanctioned
   exception to zero elevation, because a console's buttons are
   physical. Keys are stamped from four stocks (`MetalFinish`):

@@ -77,8 +77,7 @@ struct DashboardView: View {
 
     private var firstFlightCard: some View {
         MetalPanel {
-            SectionHeader(title: "First flight", icon: "checklist",
-                          accent: accent, silverIcon: true)
+            SectionHeader(title: "First flight", icon: "checklist", accent: accent)
             Text("Three moves and \(engine.state.airlineName) is an airline.")
                 .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
             VStack(alignment: .leading, spacing: 4) {
