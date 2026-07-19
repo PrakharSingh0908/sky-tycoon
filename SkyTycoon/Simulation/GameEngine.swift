@@ -346,6 +346,13 @@ final class GameEngine {
                 / Double(activePlanes.count)
             avgComfort = min(1, avgComfort)
 
+            // Catering (GDD §18): per-passenger cost lands on the cabin &
+            // catering line; the satisfaction consequence lands below.
+            let catering = route.catering ?? CateringLevel.none
+            if catering != .none {
+                report.cabinCost += econ.pax * catering.costPerPax
+            }
+
             report.revenue += econ.revenue
             report.fuelCost += econ.fuel
             state.routes[r].lastLoadFactor = econ.loadFactor
@@ -378,8 +385,20 @@ final class GameEngine {
             let cabinAdequacy = cabinU <= 1 ? 1.0 : 1.0 / cabinU   // understaffed cabin = worse service
             let service = (cabinSkill / 5.0) * cabinAdequacy
             let incidents = 1.0
-            let target = (punctuality * 0.35 + avgComfort * 0.25 + service * 0.20
-                          + econ.fairness * 0.15 + incidents * 0.05) * 100
+            // Catering moves the target: snacks please a little, hot meals
+            // more — unless a plane on the route lacks a galley oven, in
+            // which case the promised meal arrives cold and passengers
+            // are dissuaded (GDD §18).
+            let ovensReady = activePlanes.allSatisfy { $0.hasGalleyOven ?? false }
+            let cateringDelta: Double = switch catering {
+            case .none: 0
+            case .snacks: Balance.cateringSnacksDelta
+            case .hotMeals: ovensReady ? Balance.cateringHotDelta
+                                       : Balance.cateringColdMealPenalty
+            }
+            let target = min(100, max(0,
+                (punctuality * 0.35 + avgComfort * 0.25 + service * 0.20
+                 + econ.fairness * 0.15 + incidents * 0.05) * 100 + cateringDelta))
             state.routes[r].satisfaction += (target - route.satisfaction) * 0.15
             state.routes[r].lastPunctuality = punctuality
         }
@@ -895,6 +914,16 @@ final class GameEngine {
             firedOn: state.date)
         state.lastEventTotalWeek = state.date.totalWeeks
         state.lastNegativeEventTotalWeek = state.date.totalWeeks
+        logEvent(title: "\(plane.nickname) is lost", isNegative: true)
+    }
+
+    /// Appends to the capped event history (charts + Major events list).
+    private func logEvent(title: String, isNegative: Bool) {
+        var log = state.eventLog ?? []
+        log.append(EventLogEntry(id: UUID(), totalWeek: state.date.totalWeeks,
+                                 title: title, isNegative: isNegative))
+        if log.count > 120 { log.removeFirst(log.count - 120) }
+        state.eventLog = log
     }
 
     /// Fires a card (internal so tests can force specific cards).
@@ -904,6 +933,7 @@ final class GameEngine {
             isNegative: card.isNegative, title: card.title, body: card.body,
             options: card.options, firedOn: state.date)
         state.lastEventTotalWeek = state.date.totalWeeks
+        logEvent(title: card.title, isNegative: card.isNegative)
         if card.isNegative {
             state.lastNegativeEventTotalWeek = state.date.totalWeeks
         }
@@ -1057,6 +1087,29 @@ final class GameEngine {
             deliveryWeeksRemaining: Balance.deliveryWeeks[type]!,
             cabin: .standard(abreast: spec.seatsAbreast), wear: 0, condition: 100,
             ageYears: 0, assignedRouteID: nil, groundedWeeksRemaining: 0))
+        save()
+        return true
+    }
+
+    // ── Catering (GDD §18) ───────────────────────────────────────────────
+
+    /// Set a route's in-flight service. Immediate (immediacy rule): the
+    /// satisfaction consequences start with the next settle.
+    func setCatering(routeID: UUID, level: CateringLevel) {
+        guard let i = state.routes.firstIndex(where: { $0.id == routeID }) else { return }
+        state.routes[i].catering = level
+        save()
+    }
+
+    /// Fit a galley oven — the hardware hot meals need. Instant.
+    @discardableResult
+    func installGalleyOven(aircraftID: UUID) -> Bool {
+        guard let i = state.fleet.firstIndex(where: { $0.id == aircraftID }),
+              state.fleet[i].status != .onOrder,
+              !(state.fleet[i].hasGalleyOven ?? false),
+              state.cash >= Balance.galleyOvenCost else { return false }
+        state.cash -= Balance.galleyOvenCost
+        state.fleet[i].hasGalleyOven = true
         save()
         return true
     }

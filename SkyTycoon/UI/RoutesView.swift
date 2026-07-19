@@ -441,12 +441,71 @@ struct RouteDetailView: View {
                     MeterRow(label: "Passenger satisfaction", value: route.satisfaction / 100,
                              display: "\(Int(route.satisfaction))/100",
                              color: Theme.health(route.satisfaction / 100))
+                    cateringRow(route)
                 }
                 weeklyMoneyCard(route)
                 assignCard(route)
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Theme.bgElevated, for: .navigationBar)
+        }
+    }
+
+    // ── Catering (GDD §18): choose the service, mind the hardware ────────
+
+    @ViewBuilder private func cateringRow(_ route: Route) -> some View {
+        let level = route.catering ?? .none
+        let planes = engine.state.fleet.filter { route.assignedAircraftIDs.contains($0.id) }
+        let ovens = planes.filter { $0.hasGalleyOven ?? false }.count
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text("Catering")
+                    .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
+                Spacer()
+                Menu {
+                    ForEach(CateringLevel.allCases) { option in
+                        Button {
+                            engine.setCatering(routeID: route.id, level: option)
+                        } label: {
+                            if option == level {
+                                Label(cateringLabel(option), systemImage: "checkmark")
+                            } else {
+                                Text(cateringLabel(option))
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 5) {
+                        cateringIcon(level)
+                        Text(level.displayName)
+                    }
+                    .font(.game(.subheadline, weight: .medium))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 12).padding(.vertical, 6)
+                    .metalKey(.obsidian, pressed: false)
+                }
+            }
+            if level == .hotMeals && ovens < planes.count {
+                Text("\(planes.count - ovens) of \(planes.count) aircraft here have no galley oven — meals board cold and passengers are dissuaded. Fit ovens via Fleet → Service.")
+                    .font(.game(.caption2)).foregroundStyle(Theme.loss)
+            } else if level != .none {
+                Text("\(level.costPerPax.money)/passenger, on the cabin & catering line.")
+                    .font(.game(.caption2)).foregroundStyle(Theme.textTertiary)
+            }
+        }
+    }
+
+    private func cateringLabel(_ level: CateringLevel) -> String {
+        level == .none ? level.displayName
+            : "\(level.displayName) · \(level.costPerPax.money)/pax"
+    }
+
+    /// Food art when it lands (Resources/Food/<asset>.png), SF until then.
+    @ViewBuilder private func cateringIcon(_ level: CateringLevel) -> some View {
+        if let name = level.assetName, let ui = UIImage(named: name) {
+            Image(uiImage: ui).resizable().scaledToFit().frame(width: 16, height: 16)
+        } else {
+            Image(systemName: level.icon).font(.caption2)
         }
     }
 

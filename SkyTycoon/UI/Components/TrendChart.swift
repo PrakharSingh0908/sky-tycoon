@@ -10,6 +10,13 @@
 import SwiftUI
 import Charts
 
+/// A major event's position on a trend chart, in the chart's own x units.
+struct ChartEventMark: Identifiable {
+    let id: UUID
+    let offset: Double       // 0 = now, negative = past
+    let negative: Bool
+}
+
 /// A line-plus-gradient-area trend chart over a weekly history buffer.
 struct TrendChart: View {
     let values: [Double]
@@ -20,6 +27,8 @@ struct TrendChart: View {
     var window: Int = 52
     /// X-axis unit suffix ("w" weeks, "mo" months, "q" quarters).
     var unit: String = "w"
+    /// Major events, drawn as dashed vertical rules (GDD §4.7).
+    var events: [ChartEventMark] = []
     /// Formats a y-axis value ("$1.2M", "4.1★", "82%").
     var format: (Double) -> String = { $0.money }
 
@@ -53,6 +62,13 @@ struct TrendChart: View {
                                        startPoint: .top, endPoint: .bottom)
                     )
                     .interpolationMethod(.monotone)
+                }
+                // Major events: dashed rules where history turned.
+                ForEach(events.filter { $0.offset > Double(1 - values.count) }) { mark in
+                    RuleMark(x: .value("Week", mark.offset))
+                        .foregroundStyle((mark.negative ? Theme.loss : Theme.profit)
+                            .opacity(0.45))
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
                 }
                 // The "now" marker: where the line meets the present.
                 if let last = values.last {

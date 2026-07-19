@@ -447,3 +447,20 @@ Also: every event option now carries an effect (the film-shoot
 viable strategy; consequences make maintenance a decision instead of a
 tax, and the quiet warning honors the player's agency — the game
 warned, once, where an operator would look.
+
+## 18. Amendment — Catering (2026-07-19)
+
+Per-route in-flight service (`CateringLevel`): none / snacks & drinks
+($2/pax) / hot meals ($6/pax), set from the route detail's economics
+card, charged weekly on the cabin & catering P&L line. Snacks nudge the
+satisfaction target +3. Hot meals need a GALLEY OVEN on every aircraft
+flying the route ($40K one-time fit, instant, Fleet → Service): with
+ovens +8, without −10 — the promised meal boards cold and passengers
+are dissuaded, dragging satisfaction and (through the existing
+smoothing) reputation down. Save-compat optionals; the route detail
+warns when hardware is missing. Food art slots are wired
+(Resources/Food/food_snacks.png, food_hot_meals.png) with SF fallbacks
+until the assets land.
+
+*Why:* service depth with a hardware dependency — a promise you can
+make before you can keep it, which is exactly the tycoon trap.

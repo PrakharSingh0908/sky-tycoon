@@ -497,6 +497,15 @@ enum Balance {
     /// Court settlement per life lost.
     static let settlementPerLife = 200_000.0
 
+    // ── Catering (GDD §18) ───────────────────────────────────────────────
+    /// One-time galley oven fit per airframe (instant — immediacy rule).
+    static let galleyOvenCost = 40_000.0
+    /// Satisfaction-target deltas: snacks always please a little; hot
+    /// meals please more — or backfire hard without ovens aboard.
+    static let cateringSnacksDelta = 3.0
+    static let cateringHotDelta = 8.0
+    static let cateringColdMealPenalty = -10.0
+
     /// Event pacing (2026-07-19): decisions are the game, so cards arrive
     /// on a designed rhythm, not a coin flip. The weekly chance starts at
     /// the base and RAMPS with every event-free week — expected cadence

@@ -204,6 +204,11 @@ private struct AircraftCard: View {
             Button("Heavy check · $250K · 2 wk") {
                 engine.orderCheck(aircraftID: plane.id, heavy: true)
             }
+            if !(plane.hasGalleyOven ?? false) {
+                Button("Fit galley oven · \(Balance.galleyOvenCost.money)") {
+                    engine.installGalleyOven(aircraftID: plane.id)
+                }
+            }
             Divider()
             if plane.acquisition == .leased {
                 Button("Return to lessor", role: .destructive) {

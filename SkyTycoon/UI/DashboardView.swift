@@ -14,6 +14,7 @@ struct DashboardView: View {
     @State private var financeRange: FinanceRange = .weekly
     @State private var settleFlash = false
     @State private var showingIndustry = false
+    @State private var eventsExpanded = false
     private let accent = Theme.sky
 
     enum TrendMetric: String, CaseIterable, Identifiable {
@@ -417,8 +418,51 @@ struct DashboardView: View {
             let (window, unit) = rangeShape
             TrendChart(values: series,
                        color: Theme.cornflower, window: window, unit: unit,
+                       events: chartEventMarks,
                        format: trendMetric == .reputation
                            ? { String(format: "%.1f★", $0) } : { $0.money })
+
+            // The rules on the chart, expandable into the history book.
+            if !(engine.state.eventLog ?? []).isEmpty {
+                DisclosureGroup(isExpanded: $eventsExpanded) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach((engine.state.eventLog ?? []).suffix(10).reversed()) { entry in
+                            HStack(spacing: 8) {
+                                Circle()
+                                    .fill(entry.isNegative ? Theme.loss : Theme.profit)
+                                    .frame(width: 6, height: 6)
+                                Text("Y\((entry.totalWeek - 1) / 52 + 1) W\((entry.totalWeek - 1) % 52 + 1)")
+                                    .font(.data(.caption2)).tracking(0.85)
+                                    .foregroundStyle(Theme.textTertiary)
+                                Text(entry.title)
+                                    .font(.game(.caption)).foregroundStyle(Theme.textPrimary)
+                                    .lineLimit(1)
+                                Spacer(minLength: 0)
+                            }
+                        }
+                    }
+                    .padding(.top, 6)
+                } label: {
+                    Text("Major events")
+                        .font(.data(.caption2)).tracking(0.85)
+                        .foregroundStyle(Theme.textSecondary)
+                }
+                .tint(Theme.textSecondary)
+            }
+        }
+    }
+
+    /// Event weeks → the chart's x units for the active range (weekly
+    /// points, 4-week months, 13-week quarters).
+    private var chartEventMarks: [ChartEventMark] {
+        let now = engine.state.date.totalWeeks
+        let divisor: Double = switch financeRange {
+        case .weekly: 1; case .monthly: 4; case .yearly: 13
+        }
+        return (engine.state.eventLog ?? []).map {
+            ChartEventMark(id: $0.id,
+                           offset: Double($0.totalWeek - now) / divisor,
+                           negative: $0.isNegative)
         }
     }
 

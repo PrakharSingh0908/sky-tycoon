@@ -269,6 +269,10 @@ struct Aircraft: Codable, Identifiable {
     /// Weeks remaining out of service (maintenance), 0 = available.
     var groundedWeeksRemaining: Int
 
+    /// Galley oven fitted (GDD §18): required for hot-meal catering.
+    /// Optional for save-compat: nil = not fitted.
+    var hasGalleyOven: Bool? = nil
+
     func seats(spec: AircraftSpec) -> Int {
         cabin.seats(spec: spec)
     }
@@ -294,6 +298,41 @@ struct UsedListing: Codable, Identifiable {
     var price: Double
 }
 
+/// In-flight catering per route (GDD §18). Hot meals need galley ovens on
+/// EVERY aircraft flying the route — promising them without the hardware
+/// dissuades passengers and drags satisfaction (and so reputation) down.
+enum CateringLevel: String, Codable, CaseIterable, Identifiable {
+    case none, snacks, hotMeals
+    var id: String { rawValue }
+    var displayName: String {
+        switch self {
+        case .none: "No service"
+        case .snacks: "Snacks & drinks"
+        case .hotMeals: "Hot meals"
+        }
+    }
+    /// Catering cost per passenger carried, charged weekly.
+    var costPerPax: Double {
+        switch self { case .none: 0; case .snacks: 2.0; case .hotMeals: 6.0 }
+    }
+    /// SF fallback until the food art lands. Drop PNGs named
+    /// `assetName` into Resources/Food and the UI picks them up.
+    var icon: String {
+        switch self {
+        case .none: "nosign"
+        case .snacks: "cup.and.saucer.fill"
+        case .hotMeals: "fork.knife"
+        }
+    }
+    var assetName: String? {
+        switch self {
+        case .none: nil
+        case .snacks: "food_snacks"
+        case .hotMeals: "food_hot_meals"
+        }
+    }
+}
+
 struct Route: Codable, Identifiable {
     let id: UUID
     var originID: String
@@ -315,6 +354,8 @@ struct Route: Codable, Identifiable {
     /// Last week's on-time rate 0...1, driven by staffing strain and ops
     /// skill (GDD §4.4). Airline-wide in MVP, stored per route for the UI.
     var lastPunctuality: Double
+    /// In-flight service level (GDD §18). Optional for save-compat: nil = none.
+    var catering: CateringLevel? = nil
 }
 
 enum StaffRole: String, Codable, CaseIterable, Identifiable {
@@ -499,6 +540,15 @@ struct EventOption: Codable, Identifiable {
     var effects: [EventEffect]
 }
 
+/// A line in the airline's history book: when a card fired and what it
+/// was — drawn as rules on the finance charts (GDD §4.7).
+struct EventLogEntry: Codable, Identifiable {
+    let id: UUID
+    var totalWeek: Int
+    var title: String
+    var isNegative: Bool
+}
+
 struct WeeklyReport: Codable, Identifiable {
     var id: UUID = UUID()
     var date: GameDate
@@ -662,6 +712,9 @@ struct GameState: Codable {
     /// Pity-timer anchor: the last week ANY card fired (GDD §4.7 pacing).
     /// Optional for save-compat.
     var lastEventTotalWeek: Int? = nil
+    /// Fired-event history (capped ~120) — the charts' event rules and the
+    /// Major events list. Optional for save-compat.
+    var eventLog: [EventLogEntry]? = nil
     var reports: [WeeklyReport]       // capped ring buffer (last 52)
 
     /// Per-week history buffers for trend charts, newest last

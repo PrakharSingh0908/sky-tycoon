@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Catering (GDD §18) + event rules on the charts
+
+- Routes can now serve food: none / snacks ($2/pax, +3 satisfaction) / hot meals ($6/pax) from the route detail's economics card, charged on the cabin & catering line. Hot meals require a $40K galley oven on EVERY aircraft flying the route (Fleet → Service → "Fit galley oven"): with ovens +8 satisfaction, without −10 — cold meals dissuade passengers and reputation follows. The card warns which aircraft lack hardware. Food art slots are wired (Resources/Food/) with SF-symbol fallbacks until the assets arrive.
+- Major events now draw as dashed red/green rules on the Finances chart (all three ranges, scaled to the bucket), and a "Major events" disclosure under the chart expands into the last 10 entries with dates. Fired cards and hull losses persist to a capped event log (save-compat).
+
+*Why:* catering is a classic tycoon promise-vs-hardware trap; and the charts showed consequences without causes — the rules let you read "that cliff was the crash" at a glance.
+
+
 ## Airworthiness & hull loss (GDD §17); no decision without impact
 
 - Flying an airframe past 90% wear now risks losing it: quadratic weekly probability (0.3% at 92%, 8% at 100%), seeded, max one per week. The Fleet card carries a quiet red airworthiness line instead of a popup — heed it or answer for it.
