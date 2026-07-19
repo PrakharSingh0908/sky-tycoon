@@ -175,12 +175,14 @@ struct RouteMapView: View {
                     }
                     .onEnded { _ in dragStart = nil }
             )
-            .simultaneousGesture(
+            // High priority so the enclosing ScrollView never steals the
+            // pinch; range widened for a comfortable in/out sweep.
+            .highPriorityGesture(
                 MagnifyGesture()
                     .onChanged { value in
                         let start = zoomStart ?? camera.zoom
                         zoomStart = start
-                        camera.zoom = min(9, max(1.0, start * value.magnification))
+                        camera.zoom = min(12, max(0.85, start * value.magnification))
                     }
                     .onEnded { _ in zoomStart = nil }
             )

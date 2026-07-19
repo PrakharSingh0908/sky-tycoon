@@ -7,6 +7,16 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## US map expansion, map pinch fix, the cabin-window moment
+
+- 12 more US airports (Houston, Philadelphia, Detroit, Charlotte, Orlando, San Diego, Tampa, St. Louis, Portland, Nashville, Salt Lake City, New Orleans) — the US market now has 26 fields spanning both coasts, the Gulf, and the mountain west. Distances come from the existing haversine fallback.
+- Map pinch-zoom promoted to a high-priority gesture so the enclosing ScrollView can't steal it, and the range widened (0.85×–12×) for a comfortable in/out sweep.
+- New `WindowRevealView` (Resources/Art/window_welcome.png): founding a new airline now flies the camera through the cabin porthole — the window holds a beat, then zooms into the sky and fades into the fresh game.
+- Grounded screen rebuilt around the same window: the last look out at sunset, the failure story, and the run's final ledger at the bottom as board tiles (Survived / Fleet / Routes / Rating) above the restart key.
+
+*Why:* 14 airports made the US map feel emptier than India's 19; the pinch existed but lost the gesture race inside the scroll view. The window image bookends a run — you fly in through it at founding and look out of it when the banks call time — which gives the loop an emotional frame no stat card can.
+
+
 ## Realistic aircraft names, airline tail codes, nameplate
 
 - Every airframe now carries a real-world-style designation from its maker: Vayu's utility line numbers like Cessna (Vayu 205/208/210/212), Northline's regionals name for seat count like ATR (NR-70…NR-120), Meridian's M-series tracks seats like the E-jets (M50…M260, widebodies M230/M300/M375), and Kestrel's KD/KJ lines are its Dash/CRJ-style competitors (KD-72…, KJ-80/90/265). Specs and photos unchanged — `makeSpec` just takes an explicit name.

@@ -195,6 +195,21 @@ enum Balance {
         .init(id: "MSP", name: "Minneapolis",   population: 3.7,  businessIndex: 0.32, runwayClass: 2, weeklySlots: 35, latitude: 44.882, longitude: -93.222),
         .init(id: "LAS", name: "Las Vegas",     population: 2.3,  businessIndex: 0.10, runwayClass: 2, weeklySlots: 40, latitude: 36.084, longitude: -115.154),
         .init(id: "AUS", name: "Austin",        population: 2.4,  businessIndex: 0.35, runwayClass: 2, weeklySlots: 30, latitude: 30.194, longitude: -97.670),
+        // Expansion set (2026-07-19): the rest of the majors plus strong
+        // regionals — the US map now covers both coasts, the Gulf, and
+        // the mountain west.
+        .init(id: "IAH", name: "Houston",       population: 7.1,  businessIndex: 0.38, runwayClass: 3, weeklySlots: 50, latitude: 29.984, longitude: -95.341),
+        .init(id: "PHL", name: "Philadelphia",  population: 6.2,  businessIndex: 0.35, runwayClass: 3, weeklySlots: 40, latitude: 39.872, longitude: -75.241),
+        .init(id: "DTW", name: "Detroit",       population: 4.3,  businessIndex: 0.32, runwayClass: 3, weeklySlots: 40, latitude: 42.212, longitude: -83.353),
+        .init(id: "CLT", name: "Charlotte",     population: 2.8,  businessIndex: 0.35, runwayClass: 3, weeklySlots: 40, latitude: 35.214, longitude: -80.943),
+        .init(id: "MCO", name: "Orlando",       population: 2.7,  businessIndex: 0.15, runwayClass: 3, weeklySlots: 40, latitude: 28.429, longitude: -81.309),
+        .init(id: "SAN", name: "San Diego",     population: 3.3,  businessIndex: 0.28, runwayClass: 2, weeklySlots: 35, latitude: 32.734, longitude: -117.190),
+        .init(id: "TPA", name: "Tampa",         population: 3.2,  businessIndex: 0.20, runwayClass: 2, weeklySlots: 35, latitude: 27.976, longitude: -82.533),
+        .init(id: "STL", name: "St. Louis",     population: 2.8,  businessIndex: 0.25, runwayClass: 2, weeklySlots: 30, latitude: 38.749, longitude: -90.370),
+        .init(id: "PDX", name: "Portland",      population: 2.5,  businessIndex: 0.30, runwayClass: 2, weeklySlots: 30, latitude: 45.589, longitude: -122.597),
+        .init(id: "BNA", name: "Nashville",     population: 2.1,  businessIndex: 0.25, runwayClass: 2, weeklySlots: 30, latitude: 36.126, longitude: -86.678),
+        .init(id: "SLC", name: "Salt Lake City", population: 1.3, businessIndex: 0.28, runwayClass: 2, weeklySlots: 30, latitude: 40.789, longitude: -111.978),
+        .init(id: "MSY", name: "New Orleans",   population: 1.3,  businessIndex: 0.15, runwayClass: 2, weeklySlots: 25, latitude: 29.993, longitude: -90.258),
     ]
 
     /// The playable map for a country.

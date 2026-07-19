@@ -116,22 +116,71 @@ struct RootView: View {
         }
     }
 
+    // The last look out the window, with the run's numbers below.
     private var bankruptcyOverlay: some View {
-        VStack(spacing: 18) {
-            Image(systemName: "airplane.arrival")
-                .font(.system(size: 52)).foregroundStyle(Theme.loss)
+        VStack(spacing: 0) {
+            if let window = UIImage(named: "window_welcome") {
+                Image(uiImage: window)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 320)
+                    .padding(.top, 24)
+            }
             Text("Grounded")
                 .font(.display(.largeTitle)).foregroundStyle(Theme.textPrimary)
-            Text("Eight weeks insolvent with nothing left to sell. \(engine.state.airlineName) survived \(engine.state.date.description). The banks have called time.")
+                .padding(.top, 4)
+            Text("Eight weeks insolvent with nothing left to sell. \(engine.state.airlineName) has flown its last sector. The banks have called time.")
                 .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
-            Button("Start a new airline") { engine.restart() }
-                .buttonStyle(GameButtonStyle(color: Theme.sky, prominent: true))
+                .padding(.top, 10)
+            Spacer(minLength: 16)
+            HStack(alignment: .top, spacing: 8) {
+                runStat("Survived", engine.state.date.description)
+                runStat("Fleet", "\(engine.state.fleet.count)")
+                runStat("Routes", "\(engine.state.routes.count)")
+                runStat("Rating", String(format: "%.1f★", engine.state.reputation))
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, Theme.gutter)
+            Button {
+                engine.restart()
+            } label: {
+                Text("Start a new airline").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(GameButtonStyle(color: Theme.sky, prominent: true))
+            .padding(.horizontal, Theme.gutter)
+            .padding(.top, 12)
+            .padding(.bottom, 24)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.bg.opacity(0.97))
+        .background(Color.black.ignoresSafeArea())
     }
+
+    /// A board tile for the final ledger (mono caps value, engraved label).
+    private func runStat(_ label: String, _ value: String) -> some View {
+        InstrumentWell {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(value)
+                    .font(.data(.subheadline, weight: .semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                    .lineLimit(1).minimumScaleFactor(0.7)
+                Text(label.uppercased())
+                    .font(.data(.caption2)).tracking(0.85)
+                    .foregroundStyle(Color.white.opacity(0.55))
+                    .shadow(color: .black.opacity(0.8), radius: 0, y: 1)
+                    .lineLimit(1).minimumScaleFactor(0.8)
+            }
+        }
+    }
+}
+
+#Preview("Grounded") {
+    RootView().environment({ () -> GameEngine in
+        var state = GameEngine.previewGame().state
+        state.isBankrupt = true
+        return GameEngine(state: state)
+    }())
 }
 
 #Preview {

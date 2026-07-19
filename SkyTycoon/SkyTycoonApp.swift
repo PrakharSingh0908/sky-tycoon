@@ -16,6 +16,8 @@ final class GameSession {
     /// Set when the player chose "New game" for a specific slot — the
     /// founding screen commits into it.
     var newGameSlot: Int? = nil
+    /// One-shot: plays the cabin-window reveal over the fresh game.
+    var showFoundingReveal = false
 
     init() {
         GameEngine.migrateLegacySave()
@@ -50,6 +52,7 @@ final class GameSession {
         newEngine.startClock()
         engine = newEngine
         newGameSlot = nil
+        showFoundingReveal = true
     }
 }
 
@@ -81,6 +84,13 @@ struct SkyTycoonApp: App {
                 }
             }
             .environment(session)
+            // The founding moment: fly through the cabin window into the
+            // brand-new airline.
+            .overlay {
+                if session.showFoundingReveal {
+                    WindowRevealView { session.showFoundingReveal = false }
+                }
+            }
             #if DEBUG
             .modifier(InjectionReloader())
             #endif
