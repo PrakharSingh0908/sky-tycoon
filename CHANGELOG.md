@@ -7,6 +7,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Industry rows aligned; wear escalates and surfaces in Ops
+
+- Industry trend rows rebuilt on a strict grid: tag column, single-line name, and ONE mono readout per trend ("−12% aircraft · 37wk", green/red by favor); the story line runs full-width beneath instead of truncating mid-word. The NEXT rival line no longer wraps (name scales, readout holds).
+- Aircraft worn past 80% now appear in the Dashboard's Ops conditions card: amber "VT-A · 84% wear · Service soon", turning loss-red "Hull-loss risk — ground it" past 90%.
+- Wear is no longer linear: metal fatigue compounds (0.7× accumulation when fresh, ~1.6× near the line), so the last 20% arrives faster than the first — early servicing is now mechanically rewarded.
+
+*Why:* the trend rows wrapped into four ragged lines per entry; wear risk deserved dashboard visibility since ignoring it is now lethal; and a linear wear clock made "run it to 89% then service" the optimal exploit — compounding fatigue punishes brinkmanship.
+
+
 ## Tray picker polish + fairness label trim
 
 - Catering tiles get an 8pt gutter, full-width swatch plates, and tile-width short names (None / Sandwich / Fruit / Bento) — the full tray names were colliding edge-to-edge across the row.

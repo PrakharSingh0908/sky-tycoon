@@ -370,8 +370,13 @@ final class GameEngine {
                 if let idx = state.fleet.firstIndex(where: { $0.id == plane.id }) {
                     let spec = Balance.specs[plane.type]!
                     let hours = route.distanceKm / spec.cruiseKmh * Double(route.weeklyFrequency) * 2
+                    // Metal fatigue compounds: a worn airframe wears FASTER
+                    // (0.7× fresh → ~1.6× near the line), so the last 20%
+                    // arrives quicker than the first — service early.
+                    let fatigue = 0.7 + pow(state.fleet[idx].wear / 100, 1.5)
                     state.fleet[idx].wear = min(100, state.fleet[idx].wear
-                        + hours * 0.05 * (1.5 - state.fleet[idx].condition / 200))
+                        + hours * 0.05 * fatigue
+                        * (1.5 - state.fleet[idx].condition / 200))
                 }
             }
 

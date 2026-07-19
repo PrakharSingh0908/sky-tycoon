@@ -34,7 +34,9 @@ struct DashboardView: View {
         GameScreen(title: "Dashboard", accent: accent) {
             heroCard
             if engine.state.reputation < 2.0 { reputationCollapseBanner }
-            if !engine.state.activeEffects.isEmpty { opsConditionsCard }
+            if !engine.state.activeEffects.isEmpty || !wornAircraft.isEmpty {
+                opsConditionsCard
+            }
             trendsCard
             industryCard
             if let report = engine.latestReport { lastWeekCard(report) }
@@ -108,6 +110,14 @@ struct DashboardView: View {
 
     // ── Ops conditions: timed event modifiers currently in force ────────
 
+    /// Delivered airframes worn past 80% — an ops condition, not just a
+    /// Fleet-card footnote (GDD §17).
+    private var wornAircraft: [Aircraft] {
+        engine.state.fleet
+            .filter { $0.status != .onOrder && $0.wear >= 80 }
+            .sorted { $0.wear > $1.wear }
+    }
+
     private var opsConditionsCard: some View {
         GameCard {
             SectionHeader(title: "Ops conditions", icon: "exclamationmark.bubble.fill",
@@ -121,6 +131,17 @@ struct DashboardView: View {
                     Spacer()
                     Text("\(effect.weeksRemaining) wk remaining")
                         .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+                }
+            }
+            ForEach(wornAircraft) { plane in
+                let critical = plane.wear >= Balance.wearDangerThreshold
+                HStack {
+                    StatusBadge(text: "\(plane.nickname) · \(Int(plane.wear))% wear",
+                                color: critical ? Theme.loss : Theme.warn)
+                    Spacer()
+                    Text(critical ? "Hull-loss risk — ground it" : "Service soon")
+                        .font(.game(.caption))
+                        .foregroundStyle(critical ? Theme.loss : Theme.textSecondary)
                 }
             }
         }
@@ -315,14 +336,16 @@ struct DashboardView: View {
                 if let next = engine.nextRival {
                     let progress = min(1, engine.marketCap / next.marketCap)
                     VStack(alignment: .leading, spacing: 4) {
-                        HStack {
+                        HStack(spacing: 8) {
                             Text("NEXT · \(next.name.uppercased())")
                                 .font(.data(.caption2)).tracking(0.85)
                                 .foregroundStyle(Theme.textSecondary)
-                            Spacer()
+                                .lineLimit(1).minimumScaleFactor(0.75)
+                            Spacer(minLength: 8)
                             TickerText(text: "\(Int(progress * 100))% of \(next.marketCap.money)",
                                        font: .game(.caption2, weight: .medium),
                                        color: Theme.textSecondary)
+                                .fixedSize()
                         }
                         MeterBar(value: progress, color: Theme.cornflower, height: 4)
                     }
@@ -346,29 +369,36 @@ struct DashboardView: View {
         .sheet(isPresented: $showingIndustry) { IndustrySheet() }
     }
 
+    // One aligned line per fact: tag + name + a single mono readout
+    // (effect · weeks); the story gets its own full-width line beneath.
     private func trendRow(_ trend: IndustryTrend) -> some View {
         let pct = Int(((trend.multiplier - 1) * 100).rounded())
-        return HStack(spacing: 8) {
-            Text(trend.horizon == .long ? "LONG" : "SHORT")
-                .font(.data(.caption2)).tracking(0.85)
-                .foregroundStyle(trend.horizon == .long ? Theme.cornflower : Theme.warn)
-                .frame(width: 44, alignment: .leading)
-            VStack(alignment: .leading, spacing: 1) {
+        let kind = switch trend.kind {
+        case .demand: "demand"; case .fuel: "fuel"
+        case .wages: "wages"; case .aircraftPrices: "aircraft"
+        }
+        return VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 8) {
+                Text(trend.horizon == .long ? "LONG" : "SHORT")
+                    .font(.data(.caption2)).tracking(0.85)
+                    .foregroundStyle(trend.horizon == .long ? Theme.cornflower : Theme.warn)
+                    .frame(width: 46, alignment: .leading)
                 Text(trend.name)
                     .font(.game(.subheadline, weight: .medium))
                     .foregroundStyle(Theme.textPrimary)
-                Text(trend.detail)
-                    .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
-                    .lineLimit(1)
-            }
-            Spacer(minLength: 8)
-            VStack(alignment: .trailing, spacing: 1) {
-                Text("\(pct >= 0 ? "+" : "")\(pct)% \(trend.kind.label)")
-                    .font(.data(.caption2, weight: .semibold))
+                    .lineLimit(1).minimumScaleFactor(0.85)
+                Spacer(minLength: 8)
+                (Text("\(pct >= 0 ? "+" : "")\(pct)% \(kind)")
                     .foregroundStyle(trend.favorsPlayer ? Theme.profit : Theme.loss)
-                Text("\(trend.weeksRemaining) wk")
-                    .font(.game(.caption2)).foregroundStyle(Theme.textTertiary)
+                 + Text(" · \(trend.weeksRemaining)wk")
+                    .foregroundStyle(Theme.textTertiary))
+                    .font(.data(.caption2, weight: .semibold))
+                    .lineLimit(1).fixedSize()
             }
+            Text(trend.detail)
+                .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                .lineLimit(1)
+                .padding(.leading, 54)
         }
     }
 
