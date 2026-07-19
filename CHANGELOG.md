@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Flap row drops the currency cell
+
+- The split-flap net-worth row no longer shows a $ cell — just sign, digits, and magnitude (− 4.74 M).
+
+*Why:* the eyebrow label already names the metric and every other number on screen is dollars; one fewer cell keeps the board tighter.
+
+
 ## Stamped metal tags + plane glyph everywhere
 
 - `StatusBadge` re-machined as a stamped silver tag: silver-gradient plate, punched wire hole on the leading edge, debossed mono lettering (dark strike, light catching the cut), and the semantic color as a thin anodized wash — replacing the hairline-outline chips. All badges (staff counts, LEASED, IN SHOP, IDLE, route tags) pick it up.

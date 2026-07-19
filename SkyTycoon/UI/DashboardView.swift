@@ -158,7 +158,8 @@ struct DashboardView: View {
     /// flap cell — gradient tile, hairline rim, the horizontal seam — with
     /// the glyph in lit 3D metal (red alloy when negative, silver positive).
     private var netWorthText: some View {
-        let value = engine.netWorth.money
+        // No currency cell: the eyebrow already says what this is.
+        let value = engine.netWorth.money.replacingOccurrences(of: "$", with: "")
         let negative = engine.netWorth < 0
         return HStack(spacing: 3) {
             ForEach(Array(value.enumerated()), id: \.offset) { _, ch in
