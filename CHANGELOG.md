@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Asking wage dropped from applicant meta
+
+- The applicant row's meta line no longer repeats "asks $X/wk"; it now reads just "waits N wk". The Hire key already carries the wage.
+
+*Why:* per direction. The same number sat twice in a 60pt row; the button is the one that matters because it is the price you tap.
+
+
 ## Reject applicants, and a pin proving assignments move workload
 
 - Each applicant row at the hiring desk now has a quiet reject cross in its corner: one tap and they leave the pool immediately (engine rejectApplicant). No penalty; you simply pass. A "Hiring desk" preview pins the row.

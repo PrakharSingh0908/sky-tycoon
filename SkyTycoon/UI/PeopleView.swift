@@ -319,7 +319,7 @@ private struct HiringSheet: View {
                         .lineLimit(1)
                     HStack(spacing: 5) {
                         StarRating(rating: applicant.skill, size: 8)
-                        Text("asks \(applicant.askingWage.money)/wk · waits \(applicant.weeksRemaining) wk")
+                        Text("waits \(applicant.weeksRemaining) wk")
                             .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
                             .lineLimit(1)
                     }
