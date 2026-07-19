@@ -9,9 +9,9 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## Seattle stamp on the boarding pass
 
-- Boarding passes touching Seattle now carry the engraved city stamp (Resources/Stamps/stamp_seattle.png) franked beside the destination block. The art is dark ink on transparency, so it is inverted and lifted in place to read as engraved silver with a soft glow, matching the polished-silver instrument language. A cityStamps map keys stamps by airport code, so future city stamps drop in with one line. A "Seattle stamp" preview pins the treatment.
+- Boarding passes touching Seattle now carry the engraved city stamp (Resources/Stamps/stamp_seattle.png) as a ghost-faint watermark behind the destination block, inverted from its dark-ink art and pressed in at 16% opacity so the airport code stays fully readable over it. A cityStamps map keys stamps by airport code, so future city stamps drop in with one line. A "Seattle stamp" preview pins the treatment.
 
-*Why:* per direction. Routes should feel like places, not ID pairs; a franked stamp gives the pass the postal romance and the silver treatment keeps it in the machined material family.
+*Why:* per direction, first as a franked stamp beside the code, then moved into the background very muted. Routes should feel like places, not ID pairs; a watermark gives the pass the postal romance without competing with the flight data.
 
 
 ## Slide to lease

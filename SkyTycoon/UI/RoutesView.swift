@@ -275,19 +275,6 @@ private struct BoardingPassCard: View {
                 codeBlock(code: route.originID, city: originName, alignment: .leading)
                 flightPath
                 codeBlock(code: route.destinationID, city: destName, alignment: .trailing)
-                if let stampName, let stamp = UIImage(named: stampName) {
-                    // The art is dark ink on transparency; inverted and
-                    // lifted it reads as engraved silver on the ticket.
-                    Image(uiImage: stamp)
-                        .resizable().scaledToFit()
-                        .colorInvert()
-                        .brightness(0.28)
-                        .contrast(1.15)
-                        .shadow(color: .white.opacity(0.35), radius: 4)
-                        .frame(height: 72)
-                        .padding(.vertical, -10)
-                        .padding(.leading, -4)
-                }
             }
             .padding(Theme.cardPadding)
             .padding(.vertical, 2)
@@ -342,6 +329,21 @@ private struct BoardingPassCard: View {
                     engine.closeRoute(routeID: route.id)
                 }
                 Button("Keep flying", role: .cancel) {}
+            }
+        }
+        // City stamp, franked ghost-faint behind the flight header. The
+        // art is dark ink on transparency; inverted it reads as a silver
+        // watermark pressed into the ticket.
+        .background(alignment: .topTrailing) {
+            if let stampName, let stamp = UIImage(named: stampName) {
+                Image(uiImage: stamp)
+                    .resizable().scaledToFit()
+                    .colorInvert()
+                    .frame(height: 104)
+                    .opacity(0.16)
+                    .padding(.top, 2)
+                    .padding(.trailing, 10)
+                    .allowsHitTesting(false)
             }
         }
         .background(
