@@ -230,17 +230,20 @@ private struct AircraftCard: View {
         }
     }
 
+    /// Menu chips wear the same machined key surface as real buttons, so
+    /// the action row reads as one bank of console keys.
     private func menuChip(_ title: String, icon: String, color: Color) -> some View {
-        HStack(spacing: 4) {
-            Image(systemName: icon).font(.caption2.weight(.bold))
+        HStack(spacing: 5) {
+            Image(systemName: icon).font(.caption2.weight(.medium))
+                .foregroundStyle(Theme.cornflower)
             Text(title)
+                .foregroundStyle(Color.white)
         }
-        .font(.game(.subheadline, weight: .semibold))
+        .font(.game(.subheadline, weight: .medium))
         .lineLimit(1)
-        .padding(.horizontal, 12).padding(.vertical, 8)
-        .frame(minHeight: 34)
-        .background(color.opacity(0.16), in: RoundedRectangle(cornerRadius: Theme.controlCorner))
-        .foregroundStyle(color)
+        .padding(.horizontal, 16).padding(.vertical, 8)
+        .frame(minHeight: 36)
+        .metalKey(prominent: false, pressed: false)
     }
 
     private func routeLabel(_ route: Route, spec: AircraftSpec) -> String {

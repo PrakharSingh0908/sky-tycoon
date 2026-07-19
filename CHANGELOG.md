@@ -9,6 +9,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased — design-system branch]
 
+### 2026-07-19 — Fleet menu chips join the key bank
+
+**Fixed**
+- The fleet card's Route/Service menu chips still wore the old flat
+  tinted style beside the metal Cabin button. They now use the shared
+  .metalKey surface (gunmetal face, cornflower icons), so the action
+  row reads as one bank of console keys.
+
+
 ### 2026-07-19 — MetalKey extracted as a component; sizing bug fixed
 
 **Fixed**
