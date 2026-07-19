@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Instant joins and the contract-signing moment
+
+- New hires are on the job the moment the contract inks. The "+N joining", "joins next wk", and "on duty next wk" treatments are gone (the sim always counted hires immediately; the copy claimed otherwise). Fresh hires read "just joined" on the roster for their first week.
+- Signing now has its moment: after a hire (direct, at asking from the negotiation table, or on an accepted offer), a self-sizing contract sheet presents with the employee's portrait springing in, the stamped terms (position, weekly wage, starts immediately), and their signature drawing itself across the line in the handwriting face, with a success haptic. Negotiated hires ink at the negotiated wage. A "Contract signed" preview pins the card.
+
+*Why:* per direction, smoother UX. The fake one-week delay was pure copy debt that made hiring feel laggy; and a hire is the most personal transaction in the game, so it deserves the same ink-and-paper ceremony as the aunt's letters.
+
+
 ## Silver icons on the Fleet empty state and Showroom row
 
 - The "No aircraft yet" airplane medallion and the Showroom cart icon on the Fleet screen now wear the polished-silver gradient with the soft glow, replacing their cornflower accent fills. The treatment is extracted into a reusable polishedSilver() modifier that SectionHeader also uses, so future icons take one call. An "Empty fleet" preview pins the state.

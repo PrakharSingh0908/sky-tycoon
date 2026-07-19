@@ -78,10 +78,6 @@ private struct StaffPoolCard: View {
                     StarRating(rating: pool.skill, size: 9)
                 }
                 Spacer()
-                let joining = pool.members.filter { $0.hiredOn == engine.state.date }.count
-                if joining > 0 {
-                    StatusBadge(text: "+\(joining) joining", color: Theme.teal)
-                }
                 StatusBadge(text: "\(pool.headcount) staff", color: accent)
             }
 
@@ -126,18 +122,9 @@ private struct StaffPoolCard: View {
                         memberRow(member)
                     }
                 } label: {
-                    HStack(spacing: 6) {
-                        Label("Roster (\(pool.members.count))", systemImage: "person.text.rectangle")
-                            .font(.game(.caption, weight: .semibold))
-                            .foregroundStyle(Theme.textSecondary)
-                        // Pending starts surface on the collapsed row too.
-                        let joining = pool.members.filter { $0.hiredOn == engine.state.date }.count
-                        if joining > 0 {
-                            Text("· \(joining) join\(joining == 1 ? "s" : "") next wk")
-                                .font(.game(.caption, weight: .semibold))
-                                .foregroundStyle(Theme.teal)
-                        }
-                    }
+                    Label("Roster (\(pool.members.count))", systemImage: "person.text.rectangle")
+                        .font(.game(.caption, weight: .semibold))
+                        .foregroundStyle(Theme.textSecondary)
                 }
                 .tint(Theme.textSecondary)
             }
@@ -157,9 +144,8 @@ private struct StaffPoolCard: View {
     }
 
     private func memberRow(_ member: StaffMember) -> some View {
-        // Hired mid-week: on the roster now, on the job from the next
-        // settle. That fact lives on the meta line — a badge here made
-        // the row fight for width and wrap.
+        // New hires are on the job the moment the contract inks (2026-07-20);
+        // the meta line just marks them fresh for the week.
         let justJoined = member.hiredOn == engine.state.date
         return HStack(spacing: 10) {
             PersonAvatar(avatar: member.avatar, name: member.name, size: 34)
@@ -171,7 +157,7 @@ private struct StaffPoolCard: View {
                 HStack(spacing: 5) {
                     StarRating(rating: member.skill, size: 8)
                     Text(justJoined
-                         ? "\(member.weeklyWage.money)/wk · on duty next wk"
+                         ? "\(member.weeklyWage.money)/wk · just joined"
                          : "\(member.weeklyWage.money)/wk · since \(member.hiredOn.description)")
                         .font(.game(.caption2))
                         .foregroundStyle(justJoined ? Theme.cornflower : Theme.textSecondary)
@@ -236,6 +222,10 @@ private struct HiringSheet: View {
     @Environment(\.dismiss) private var dismiss
     let role: StaffRole
     @State private var negotiating: JobApplicant?
+    @State private var signed: SignedContract?
+    /// A contract inked at the negotiation table waits here until that
+    /// sheet finishes dismissing, then presents.
+    @State private var pendingContract: SignedContract?
     private let accent = Theme.violet
 
     private var applicants: [JobApplicant] {
@@ -267,7 +257,15 @@ private struct HiringSheet: View {
         .presentationBackground(Theme.bgElevated)
         .preferredColorScheme(.dark)
         .holdsSimClock()   // patience doesn't drain while you're deciding
-        .sheet(item: $negotiating) { NegotiationSheet(applicant: $0) }
+        .sheet(item: $negotiating, onDismiss: {
+            if let contract = pendingContract {
+                pendingContract = nil
+                signed = contract
+            }
+        }) { applicant in
+            NegotiationSheet(applicant: applicant) { pendingContract = $0 }
+        }
+        .sheet(item: $signed) { ContractSignedCard(contract: $0) }
     }
 
     // Info line first, keys on their own full-width row below — five
@@ -302,7 +300,12 @@ private struct HiringSheet: View {
                 }
                 .buttonStyle(GameButtonStyle(finish: .obsidian))
                 Button {
-                    engine.hireApplicant(applicantID: applicant.id)
+                    // Capture the contract before the applicant leaves state.
+                    let contract = SignedContract(applicant: applicant,
+                                                  wage: applicant.askingWage)
+                    if engine.hireApplicant(applicantID: applicant.id) {
+                        signed = contract
+                    }
                 } label: {
                     Text("Hire · \(applicant.askingWage.money)/wk").frame(maxWidth: .infinity)
                 }
@@ -320,6 +323,7 @@ private struct NegotiationSheet: View {
     @Environment(GameEngine.self) private var engine
     @Environment(\.dismiss) private var dismiss
     let applicant: JobApplicant
+    var onSigned: (SignedContract) -> Void = { _ in }
     @State private var offer: Double = 0
     @State private var response: String?
 
@@ -378,7 +382,11 @@ private struct NegotiationSheet: View {
                     Button("Make offer") { makeOffer(person) }
                         .buttonStyle(GameButtonStyle(color: Theme.violet, prominent: true))
                     Button("Hire at asking") {
-                        engine.hireApplicant(applicantID: person.id)
+                        let contract = SignedContract(applicant: person,
+                                                      wage: person.askingWage)
+                        if engine.hireApplicant(applicantID: person.id) {
+                            onSigned(contract)
+                        }
                         dismiss()
                     }
                     .buttonStyle(GameButtonStyle(color: Theme.violet))
@@ -404,6 +412,7 @@ private struct NegotiationSheet: View {
     private func makeOffer(_ person: JobApplicant) {
         switch engine.negotiate(applicantID: person.id, offer: offer) {
         case .accepted:
+            onSigned(SignedContract(applicant: person, wage: offer))
             dismiss()
         case .countered(let newAsking):
             response = newAsking < person.askingWage
@@ -415,4 +424,119 @@ private struct NegotiationSheet: View {
             dismiss()
         }
     }
+}
+
+// ── The signing moment ───────────────────────────────────────────────────
+
+/// A hire caught at the instant of signing — captured before the applicant
+/// leaves state, because the roster only knows them as a member afterward.
+private struct SignedContract: Identifiable {
+    let id = UUID()
+    let name: String
+    let avatar: String?
+    let role: StaffRole
+    let wage: Double
+    let skill: Double
+
+    init(applicant: JobApplicant, wage: Double) {
+        name = applicant.name
+        avatar = applicant.avatar
+        role = applicant.role
+        self.wage = wage
+        skill = applicant.skill
+    }
+}
+
+/// The contract inks in front of you: portrait arrives, terms stamped,
+/// then the new hire's signature draws itself across the line. They are
+/// on the job the moment the ink dries.
+private struct ContractSignedCard: View {
+    @Environment(\.dismiss) private var dismiss
+    let contract: SignedContract
+    @State private var arrived = false
+    @State private var contentHeight: CGFloat = 0
+
+    var body: some View {
+        VStack(spacing: 14) {
+            HStack(spacing: 6) {
+                Image(systemName: "doc.text.fill")
+                    .font(.caption2.weight(.medium)).polishedSilver()
+                Text("EMPLOYMENT CONTRACT")
+                    .font(.data(.caption2)).tracking(0.9)
+                    .foregroundStyle(Theme.textSecondary)
+            }
+            .padding(.top, 22)
+
+            PersonAvatar(avatar: contract.avatar, name: contract.name, size: 76)
+                .scaleEffect(arrived ? 1 : 0.6)
+                .opacity(arrived ? 1 : 0)
+
+            VStack(spacing: 4) {
+                Text(contract.name)
+                    .font(.display(.title2)).foregroundStyle(Theme.textPrimary)
+                    .multilineTextAlignment(.center)
+                StarRating(rating: contract.skill, size: 10)
+            }
+
+            VStack(spacing: 8) {
+                termRow("Position", contract.role.displayName)
+                termRow("Weekly wage", "\(contract.wage.money)/wk")
+                termRow("Starts", "Immediately")
+            }
+            .padding(14)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.corner))
+
+            VStack(spacing: 5) {
+                HandwrittenSignature(name: contract.name, size: 34)
+                Rectangle().fill(Theme.hairline)
+                    .frame(height: 1).frame(maxWidth: 220)
+                Text("Employee signature")
+                    .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+            }
+            .padding(.top, 4)
+
+            Button {
+                dismiss()
+            } label: {
+                Text("Welcome aboard").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(GameButtonStyle(finish: .bronze))
+            .padding(.top, 6)
+        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 18)
+        .frame(maxWidth: .infinity)
+        .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) {
+            contentHeight = $0
+        }
+        .presentationDetents([.height(min(contentHeight + 24, 720))])
+        .presentationBackground(Theme.bgElevated)
+        .preferredColorScheme(.dark)
+        .holdsSimClock()
+        .sensoryFeedback(.success, trigger: arrived)
+        .onAppear { withAnimation(.spring(duration: 0.5)) { arrived = true } }
+    }
+
+    private func termRow(_ label: String, _ value: String) -> some View {
+        HStack {
+            Text(label).font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+            Spacer()
+            Text(value).font(.game(.caption, weight: .semibold))
+                .foregroundStyle(Theme.textPrimary)
+        }
+    }
+}
+
+// Signing-moment pin (flat): the contract card as presented after a hire.
+#Preview("Contract signed") {
+    let applicant = JobApplicant(id: UUID(), role: .cabinCrew,
+                                 name: "Maya Thompson",
+                                 avatar: "avatar_crew_f_03",
+                                 skill: 3.4, askingWage: 940,
+                                 flexibility: 0.5, irritation: 0,
+                                 weeksRemaining: 3)
+    ContractSignedCard(contract: SignedContract(applicant: applicant, wage: 940))
+        .background(Theme.bgElevated)
+        .environment(GameEngine.previewGame())
+        .preferredColorScheme(.dark)
 }
