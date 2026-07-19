@@ -231,6 +231,14 @@ struct NewRouteSheet: View {
         .preferredColorScheme(.dark)
 }
 
+// Franked pass pin: routes touching Seattle carry the engraved city stamp.
+#Preview("Seattle stamp") {
+    let engine = GameEngine.newGame(airlineName: "Foundation Air", country: .us, seed: 7)
+    let _ = engine.openRoute(from: "SFO", to: "SEA", fare: 90, frequency: 7)
+    return RoutesView().environment(engine)
+        .preferredColorScheme(.dark)
+}
+
 #Preview("Route detail") {
     let engine = GameEngine.previewGame()
     return NavigationStack {
@@ -254,6 +262,12 @@ private struct BoardingPassCard: View {
 
     private let stubHeight: CGFloat = 124
 
+    /// Engraved city stamps, franked on passes that touch the city.
+    private static let cityStamps = ["SEA": "stamp_seattle"]
+    private var stampName: String? {
+        Self.cityStamps[route.destinationID] ?? Self.cityStamps[route.originID]
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // ── The flight ───────────────────────────────────────────────
@@ -261,6 +275,19 @@ private struct BoardingPassCard: View {
                 codeBlock(code: route.originID, city: originName, alignment: .leading)
                 flightPath
                 codeBlock(code: route.destinationID, city: destName, alignment: .trailing)
+                if let stampName, let stamp = UIImage(named: stampName) {
+                    // The art is dark ink on transparency; inverted and
+                    // lifted it reads as engraved silver on the ticket.
+                    Image(uiImage: stamp)
+                        .resizable().scaledToFit()
+                        .colorInvert()
+                        .brightness(0.28)
+                        .contrast(1.15)
+                        .shadow(color: .white.opacity(0.35), radius: 4)
+                        .frame(height: 72)
+                        .padding(.vertical, -10)
+                        .padding(.leading, -4)
+                }
             }
             .padding(Theme.cardPadding)
             .padding(.vertical, 2)

@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Seattle stamp on the boarding pass
+
+- Boarding passes touching Seattle now carry the engraved city stamp (Resources/Stamps/stamp_seattle.png) franked beside the destination block. The art is dark ink on transparency, so it is inverted and lifted in place to read as engraved silver with a soft glow, matching the polished-silver instrument language. A cityStamps map keys stamps by airport code, so future city stamps drop in with one line. A "Seattle stamp" preview pins the treatment.
+
+*Why:* per direction. Routes should feel like places, not ID pairs; a franked stamp gives the pass the postal romance and the silver treatment keeps it in the machined material family.
+
+
 ## Slide to lease
 
 - The Lease button in the showroom's lease cards is now a SlideKey, a new design-system control: a bronze machined key travels a recessed groove past the engraved "Slide to lease" label, and the contract signs only at the end of the throw. Short pulls spring back; a full pull fires the success haptic and the receipt. Locked tiers keep the lock plate over the whole card. A "Lease tab" preview pins the control.
