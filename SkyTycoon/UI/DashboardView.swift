@@ -32,8 +32,10 @@ struct DashboardView: View {
 
     var body: some View {
         GameScreen(title: "Dashboard", accent: accent) {
-            heroCard
+            // A founder's first session leads with the checklist, not the
+            // scoreboard: First Flight is THE card until the airline flies.
             if !firstFlightDone { firstFlightCard }
+            heroCard
             if engine.state.reputation < 2.0 { reputationCollapseBanner }
             if !engine.state.activeEffects.isEmpty || !wornAircraft.isEmpty {
                 opsConditionsCard
@@ -74,27 +76,32 @@ struct DashboardView: View {
     }
 
     private var firstFlightCard: some View {
-        GameCard(highlight: Theme.cornflower) {
+        GameCard {
             SectionHeader(title: "First flight", icon: "checklist", accent: accent)
             Text("Three moves and \(engine.state.airlineName) is an airline.")
                 .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
-            firstFlightRow(done: !engine.state.fleet.isEmpty,
-                           title: "Lease your first aircraft",
-                           detail: "No capital needed. A feeder flies day one.") {
-                showingShowroom = true
-            }
-            firstFlightRow(done: !engine.state.routes.isEmpty,
-                           title: "Open your first route",
-                           detail: "Pick a pair where the demand is.") {
-                showingNewRoute = true
-            }
-            firstFlightRow(done: hasAssignedRoute,
-                           title: "Put the plane on the route",
-                           detail: "Assign it and the week starts earning.") {
-                if engine.state.routes.first != nil {
-                    showingFirstRoute = true
-                } else {
+            VStack(alignment: .leading, spacing: 4) {
+                firstFlightRow(number: 1, isLast: false,
+                               done: !engine.state.fleet.isEmpty,
+                               title: "Lease your first aircraft",
+                               detail: "No capital needed. A feeder flies day one.") {
+                    showingShowroom = true
+                }
+                firstFlightRow(number: 2, isLast: false,
+                               done: !engine.state.routes.isEmpty,
+                               title: "Open your first route",
+                               detail: "Pick a pair where the demand is.") {
                     showingNewRoute = true
+                }
+                firstFlightRow(number: 3, isLast: true,
+                               done: hasAssignedRoute,
+                               title: "Put the plane on the route",
+                               detail: "Assign it and the week starts earning.") {
+                    if engine.state.routes.first != nil {
+                        showingFirstRoute = true
+                    } else {
+                        showingNewRoute = true
+                    }
                 }
             }
         }
@@ -109,15 +116,53 @@ struct DashboardView: View {
         }
     }
 
-    private func firstFlightRow(done: Bool, title: String, detail: String,
+    /// A machined step disc: numbered gunmetal until done, then a
+    /// checkmark on profit-tinted metal. Same material family as the keys.
+    private func stepDisc(number: Int, done: Bool) -> some View {
+        ZStack {
+            Circle().fill(LinearGradient(
+                colors: done
+                    ? [Color(red: 0.40, green: 0.72, blue: 0.51),
+                       Color(red: 0.17, green: 0.40, blue: 0.27)]
+                    : [Color(white: 0.32), Color(white: 0.14)],
+                startPoint: .top, endPoint: .bottom))
+            Circle().strokeBorder(LinearGradient(
+                colors: [.white.opacity(0.45), .black.opacity(0.55)],
+                startPoint: .top, endPoint: .bottom), lineWidth: 1)
+            if done {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.white)
+            } else {
+                Text("\(number)")
+                    .font(.data(.caption, weight: .semibold))
+                    .foregroundStyle(.white)
+            }
+        }
+        .frame(width: 24, height: 24)
+        .shadow(color: .black.opacity(0.4), radius: 1.5, y: 1)
+    }
+
+    private func firstFlightRow(number: Int, isLast: Bool, done: Bool,
+                                title: String, detail: String,
                                 action: @escaping () -> Void) -> some View {
         Button {
             if !done { action() }
         } label: {
-            HStack(spacing: 10) {
-                Image(systemName: done ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(done ? Theme.profit : Theme.cornflower)
-                VStack(alignment: .leading, spacing: 1) {
+            HStack(alignment: .top, spacing: 12) {
+                // Disc rides the TOP of the row; a hairline rail runs to
+                // the next step, stepper-style.
+                VStack(spacing: 3) {
+                    stepDisc(number: number, done: done)
+                    if !isLast {
+                        Rectangle()
+                            .fill(Theme.hairline)
+                            .frame(width: 1)
+                            .frame(maxHeight: .infinity)
+                    }
+                }
+                .fixedSize(horizontal: true, vertical: false)
+                VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(.game(.subheadline, weight: done ? .regular : .semibold))
                         .foregroundStyle(done ? Theme.textSecondary : Theme.textPrimary)
@@ -127,11 +172,14 @@ struct DashboardView: View {
                             .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
                     }
                 }
+                .padding(.top, 2)
+                .padding(.bottom, isLast ? 0 : 12)
                 Spacer()
                 if !done {
                     Image(systemName: "chevron.right")
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(Theme.textSecondary)
+                        .padding(.top, 6)
                 }
             }
         }

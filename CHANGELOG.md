@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## First Flight card refined
+
+- The checklist now LEADS the Dashboard (above the hero) until the airline flies, with the accent stroke removed - hierarchy by position, not decoration.
+- Step pointers are machined numbered discs (gunmetal gradient with a light-catching rim, checkmark on green metal when done), top-aligned to each row instead of vertically centered, with a hairline rail connecting the steps stepper-style.
+
+*Why:* per direction - the founder's first decision deserves the top slot, and the hardware language should match the rest of the console.
+
+
 ## First Flight onboarding card
 
 - New founders get a checklist card on the Dashboard, right under the hero: three steps (lease your first aircraft, open your first route, put the plane on the route), each row opening the relevant surface directly as a sheet - the showroom on the Lease tab, the route desk, or the first route's detail for assignment. Steps check off and strike through as the airline comes alive; the card retires itself once a plane is flying a route.
