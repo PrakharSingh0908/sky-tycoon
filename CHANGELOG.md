@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Reject applicants, and a pin proving assignments move workload
+
+- Each applicant row at the hiring desk now has a quiet reject cross in its corner: one tap and they leave the pool immediately (engine rejectApplicant). No penalty; you simply pass. A "Hiring desk" preview pins the row.
+- Verified that assigning a plane to a route already moves the Workload meter instantly (it reads the same liveCrewDemandHours the tick runs). Added a "Workload moves on assignment" preview pin: baseline pilots at 65% next to the same pool at 120% with the overwork warning, immediately after one extra plane was leased and assigned with no settle between.
+
+*Why:* per direction. Rejecting was the missing third answer at the desk (hire, haggle, or pass), and the workload pin turns an invisible immediacy guarantee into a regression test.
+
+
 ## Workload meter moves the moment you hire
 
 - The Workload meter on the People cards (and the overwork warning) now reads a live projection instead of last week's settled value: crew demand hours from the current routes and assignments over current headcount. Hire someone and the meter drops before the sheet closes; assign a plane or bump frequency and it rises. The demand-hours formula is extracted into liveCrewDemandHours(), which the weekly tick runs on too, so the projection can never disagree with what next week books.

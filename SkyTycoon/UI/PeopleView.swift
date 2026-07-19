@@ -35,6 +35,42 @@ struct PeopleView: View {
     RosterRowsPreview()
 }
 
+// Immediacy pin: assigning a plane mid-week moves the Workload meter NOW.
+// Top card = baseline; bottom card = same pool right after one more plane
+// was leased and assigned, no settle in between.
+#Preview("Workload moves on assignment") {
+    WorkloadProjectionPreview()
+}
+
+private struct WorkloadProjectionPreview: View {
+    private let baseline = GameEngine.previewGame()
+    private let assigned: GameEngine
+    init() {
+        let e = GameEngine.previewGame()
+        let type = e.state.fleet[0].type
+        if e.leaseAircraft(type: type, nickname: "PROOF-1"),
+           let plane = e.state.fleet.last {
+            e.assign(aircraftID: plane.id, to: e.state.routes[0].id)
+        }
+        assigned = e
+    }
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 12) {
+                StaffPoolCard(role: .pilots, pool: baseline.state.staff[.pilots]!,
+                              accent: Theme.violet, onHiring: { _ in })
+                    .environment(baseline)
+                StaffPoolCard(role: .pilots, pool: assigned.state.staff[.pilots]!,
+                              accent: Theme.violet, onHiring: { _ in })
+                    .environment(assigned)
+            }
+            .padding()
+        }
+        .background(Theme.bg)
+        .preferredColorScheme(.dark)
+    }
+}
+
 private struct RosterRowsPreview: View {
     private let engine = GameEngine.previewGame()
     var body: some View {
@@ -289,6 +325,19 @@ private struct HiringSheet: View {
                     }
                 }
                 Spacer(minLength: 0)
+                // The quiet no: turn them away without a word.
+                Button {
+                    withAnimation(.snappy) {
+                        _ = engine.rejectApplicant(applicantID: applicant.id)
+                    }
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Theme.textSecondary)
+                        .frame(width: 30, height: 30)
+                        .background(Color.white.opacity(0.06), in: Circle())
+                }
+                .buttonStyle(.plain)
             }
             if applicant.irritation > 0 {
                 MeterRow(label: "Patience", value: 1 - applicant.irritation / 100,
@@ -528,6 +577,14 @@ private struct ContractSignedCard: View {
                 .foregroundStyle(Theme.textPrimary)
         }
     }
+}
+
+// Hiring desk pin (flat): applicant rows with hire, negotiate, and the
+// quiet reject cross.
+#Preview("Hiring desk") {
+    HiringSheet(role: .pilots)
+        .environment(GameEngine.previewGame())
+        .preferredColorScheme(.dark)
 }
 
 // Signing-moment pin (flat): the contract card as presented after a hire.

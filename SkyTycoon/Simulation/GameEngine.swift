@@ -1695,6 +1695,15 @@ final class GameEngine {
         return .countered(asking)
     }
 
+    /// Turn someone away at the desk — they leave the applicant pool now.
+    @discardableResult
+    func rejectApplicant(applicantID: UUID) -> Bool {
+        guard let i = state.applicants.firstIndex(where: { $0.id == applicantID }) else { return false }
+        state.applicants.remove(at: i)
+        save()
+        return true
+    }
+
     /// Hire at their current asking wage, no haggling.
     @discardableResult
     func hireApplicant(applicantID: UUID) -> Bool {
