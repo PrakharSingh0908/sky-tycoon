@@ -9,6 +9,18 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## [Unreleased — design-system branch]
 
+### 2026-07-19 — Buttons become machined metal keys
+
+**Changed**
+- GameButtonStyle rebuilt as physical console keys: gradient metal
+  faces (brushed white primary, gunmetal secondary), a light-catching
+  top rim, an extruded base lip, a drop shadow, and 2.5pt press-travel
+  with the key visually sinking onto its base (scale-press retired).
+  PillStepper's -/+ keys get the mini gunmetal treatment. Recorded in
+  the design doc as Blueprint's one sanctioned exception to the
+  zero-elevation rule — a console's buttons are physical.
+
+
 ### 2026-07-19 — Portraits displayed open, not cropped
 
 **Changed**

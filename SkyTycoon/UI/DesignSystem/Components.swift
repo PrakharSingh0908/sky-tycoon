@@ -307,27 +307,54 @@ struct GameButtonStyle: ButtonStyle {
     var prominent = false
 
     func makeBody(configuration: Configuration) -> some View {
-        // Blueprint buttons: primary = WHITE filled, 8px (never the blue);
-        // secondary = graphite outline. Functional colors (loss/warn) tint
-        // the outline variant's label so destructive still reads.
+        // Blueprint keys (v3.1.1): machined METAL buttons — the one
+        // sanctioned exception to zero elevation, because a console's
+        // buttons are physical. Gradient face, bright top rim, extruded
+        // base lip, and real press-travel: the key sinks into the panel.
+        let pressed = configuration.isPressed
         let functional = color == Theme.loss || color == Theme.warn || color == Theme.profit
-        return configuration.label
-            .font(.game(.subheadline, weight: .medium))
-            .lineLimit(1)
-            .padding(.horizontal, 16).padding(.vertical, 8)
-            .frame(minHeight: 36)
-            .background(prominent ? AnyShapeStyle(Color.white) : AnyShapeStyle(Color.clear),
-                        in: RoundedRectangle(cornerRadius: Theme.corner))
-            .overlay(RoundedRectangle(cornerRadius: Theme.corner)
-                .strokeBorder(prominent ? Color.clear
-                              : (functional ? color.opacity(0.6) : Theme.graphite),
-                              lineWidth: 1))
-            .foregroundStyle(prominent ? Theme.bg : (functional ? color : Color.white))
-            .scaleEffect(configuration.isPressed ? 0.95 : 1)
-            .animation(.snappy(duration: 0.15), value: configuration.isPressed)
-            .sensoryFeedback(.impact(weight: .light), trigger: configuration.isPressed) { old, new in
-                !old && new
-            }
+        let shape = RoundedRectangle(cornerRadius: Theme.corner)
+        let travel: CGFloat = 2.5
+
+        // Face: brushed white metal (primary) or dark gunmetal (secondary).
+        let face: LinearGradient = prominent
+            ? LinearGradient(colors: pressed
+                ? [Color(white: 0.80), Color(white: 0.68)]
+                : [Color(white: 1.00), Color(white: 0.80)],
+                startPoint: .top, endPoint: .bottom)
+            : LinearGradient(colors: pressed
+                ? [Color(white: 0.13), Color(white: 0.09)]
+                : [Color(white: 0.24), Color(white: 0.12)],
+                startPoint: .top, endPoint: .bottom)
+        // Rim: light catches the machined top edge, falls off below.
+        let rim = LinearGradient(colors: prominent
+            ? [Color.white, Color(white: 0.45)]
+            : [Color.white.opacity(0.30), Color.black.opacity(0.55)],
+            startPoint: .top, endPoint: .bottom)
+        let lip: Color = prominent ? Color(white: 0.30) : Color.black.opacity(0.85)
+
+        return ZStack {
+            // The extruded base the key travels onto.
+            shape.fill(lip)
+                .offset(y: travel)
+            configuration.label
+                .font(.game(.subheadline, weight: .medium))
+                .lineLimit(1)
+                .padding(.horizontal, 16).padding(.vertical, 8)
+                .frame(minHeight: 36)
+                .background(face, in: shape)
+                .overlay(shape.strokeBorder(rim, lineWidth: 1))
+                .foregroundStyle(prominent ? Theme.bg
+                                 : (functional ? color : Color.white))
+                .offset(y: pressed ? travel : 0)
+        }
+        .compositingGroup()
+        .shadow(color: .black.opacity(pressed ? 0.15 : 0.35),
+                radius: pressed ? 2 : 5, y: pressed ? 1 : 4)
+        .animation(.snappy(duration: 0.12), value: pressed)
+        .sensoryFeedback(.impact(weight: .light), trigger: pressed) { old, new in
+            !old && new
+        }
     }
 }
 
@@ -363,10 +390,17 @@ struct PillStepper: View {
             Image(systemName: symbol)
                 .font(.system(size: 13, weight: .medium))
                 .frame(width: 30, height: 30)
-                .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.corner))
+                .background(
+                    LinearGradient(colors: [Color(white: 0.24), Color(white: 0.12)],
+                                   startPoint: .top, endPoint: .bottom),
+                    in: RoundedRectangle(cornerRadius: Theme.corner))
                 .overlay(RoundedRectangle(cornerRadius: Theme.corner)
-                    .strokeBorder(Theme.graphite, lineWidth: 1))
+                    .strokeBorder(LinearGradient(colors: [.white.opacity(0.30),
+                                                          .black.opacity(0.55)],
+                                                 startPoint: .top, endPoint: .bottom),
+                                  lineWidth: 1))
                 .foregroundStyle(Color.white)
+                .shadow(color: .black.opacity(0.35), radius: 3, y: 2)
         }
         .buttonStyle(.plain)
     }
