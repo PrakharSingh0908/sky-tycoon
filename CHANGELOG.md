@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Route desk gets a close button
+
+- The New route sheet now has the standard xmark close in its header, matching the formula sheet — no more swipe-only dismissal.
+
+*Why:* every other sheet offers an explicit way out; a drawer without one reads as a trap.
+
+
 ## Lawsuit incidents (GDD §19)
 
 - Two new PR cards name a real roster member: scalding tea spilled on a passenger (cabin crew, $180K claim) or a hard landing injuring an elderly passenger's spine (pilot, $300K). The card quotes the accused's stars and tenure.

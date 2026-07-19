@@ -116,9 +116,22 @@ private struct NewRouteSheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                Text("New route")
-                    .font(.display(.title2)).foregroundStyle(Theme.textPrimary)
-                    .padding(.top, 20)
+                HStack {
+                    Text("New route")
+                        .font(.display(.title2)).foregroundStyle(Theme.textPrimary)
+                    Spacer()
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 12, weight: .medium))
+                            .frame(width: 28, height: 28)
+                            .background(Color.white.opacity(0.07), in: Circle())
+                            .foregroundStyle(Theme.textSecondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.top, 20)
 
                 // Origin: one tap per airport, slots shown for the pick.
                 ScrollView(.horizontal, showsIndicators: false) {
