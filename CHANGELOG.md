@@ -7,11 +7,11 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
-## Seattle stamp on the boarding pass
+## Seattle stamp removed
 
-- Boarding passes touching Seattle now carry the engraved city stamp (Resources/Stamps/stamp_seattle.png) as a ghost-faint watermark behind the destination block, inverted from its dark-ink art and pressed in at 16% opacity so the airport code stays fully readable over it. A cityStamps map keys stamps by airport code, so future city stamps drop in with one line. A "Seattle stamp" preview pins the treatment.
+- The Seattle city stamp on boarding passes is gone: tried first franked beside the destination code, then as a ghost watermark behind it, and cut on review. The asset, the cityStamps map, and the preview pin are all removed; the pass is back to its clean pre-stamp layout.
 
-*Why:* per direction, first as a franked stamp beside the code, then moved into the background very muted. Routes should feel like places, not ID pairs; a watermark gives the pass the postal romance without competing with the flight data.
+*Why:* per direction, it looked bad on the ticket in both treatments. The dark-ink engraving never sat naturally on the carbon card, and the pass reads better without decoration competing with the flight data.
 
 
 ## Slide to lease

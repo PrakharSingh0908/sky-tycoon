@@ -230,15 +230,6 @@ struct NewRouteSheet: View {
     RoutesView().environment(GameEngine.previewGame())
         .preferredColorScheme(.dark)
 }
-
-// Franked pass pin: routes touching Seattle carry the engraved city stamp.
-#Preview("Seattle stamp") {
-    let engine = GameEngine.newGame(airlineName: "Foundation Air", country: .us, seed: 7)
-    let _ = engine.openRoute(from: "SFO", to: "SEA", fare: 90, frequency: 7)
-    return RoutesView().environment(engine)
-        .preferredColorScheme(.dark)
-}
-
 #Preview("Route detail") {
     let engine = GameEngine.previewGame()
     return NavigationStack {
@@ -261,12 +252,6 @@ private struct BoardingPassCard: View {
     @State private var showingAircraft = false
 
     private let stubHeight: CGFloat = 124
-
-    /// Engraved city stamps, franked on passes that touch the city.
-    private static let cityStamps = ["SEA": "stamp_seattle"]
-    private var stampName: String? {
-        Self.cityStamps[route.destinationID] ?? Self.cityStamps[route.originID]
-    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -329,21 +314,6 @@ private struct BoardingPassCard: View {
                     engine.closeRoute(routeID: route.id)
                 }
                 Button("Keep flying", role: .cancel) {}
-            }
-        }
-        // City stamp, franked ghost-faint behind the flight header. The
-        // art is dark ink on transparency; inverted it reads as a silver
-        // watermark pressed into the ticket.
-        .background(alignment: .topTrailing) {
-            if let stampName, let stamp = UIImage(named: stampName) {
-                Image(uiImage: stamp)
-                    .resizable().scaledToFit()
-                    .colorInvert()
-                    .frame(height: 104)
-                    .opacity(0.16)
-                    .padding(.top, 2)
-                    .padding(.trailing, 10)
-                    .allowsHitTesting(false)
             }
         }
         .background(
