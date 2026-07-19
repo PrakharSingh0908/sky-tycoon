@@ -384,6 +384,25 @@ final class GameEngine {
             state.routes[r].lastPunctuality = punctuality
         }
 
+        // 3b. AIRWORTHINESS (GDD §17): an airframe flown past the danger
+        // line can be lost — quadratic risk from the threshold, seeded
+        // roll, at most one hull loss per week. The Fleet card warned.
+        for i in state.fleet.indices {
+            let plane = state.fleet[i]
+            guard plane.status != .onOrder, plane.groundedWeeksRemaining == 0,
+                  let routeID = plane.assignedRouteID,
+                  let route = state.routes.first(where: { $0.id == routeID }),
+                  route.weeklyFrequency > 0,
+                  plane.wear > Balance.wearDangerThreshold else { continue }
+            let over = (plane.wear - Balance.wearDangerThreshold)
+                / (100 - Balance.wearDangerThreshold)
+            let risk = over * over * Balance.crashRiskAt100Wear
+            if Double.random(in: 0...1, using: &state.seedRNG) < risk {
+                crash(planeIndex: i, route: route)
+                break
+            }
+        }
+
         // 4. WAGES, overtime, happiness (pay AND workload), attrition.
         // Wage trends (labor squeeze, pilot shortage) are a market premium
         // on the whole bill while they run.
@@ -818,6 +837,64 @@ final class GameEngine {
             roll -= weight
             if roll < 0 { present(card); return }
         }
+    }
+
+    /// Hull loss (GDD §17): the plane is gone, souls are lost — named crew
+    /// among them — the courts settle, and the market recoils. Everything
+    /// applies immediately; the event card is the reckoning, not a choice.
+    private func crash(planeIndex: Int, route: Route) {
+        let plane = state.fleet[planeIndex]
+        let spec = Balance.specs[plane.type]!
+        let pax = max(1, Int((Double(plane.seats(spec: spec)) * route.lastLoadFactor).rounded()))
+        let souls = pax + spec.pilotsPerFlight + spec.cabinCrewPerFlight
+
+        unassignEverywhere(aircraftID: plane.id)
+        state.fleet.remove(at: planeIndex)
+
+        // The crew aboard were real roster members.
+        var lostNames: [String] = []
+        func removeCrew(role: StaffRole, count: Int) {
+            guard var pool = state.staff[role], count > 0,
+                  !pool.members.isEmpty else { return }
+            for _ in 0..<min(count, pool.members.count) {
+                let idx = Int.random(in: 0..<pool.members.count, using: &state.seedRNG)
+                lostNames.append(pool.members[idx].name)
+                pool.members.remove(at: idx)
+            }
+            pool.headcount = pool.members.count
+            recomputeAggregates(&pool)
+            state.staff[role] = pool
+        }
+        removeCrew(role: .pilots, count: spec.pilotsPerFlight)
+        removeCrew(role: .cabinCrew, count: spec.cabinCrewPerFlight)
+
+        // Reputation craters, every route feels it, the courts settle.
+        state.reputation = max(0.5, state.reputation - 1.5)
+        for i in state.routes.indices {
+            state.routes[i].satisfaction = max(0, state.routes[i].satisfaction - 20)
+        }
+        let settlement = Double(souls) * Balance.settlementPerLife
+        state.cash -= settlement
+
+        // The market recoils: a safety scare lands as an industry trend.
+        var trends = industryTrends
+        trends.removeAll { $0.key == "safety_scare" }
+        trends.append(IndustryTrend(
+            id: UUID(), key: "safety_scare", name: "Safety scare",
+            detail: "Your crash leads every bulletin.",
+            kind: .demand, horizon: .short, multiplier: 0.80, weeksRemaining: 8))
+        state.industryTrends = trends
+
+        let crewLine = lostNames.isEmpty ? ""
+            : " Among them, your own: \(lostNames.joined(separator: ", "))."
+        state.pendingEvent = GameEvent(
+            id: UUID(), cardID: "hullLoss", category: .technical, isNegative: true,
+            title: "\(plane.nickname) is lost",
+            body: "\(plane.nickname) (\(spec.displayName)) went down on \(route.originID) ✈︎ \(route.destinationID). \(souls) lives were lost.\(crewLine) The courts award \(settlement.money) to the families. The investigation is unsparing: at \(Int(plane.wear))% wear, this airframe should never have flown.",
+            options: [EventOption(label: "Own it. Never again.", effects: [])],
+            firedOn: state.date)
+        state.lastEventTotalWeek = state.date.totalWeeks
+        state.lastNegativeEventTotalWeek = state.date.totalWeeks
     }
 
     /// Fires a card (internal so tests can force specific cards).

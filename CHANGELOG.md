@@ -7,6 +7,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Airworthiness & hull loss (GDD §17); no decision without impact
+
+- Flying an airframe past 90% wear now risks losing it: quadratic weekly probability (0.3% at 92%, 8% at 100%), seeded, max one per week. The Fleet card carries a quiet red airworthiness line instead of a popup — heed it or answer for it.
+- A crash destroys the plane, kills passengers and named roster crew (the flight's pilot/cabin complement are removed from your pools), drops reputation 1.5 stars and all route satisfaction by 20, levies $200K/life in court settlements immediately, and lands an 8-week −20% "Safety scare" demand trend. A single-option reckoning card narrates the loss.
+- The event deck's one consequence-free option (film shoot "Decline politely") now protects satisfaction (+2) — every decision has weight.
+
+*Why:* wear was a cost curve without stakes — flying wrecks was viable. Real consequences make maintenance a decision, and the deliberately quiet warning keeps the player's agency: the game warns where an operator would look, once.
+
+
 ## Event pity timer (GDD §16)
 
 - Event cards now arrive on a designed rhythm: 22% base weekly chance ramping +13% per event-free week (capped 85%), grace cut from 6 to 3 weeks. Expected cadence ~2–3 weeks; five-week droughts drop below 3%. Save-compat via optional anchor field; year-1's consecutive-negatives guard unchanged.

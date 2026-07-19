@@ -422,3 +422,28 @@ no-consecutive-negatives guard stands.
 *Why:* flat probability makes droughts and floods equally likely — a
 tycoon game needs a decision RHYTHM, so the player is always within a
 week or two of the next meaningful choice.
+
+## 17. Amendment — Airworthiness and hull loss (2026-07-19)
+
+Wear past 90% (`wearDangerThreshold`) puts a FLYING airframe at risk of
+hull loss: quadratic per-week probability from the threshold, 8% at
+100% wear (`crashRiskAt100Wear`), seeded roll, at most one loss per
+week. The warning is deliberately quiet — a red airworthiness line on
+the Fleet card, no popup — the player either services the plane or
+answers for it.
+
+A crash: the airframe is destroyed; passengers AND named roster crew
+(the flight's pilot/cabin complement) are lost; reputation drops 1.5
+stars; every route's satisfaction falls 20; the courts award
+$200K/life (`settlementPerLife`) immediately; and a "Safety scare"
+demand trend (−20%, 8 wk) lands on the industry board. A full-screen
+reckoning card narrates it — one option, no outs; the decision was
+made in the weeks the warning was ignored.
+
+Also: every event option now carries an effect (the film-shoot
+"decline" was the one no-op — declining now protects satisfaction).
+
+*Why:* wear had a cost curve but no stakes, so 100%-wear fleets were a
+viable strategy; consequences make maintenance a decision instead of a
+tax, and the quiet warning honors the player's agency — the game
+warned, once, where an operator would look.

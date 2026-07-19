@@ -113,6 +113,22 @@ private struct AircraftCard: View {
                              display: "\(Int(plane.condition))",
                              color: Theme.health(plane.condition / 100))
                 }
+                // The quiet-but-mortal warning (GDD §17): past the danger
+                // line, a flying airframe can be LOST. Not a popup — a
+                // line on the card the player either heeds or answers for.
+                if plane.status != .onOrder,
+                   plane.wear >= Balance.wearDangerThreshold {
+                    Label(plane.assignedRouteID != nil
+                          ? "Airworthiness critical: \(Int(plane.wear))% wear on an active route. Ground it for service — worn airframes go down."
+                          : "Airworthiness critical: \(Int(plane.wear))% wear. Service before it flies again.",
+                          systemImage: "exclamationmark.octagon.fill")
+                        .font(.game(.caption, weight: .medium))
+                        .foregroundStyle(Theme.loss)
+                        .padding(10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Theme.loss.opacity(0.10),
+                                    in: RoundedRectangle(cornerRadius: 10))
+                }
                 statusLine
                 actions
             }

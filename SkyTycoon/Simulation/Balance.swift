@@ -487,6 +487,16 @@ enum Balance {
 
     // ── The event deck (GDD §4.7, M3) ────────────────────────────────────
 
+    // ── Airworthiness (GDD §17) ──────────────────────────────────────────
+    /// Above this wear, a flying airframe is a hull-loss risk — the Fleet
+    /// card warns quietly; ignoring it can end in a crash.
+    static let wearDangerThreshold = 90.0
+    /// Per-flying-week loss probability at 100% wear (quadratic from the
+    /// threshold: 92% wear ≈ 0.3%/wk, 96% ≈ 1.2%, 100% = 8%).
+    static let crashRiskAt100Wear = 0.08
+    /// Court settlement per life lost.
+    static let settlementPerLife = 200_000.0
+
     /// Event pacing (2026-07-19): decisions are the game, so cards arrive
     /// on a designed rhythm, not a coin flip. The weekly chance starts at
     /// the base and RAMPS with every event-free week — expected cadence
@@ -603,8 +613,10 @@ enum Balance {
             options: [
                 EventOption(label: "Accept (+$120,000, demand −8% for 1 wk)",
                             effects: [.cash(120_000), .demand(multiplier: 0.92, weeks: 1)]),
-                EventOption(label: "Decline politely",
-                            effects: []),
+                // Every decision has weight: declining keeps the schedule
+                // whole, and passengers feel the reliability.
+                EventOption(label: "Decline politely (+2 satisfaction)",
+                            effects: [.satisfaction(2)]),
             ],
             isEligible: { state in
                 state.fleet.contains { $0.status != .onOrder }
