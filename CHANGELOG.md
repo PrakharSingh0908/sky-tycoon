@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Hiring sheet declutter
+
+- Applicant cards restructured: avatar + name + single-line meta (stars · asking wage · patience window) on top, then the patience meter when relevant, then a full-width key row — obsidian "Negotiate" and bronze "Hire · $4.2K/wk" splitting the width evenly.
+
+*Why:* device testing — five elements on one line squeezed the meta into a four-line sliver and truncated "Negotiate" to "Negot…"; stacking info over actions gives both room, and putting the asking wage on the Hire key makes the commitment legible at the point of tap.
+
+
 ## Map: unconnected airports fade back
 
 - City dots without any route drop from 60% to 28% white (halo 45% → 22%); connected airports keep the full teal.

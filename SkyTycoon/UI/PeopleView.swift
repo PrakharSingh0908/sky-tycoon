@@ -264,32 +264,46 @@ private struct HiringSheet: View {
         .sheet(item: $negotiating) { NegotiationSheet(applicant: $0) }
     }
 
+    // Info line first, keys on their own full-width row below — five
+    // things sharing one line wrapped the meta and truncated the buttons.
     private func applicantRow(_ applicant: JobApplicant) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
                 PersonAvatar(avatar: applicant.avatar, name: applicant.name, size: 40)
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text(applicant.name).font(.game(.subheadline, weight: .semibold))
                         .foregroundStyle(Theme.textPrimary)
-                    HStack(spacing: 4) {
+                        .lineLimit(1)
+                    HStack(spacing: 5) {
                         StarRating(rating: applicant.skill, size: 8)
                         Text("asks \(applicant.askingWage.money)/wk · waits \(applicant.weeksRemaining) wk")
                             .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                            .lineLimit(1)
                     }
                 }
-                Spacer()
-                Button("Negotiate") { negotiating = applicant }
-                    .buttonStyle(GameButtonStyle(color: accent))
-                Button("Hire") { engine.hireApplicant(applicantID: applicant.id) }
-                    .buttonStyle(GameButtonStyle(color: accent, prominent: true))
+                Spacer(minLength: 0)
             }
             if applicant.irritation > 0 {
                 MeterRow(label: "Patience", value: 1 - applicant.irritation / 100,
                          display: "\(Int(100 - applicant.irritation))%",
                          color: Theme.health(1 - applicant.irritation / 100))
             }
+            HStack(spacing: 10) {
+                Button {
+                    negotiating = applicant
+                } label: {
+                    Text("Negotiate").frame(maxWidth: .infinity)
+                }
+                .buttonStyle(GameButtonStyle(finish: .obsidian))
+                Button {
+                    engine.hireApplicant(applicantID: applicant.id)
+                } label: {
+                    Text("Hire · \(applicant.askingWage.money)/wk").frame(maxWidth: .infinity)
+                }
+                .buttonStyle(GameButtonStyle(finish: .bronze))
+            }
         }
-        .padding(10)
+        .padding(12)
         .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.corner))
     }
 }
