@@ -179,6 +179,16 @@ final class GameEngine {
                 Balance.avatarName(role: role, male: male, variant: variant))
     }
 
+    /// Roster lookup across all pools (the event card shows the accused).
+    func staffMember(id: UUID) -> StaffMember? {
+        for role in StaffRole.allCases {
+            if let member = state.staff[role]?.members.first(where: { $0.id == id }) {
+                return member
+            }
+        }
+        return nil
+    }
+
     /// Recomputes a pool's aggregate wage/skill from its members (the sim
     /// runs on the aggregates; the roster is the source of truth).
     private func recomputeAggregates(_ pool: inout StaffPool) {
@@ -994,7 +1004,7 @@ final class GameEngine {
         let type = top[Int.random(in: 0..<top.count, using: &state.seedRNG)]
         let spec = Balance.specs[type]!
         let n = counts[type]!
-        let body = "\(spec.seller) has issued a mandatory recall of the \(spec.displayName): a fuel-line clamp defect found in airframes worldwide. You operate \(n). The maker covers parts — the downtime and the choice are yours: send them in now, or negotiate a deferral and fly on with the defect aboard."
+        let body = "\(spec.seller) has issued a mandatory recall of the \(spec.displayName): a fuel-line clamp defect found in airframes worldwide. You operate \(n). The maker covers parts. Compliance grounds each airframe two weeks and the retrofit freshens wear; a deferral means fines, and the defect keeps flying with added wear."
         return (body, type)
     }
 
@@ -1010,7 +1020,7 @@ final class GameEngine {
         let member = pool.members[Int.random(in: 0..<pool.members.count, using: &state.seedRNG)]
         let tenure = max(0, state.date.totalWeeks - member.hiredOn.totalWeeks)
         let record = String(format: "%.1f★ · %d wk with you", member.skill, tenure)
-        let counsel = "Counsel's read: a strong record wins a public trial; a thin one gets torn apart on the stand."
+        let counsel = "Counsel's read: a strong record wins a public trial; a thin one gets torn apart on the stand. A quiet settlement never makes the news."
         let body = switch card.id {
         case "teaSpill":
             "\(member.name) (\(record)) spilled scalding tea over a passenger during service, and the burns needed treatment. The passenger's lawyers want \(180_000.0.money). \(counsel)"

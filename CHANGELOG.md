@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Event cards: one-liner keys, the accused on the card, the tea
+
+- All 15 long option labels across the deck shortened to one-liners ("Settle quietly · −$180K", "Send them in · −$10K each") — the trade-off details moved into the card bodies, which now spell out settle-vs-court and comply-vs-defer in prose. Buttons are back to strict single lines.
+- Incident cards now show the person: the accused crew member's portrait replaces the category icon as the card medallion, with the spilling-tea render breaking over the portrait's bottom-right corner on the tea card (other incident cards get a small category badge there). New `engine.staffMember(id:)` lookup; the regression preview exercises the full arrangement.
+
+*Why:* per rule — buttons are one-liners, period; and the lawsuit lands harder when the face on trial is someone you hired.
+
+
 ## Event card: self-sizing, centered, truncation-proof
 
 - The event card sheet now sizes to its content (the receipt pattern: measured height → .height detent, capped 720, scroll fallback) — long lawsuit bodies render in full instead of compressing to "…" in the fixed medium detent.

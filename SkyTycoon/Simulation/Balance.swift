@@ -577,9 +577,9 @@ enum Balance {
             body: "A cyclone is tracking toward the coast. Airports in its path will be disrupted for two weeks.",
             baseWeight: 0.8, isNegative: true, minTotalWeek: 8,
             options: [
-                EventOption(label: "Cancel early & refund (−$40,000, goodwill)",
+                EventOption(label: "Cancel & refund (−$40,000)",
                             effects: [.cash(-40_000), .satisfaction(3)]),
-                EventOption(label: "Fly partial ops (demand −20% for 2 wk)",
+                EventOption(label: "Fly partial ops (demand −20%)",
                             effects: [.demand(multiplier: 0.80, weeks: 2), .satisfaction(-4)]),
             ],
             isEligible: { !$0.routes.isEmpty }),
@@ -604,10 +604,10 @@ enum Balance {
             body: "Morale has cratered and a strike vote is underway. This is what neglect costs.",
             baseWeight: 0.5, isNegative: true, minTotalWeek: 12,
             options: [
-                EventOption(label: "Concede: +6% wages across the board (−$20,000)",
+                EventOption(label: "Concede +6% wages (−$20,000)",
                             effects: [.raiseWage(role: nil, factor: 1.06),
                                       .happiness(role: nil, delta: 20), .cash(-20_000)]),
-                EventOption(label: "Hold the line (disruption, reputation hit)",
+                EventOption(label: "Hold the line (reputation hit)",
                             effects: [.happiness(role: nil, delta: -10), .satisfaction(-8),
                                       .reputation(-0.3), .demand(multiplier: 0.85, weeks: 2)]),
             ],
@@ -624,9 +624,9 @@ enum Balance {
             body: "Maintenance flagged a compressor issue on one airframe during a routine inspection.",
             baseWeight: 0.7, isNegative: true, minTotalWeek: 8,
             options: [
-                EventOption(label: "Fix now (−$80,000, plane down 1 wk)",
+                EventOption(label: "Fix now (−$80,000 · 1 wk)",
                             effects: [.cash(-80_000), .groundRandomAircraft(weeks: 1)]),
-                EventOption(label: "Defer it (wear +25 on that airframe)",
+                EventOption(label: "Defer it (wear +25)",
                             effects: [.wearRandomAircraft(25), .satisfaction(-2)]),
             ],
             isEligible: { state in
@@ -637,7 +637,7 @@ enum Balance {
             body: "A neglected airframe failed its pre-flight checks outright. It's out of service, no options this time.",
             baseWeight: 0.10, isNegative: true, minTotalWeek: 10,
             options: [
-                EventOption(label: "Get it to the hangar (−$40,000, down 2 wk)",
+                EventOption(label: "To the hangar (−$40,000 · 2 wk)",
                             effects: [.cash(-40_000), .groundRandomAircraft(weeks: 2),
                                       .satisfaction(-5)]),
             ],
@@ -651,7 +651,7 @@ enum Balance {
             body: "A film production wants a plane for a weekend shoot: triple the usual revenue, but it pulls capacity.",
             baseWeight: 0.7, isNegative: false, minTotalWeek: 10,
             options: [
-                EventOption(label: "Accept (+$120,000, demand −8% for 1 wk)",
+                EventOption(label: "Accept · +$120K (demand dips 1 wk)",
                             effects: [.cash(120_000), .demand(multiplier: 0.92, weeks: 1)]),
                 // Every decision has weight: declining keeps the schedule
                 // whole, and passengers feel the reliability.
@@ -666,7 +666,7 @@ enum Balance {
             body: "A festival season surge is filling planes across the network for the next three weeks.",
             baseWeight: 0.8, isNegative: false, minTotalWeek: 8,
             options: [
-                EventOption(label: "All hands on deck (demand +25% for 3 wk)",
+                EventOption(label: "All hands on deck (+25% demand)",
                             effects: [.demand(multiplier: 1.25, weeks: 3)]),
             ],
             isEligible: { !$0.routes.isEmpty }),
@@ -715,9 +715,9 @@ enum Balance {
             body: "A crew member spilled hot tea on a passenger during service. Lawyers are involved.",
             baseWeight: 0.8, isNegative: true, minTotalWeek: 10,
             options: [
-                EventOption(label: "Settle quietly (−$180,000 · never makes the news)",
+                EventOption(label: "Settle quietly · −$180K",
                             effects: [.cash(-180_000)]),
-                EventOption(label: "Fight it in court (public · verdict rides on her record)",
+                EventOption(label: "Fight it in court",
                             effects: [.courtVerdict(baseFee: 180_000)]),
             ],
             isEligible: { !$0.routes.isEmpty && $0.staff[.cabinCrew]?.members.isEmpty == false }),
@@ -728,9 +728,9 @@ enum Balance {
             body: "A manufacturer has recalled one of your fleet's models over a defect.",
             baseWeight: 0.5, isNegative: true, minTotalWeek: 16,
             options: [
-                EventOption(label: "Send them in now (−$10,000 each · grounded 2 wk · retrofit freshens wear)",
+                EventOption(label: "Send them in · −$10K each",
                             effects: [.recallGround(weeks: 2, costPerPlane: 10_000)]),
-                EventOption(label: "Negotiate a deferral (−$25,000 fines each · +12 wear each · fly on)",
+                EventOption(label: "Defer · −$25K fines each",
                             effects: [.recallDefer(finePerPlane: 25_000, wearPerPlane: 12)]),
             ],
             isEligible: { state in state.fleet.contains { $0.status != .onOrder } }),
@@ -739,9 +739,9 @@ enum Balance {
             body: "A hard landing injured an elderly passenger's spine. The family's lawyers are circling.",
             baseWeight: 0.7, isNegative: true, minTotalWeek: 12,
             options: [
-                EventOption(label: "Settle quietly (−$300,000 · never makes the news)",
+                EventOption(label: "Settle quietly · −$300K",
                             effects: [.cash(-300_000)]),
-                EventOption(label: "Fight it in court (public · verdict rides on their record)",
+                EventOption(label: "Fight it in court",
                             effects: [.courtVerdict(baseFee: 300_000)]),
             ],
             isEligible: { !$0.routes.isEmpty && $0.staff[.pilots]?.members.isEmpty == false }),
