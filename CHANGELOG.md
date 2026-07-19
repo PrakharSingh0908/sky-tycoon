@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Map: unconnected airports fade back
+
+- City dots without any route drop from 60% to 28% white (halo 45% → 22%); connected airports keep the full teal.
+
+*Why:* with 26 US fields every dot at near-equal weight read as noise — dimming the unserved ones makes your actual network the figure and the rest the ground.
+
+
 ## Sim clock no longer covers bottom controls
 
 - `GameScreen`'s scroll content now reserves 92pt of bottom clearance (was 24), so the last row of buttons on every tab can scroll fully above the floating sim clock pill.

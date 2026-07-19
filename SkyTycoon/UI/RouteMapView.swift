@@ -299,13 +299,15 @@ struct RouteMapView: View {
                 city.id == $0.originID || city.id == $0.destinationID
             } ?? false
             let dotR: CGFloat = isEndpoint ? 5 : (isServed ? 4.5 : 3)
-            // Halo so dots read on bright terrain.
+            let connected = isServed || isEndpoint
+            // Halo so dots read on bright terrain — quieter for airports
+            // you haven't connected yet, so the network pops.
             ctx.fill(Path(ellipseIn: CGRect(x: p.x - dotR - 1.5, y: p.y - dotR - 1.5,
                                             width: (dotR + 1.5) * 2, height: (dotR + 1.5) * 2)),
-                     with: .color(Color.black.opacity(0.45)))
+                     with: .color(Color.black.opacity(connected ? 0.45 : 0.22)))
             ctx.fill(Path(ellipseIn: CGRect(x: p.x - dotR, y: p.y - dotR,
                                             width: dotR * 2, height: dotR * 2)),
-                     with: .color(isServed || isEndpoint ? mapTeal : .white.opacity(0.6)))
+                     with: .color(connected ? mapTeal : .white.opacity(0.28)))
             if isEndpoint {
                 ctx.draw(
                     Text(city.id)
