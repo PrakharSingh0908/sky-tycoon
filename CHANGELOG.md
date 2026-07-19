@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Routes screen: home map + crafted layout
+
+- The map opens on YOUR campaign's market: US games frame the continental US, India keeps the subcontinent (UK/China/Australia framings ready for v1.0). Focused route maps still frame their own pair.
+- The screen now has the design system's section grammar: a NETWORK eyebrow over the map with live "N RTE · M APT" counts, the chrome "Plan a new route" key promoted to directly under the map instead of buried below every pass, and the pass list under its own BOARDING PASSES eyebrow — plus a quiet empty-state line for brand-new airlines.
+
+*Why:* a US campaign opening on India broke the fantasy instantly; and the screen was an unlabeled stack — map, passes, and the primary action all floating at equal weight. Eyebrows give it the same sectioned, instrument-panel rhythm as the Dashboard.
+
+
 ## Contractor overflow (GDD §15)
 
 - Staff overtime is capped at a practical +20% of roster capacity (paid at 1.5×); all demand beyond it is flown by contractors at market hourly × 1.8. Flights keep operating — understaffing now costs money instead of producing impossible workloads.

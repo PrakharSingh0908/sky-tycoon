@@ -14,22 +14,33 @@ struct RoutesView: View {
     @State private var planning = false
     private let accent = Theme.teal
 
+    /// Airports your network touches (route endpoints, deduped).
+    private var servedAirports: Int {
+        Set(engine.state.routes.flatMap { [$0.originID, $0.destinationID] }).count
+    }
+
     var body: some View {
         NavigationStack {
             GameScreen(title: "Routes", accent: accent) {
-                // The network at a glance: satellite globe, geodesic arcs.
-                RouteMapView()
-                    .frame(height: 300)
-                    .clipShape(RoundedRectangle(cornerRadius: Theme.corner))
-                    .overlay(RoundedRectangle(cornerRadius: Theme.corner)
-                        .strokeBorder(Theme.hairline, lineWidth: 1))
-
-                ForEach(engine.state.routes) { route in
-                    BoardingPassCard(route: route,
-                        originName: engine.city(route.originID)?.name ?? route.originID,
-                        destName: engine.city(route.destinationID)?.name ?? route.destinationID,
-                        accent: accent)
+                // ── The network: eyebrow with live counts, then the globe ─
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        SectionHeader(title: "Network", icon: "globe.asia.australia.fill",
+                                      accent: accent)
+                        Spacer()
+                        Text("\(engine.state.routes.count) RTE · \(servedAirports) APT")
+                            .font(.data(.caption2)).tracking(0.85)
+                            .foregroundStyle(Theme.textTertiary)
+                    }
+                    RouteMapView()
+                        .frame(height: 300)
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.corner))
+                        .overlay(RoundedRectangle(cornerRadius: Theme.corner)
+                            .strokeBorder(Theme.hairline, lineWidth: 1))
                 }
+
+                // The desk's one bright key, right where the map ends —
+                // not buried below every pass.
                 Button {
                     planning = true
                 } label: {
@@ -37,6 +48,22 @@ struct RoutesView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(GameButtonStyle(color: accent, prominent: true))
+
+                // ── The passes, under their own eyebrow ───────────────────
+                if engine.state.routes.isEmpty {
+                    Text("No routes yet. Every airline starts with one good pair.")
+                        .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+                } else {
+                    SectionHeader(title: "Boarding passes", icon: "ticket.fill",
+                                  accent: accent)
+                        .padding(.top, 6)
+                    ForEach(engine.state.routes) { route in
+                        BoardingPassCard(route: route,
+                            originName: engine.city(route.originID)?.name ?? route.originID,
+                            destName: engine.city(route.destinationID)?.name ?? route.destinationID,
+                            accent: accent)
+                    }
+                }
             }
             .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $planning) { NewRouteSheet() }

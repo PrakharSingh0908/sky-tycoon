@@ -25,6 +25,18 @@ private struct GlobeCamera: Equatable {
     var zoom: Double        // sphere screen radius = min(w,h)/2 × zoom
 
     static let india = GlobeCamera(centerLon: 77.5, centerLat: 20.0, zoom: 4.8)
+
+    /// Home framing for the campaign's market (the map opens on YOUR
+    /// country). Zooms sized to each network's spread.
+    static func home(for country: Country) -> GlobeCamera {
+        switch country {
+        case .us: GlobeCamera(centerLon: -96.5, centerLat: 38.5, zoom: 2.3)
+        case .uk: GlobeCamera(centerLon: -2.0, centerLat: 54.0, zoom: 6.5)
+        case .china: GlobeCamera(centerLon: 104.0, centerLat: 35.0, zoom: 2.6)
+        case .australia: GlobeCamera(centerLon: 134.0, centerLat: -26.0, zoom: 2.8)
+        case .india: india
+        }
+    }
 }
 
 // ── The GPU globe: textured sphere, unlit, ops-dark multiplied ───────────
@@ -167,7 +179,13 @@ struct RouteMapView: View {
                 }
             }
             .background(Color(red: 0.043, green: 0.071, blue: 0.125))
-            .onAppear { frameFocusRoute() }
+            .onAppear {
+                if focusRouteID != nil {
+                    frameFocusRoute()
+                } else {
+                    camera = .home(for: engine.state.country)
+                }
+            }
             // ONE high-priority simultaneous pair: the map owns every touch
             // that starts on it. Splitting pan/pinch across .gesture and
             // .highPriorityGesture let the page ScrollView win vertical
