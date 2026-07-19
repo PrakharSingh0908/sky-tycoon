@@ -110,9 +110,12 @@ struct TrendChart: View {
 }
 
 /// Weekly profit bars (green/red) with a revenue line — the P&L's shape
-/// at a glance, from the last 52 weekly reports.
+/// at a glance, from the last 52 weekly reports. Weeks before the airline
+/// had history pad LEFT at ZERO (nothing was earned) and the x-domain is
+/// pinned, so the line runs the full width instead of starting mid-air.
 struct ProfitChart: View {
     let reports: [WeeklyReport]
+    var window: Int = 52
 
     var body: some View {
         if reports.count < 2 {
@@ -120,19 +123,27 @@ struct ProfitChart: View {
                 .font(.caption).foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, minHeight: 120)
         } else {
-            Chart(Array(reports.enumerated()), id: \.offset) { index, report in
-                BarMark(
-                    x: .value("Week", index - reports.count + 1),
-                    y: .value("Profit", report.profit)
-                )
-                .foregroundStyle(report.profit >= 0 ? Color.green : Color.red)
-                LineMark(
-                    x: .value("Week", index - reports.count + 1),
-                    y: .value("Revenue", report.revenue)
-                )
-                .foregroundStyle(.blue)
-                .interpolationMethod(.monotone)
+            let pad = Array(repeating: 0.0, count: max(0, window - reports.count))
+            let profits = pad + reports.map(\.profit)
+            let revenues = pad + reports.map(\.revenue)
+            Chart {
+                ForEach(Array(profits.enumerated()), id: \.offset) { index, profit in
+                    BarMark(
+                        x: .value("Week", index - profits.count + 1),
+                        y: .value("Profit", profit)
+                    )
+                    .foregroundStyle(profit >= 0 ? Color.green : Color.red)
+                }
+                ForEach(Array(revenues.enumerated()), id: \.offset) { index, revenue in
+                    LineMark(
+                        x: .value("Week", index - revenues.count + 1),
+                        y: .value("Revenue", revenue)
+                    )
+                    .foregroundStyle(.blue)
+                    .interpolationMethod(.monotone)
+                }
             }
+            .chartXScale(domain: (1 - profits.count)...0)
             .chartYAxis {
                 AxisMarks(position: .trailing) { axisValue in
                     AxisGridLine()

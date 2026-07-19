@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## 52-week P&L pads left at zero
+
+- The Money tab's P&L chart now left-pads missing weeks at ZERO (both the revenue line and profit bars) and pins its x-domain — the blue line runs the full width along $0 until real history begins, instead of starting mid-air with a phantom -60 gap.
+
+*Why:* same honesty rule as the finance charts, but flows pad at zero (nothing was earned), not at the first value.
+
+
 ## Route markets & competition (GDD §21); fleet aging
 
 - Every pair has a market: 0–4 deterministic rival carriers (big business pairs draw more), endpoint affluence, and your capture share — appeal built from comfort (weighted up on affluent pairs), price-for-market, and route satisfaction, against rivals. Monopoly pairs capture 100% regardless of comfort; contested pairs grow the pie +45%/rival, so strong products barely feel rivals while weak ones collapse.
