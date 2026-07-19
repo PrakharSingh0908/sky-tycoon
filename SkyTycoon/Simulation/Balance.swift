@@ -487,7 +487,7 @@ enum Balance {
                      isComplete: { ($0.reports.last?.profit ?? 0) >= 50_000 }),
         MilestoneDef(id: "wellRegarded", title: "Reach a 4.0★ reputation", reward: 60_000,
                      isComplete: { $0.reputation >= 4.0 }),
-        MilestoneDef(id: "flagCarrier", title: "Connect 6 of India's cities", reward: 75_000,
+        MilestoneDef(id: "flagCarrier", title: "Connect 6 {nation} cities", reward: 75_000,
                      isComplete: { state in
                          let touched = Set(state.routes.flatMap { [$0.originID, $0.destinationID] })
                          return touched.count >= 6

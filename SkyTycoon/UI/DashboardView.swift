@@ -97,7 +97,7 @@ struct DashboardView: View {
         HStack(spacing: 8) {
             Image(systemName: done ? "checkmark.circle.fill" : "circle")
                 .foregroundStyle(done ? Theme.profit : Theme.textSecondary)
-            Text(milestone.title)
+            Text(milestone.displayTitle(for: engine.state.country))
                 .font(.game(.subheadline))
                 .foregroundStyle(done ? Theme.textSecondary : Theme.textPrimary)
                 .strikethrough(done)

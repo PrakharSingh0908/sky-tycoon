@@ -40,6 +40,13 @@ enum Country: String, Codable, CaseIterable, Identifiable {
         case .china: "Mei"; case .australia: "Maggie"
         }
     }
+    /// "Indian cities", "American cities" — campaign-aware copy.
+    var adjective: String {
+        switch self {
+        case .india: "Indian"; case .us: "American"; case .uk: "British"
+        case .china: "Chinese"; case .australia: "Australian"
+        }
+    }
 }
 
 /// Country coefficient set — one economy, five flavors (GDD §5).
@@ -663,6 +670,12 @@ struct MilestoneDef: Identifiable {
     let title: String
     let reward: Double
     let isComplete: (GameState) -> Bool
+
+    /// Campaign-aware title: "{nation}" resolves to the campaign country's
+    /// adjective, so no milestone can talk about the wrong market.
+    func displayTitle(for country: Country) -> String {
+        title.replacingOccurrences(of: "{nation}", with: country.adjective)
+    }
 }
 
 /// One week of a route's economics, decomposed term by term — the tick

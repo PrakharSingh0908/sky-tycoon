@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Campaign-leak audit: milestones localized
+
+- The flag-carrier milestone read "Connect 6 of India's cities" in every campaign. Milestone titles now support a {nation} placeholder resolved through `Country.adjective` ("Connect 6 American cities" in a US game), applied in both the Milestones card and the celebration banner.
+- Swept the rest of the player-visible content for campaign leaks: the event deck, trends, and remaining copy are market-neutral; rivals, staff names, the aunt, the map camera, and the #1 line were already localized in earlier passes.
+
+*Why:* per direction — campaign immersion breaks on a single wrong country name, and the placeholder mechanism means future geo-flavored milestones can't leak by construction.
+
+
 ## Route desk gets a close button
 
 - The New route sheet now has the standard xmark close in its header, matching the formula sheet — no more swipe-only dismissal.

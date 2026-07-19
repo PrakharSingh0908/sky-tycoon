@@ -81,7 +81,7 @@ struct RootView: View {
         // ── Milestone celebration: a win, announced, then gone ────────────
         .overlay(alignment: .top) {
             if let celebration {
-                CelebrationBanner(title: "Milestone: \(celebration.title)",
+                CelebrationBanner(title: "Milestone: \(celebration.displayTitle(for: engine.state.country))",
                                   subtitle: "Reward \(celebration.reward.money) banked",
                                   accent: Theme.profit, icon: "flag.checkered")
                     .padding(.top, 4)
