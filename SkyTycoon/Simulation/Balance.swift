@@ -506,6 +506,8 @@ enum Balance {
     static let cateringSandwichColdPenalty = -8.0
     static let cateringFruitDelta = 6.0
     static let cateringBentoDelta = 10.0
+    /// A cold premium tray breaks a bigger promise than a cold sandwich.
+    static let cateringBentoColdPenalty = -12.0
 
     /// Event pacing (2026-07-19): decisions are the game, so cards arrive
     /// on a designed rhythm, not a coin flip. The weekly chance starts at

@@ -453,12 +453,13 @@ warned, once, where an operator would look.
 Per-route in-flight service (`CateringLevel`), set from the route
 detail's economics card, charged weekly per passenger on the cabin &
 catering P&L line. Three trays (art in Resources/Food):
-- SANDWICH BOX — $2/pax, the budget tray, but it needs a GALLEY OVEN
-  ($40K one-time fit, instant, Fleet → Service) on EVERY aircraft
-  flying the route: with ovens +4 satisfaction, without −8 — the
-  toasted sandwich boards cold and customers get frustrated.
-- FRUIT PLATTER — $5/pax, delicate and pricier, oven-agnostic: +6.
-- ASIAN BENTO — $9/pax, the premium tray, the biggest lift: +10.
+- SANDWICH BOX — $2/pax, the budget tray: +4 with ovens, −8 without.
+- FRUIT PLATTER — $5/pax, delicate and pricier, the ONLY oven-agnostic
+  tray: +6 always.
+Hot trays (sandwich, bento) need a GALLEY OVEN ($40K one-time fit,
+instant, Fleet → Service) on EVERY aircraft flying the route.
+- ASIAN BENTO — $9/pax, the premium tray: +10 with ovens aboard,
+  −12 without — a cold premium main breaks the biggest promise.
 Satisfaction feeds reputation through the existing smoothing, so a
 cold-sandwich route drags the brand. Save-compat optionals; the route
 detail warns when hardware is missing; the short-lived snacks/hotMeals

@@ -503,7 +503,7 @@ struct RouteDetailView: View {
                 }
             }
             if level.requiresOven && ovens < planes.count {
-                Text("\(planes.count - ovens) of \(planes.count) aircraft here have no galley oven — sandwiches board cold and customers get frustrated. Fit ovens via Fleet → Service.")
+                Text("\(planes.count - ovens) of \(planes.count) aircraft here have no galley oven — \(level == .asianBento ? "bento mains" : "sandwiches") board cold and customers get frustrated. Fit ovens via Fleet → Service.")
                     .font(.game(.caption2)).foregroundStyle(Theme.loss)
             }
         }

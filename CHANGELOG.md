@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Bento needs the oven too
+
+- The Asian bento now shares the galley-oven requirement: +10 with ovens on every aircraft, −12 without (a cold premium main breaks a bigger promise than a cold sandwich). The fruit platter is now the only oven-agnostic tray, and the route-detail warning names the right dish.
+
+*Why:* per direction — and it restores the triangle: without the oven rule, the bento was strictly best for anyone who could afford it.
+
+
 ## Tray picker matches the seat picker
 
 - The route detail's catering control is now a swatch row like the cabin architect's seat tiers: the four options (None + three trays) sit side by side with the tray art as the swatch, teal fill + stroke on the selection, and the per-pax price under each. The compact menu is gone; the cold-sandwich warning stays.

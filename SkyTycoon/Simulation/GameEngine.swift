@@ -394,7 +394,8 @@ final class GameEngine {
             case .sandwichBox: ovensReady ? Balance.cateringSandwichDelta
                                           : Balance.cateringSandwichColdPenalty
             case .fruitPlatter: Balance.cateringFruitDelta
-            case .asianBento: Balance.cateringBentoDelta
+            case .asianBento: ovensReady ? Balance.cateringBentoDelta
+                                         : Balance.cateringBentoColdPenalty
             }
             let target = min(100, max(0,
                 (punctuality * 0.35 + avgComfort * 0.25 + service * 0.20

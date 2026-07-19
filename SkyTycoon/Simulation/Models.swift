@@ -321,9 +321,10 @@ enum CateringLevel: String, Codable, CaseIterable, Identifiable {
         case .fruitPlatter: 5.0; case .asianBento: 9.0
         }
     }
-    /// The tray that needs the hardware: toasted sandwiches board cold
-    /// without an oven, and it shows in satisfaction.
-    var requiresOven: Bool { self == .sandwichBox }
+    /// The trays that need the hardware: toasted sandwiches and bento
+    /// mains board cold without an oven, and it shows in satisfaction.
+    /// Only the fruit platter is oven-agnostic.
+    var requiresOven: Bool { self == .sandwichBox || self == .asianBento }
     /// SF fallback if an asset ever fails to load (Resources/Food).
     var icon: String {
         switch self {
