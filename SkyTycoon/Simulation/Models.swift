@@ -482,6 +482,11 @@ enum EventEffect: Codable, Equatable {
     case groundRandomAircraft(weeks: Int)
     /// A seeded-random delivered aircraft takes wear (deferred fixes bite).
     case wearRandomAircraft(Double)
+    /// Take the incident to court (GDD §19). The verdict resolves from the
+    /// accused employee's credibility — skill stars plus tenure — at choice
+    /// time: cleared = legal costs only and the press runs your side;
+    /// liable = 1.5× the fee and a public reputation bruise.
+    case courtVerdict(baseFee: Double)
 }
 
 /// A running timed modifier ("Fuel +30% · 4 wk"), applied each tick.
@@ -561,6 +566,9 @@ struct GameEvent: Codable, Identifiable {
     var body: String
     var options: [EventOption]
     var firedOn: GameDate
+    /// The roster member at the center of the incident, when there is one
+    /// (lawsuit cards, GDD §19). Optional for save-compat.
+    var subjectID: UUID? = nil
 }
 
 struct EventOption: Codable, Identifiable {

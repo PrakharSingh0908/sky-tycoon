@@ -935,15 +935,42 @@ final class GameEngine {
 
     /// Fires a card (internal so tests can force specific cards).
     func present(_ card: EventCard) {
+        // Lawsuit incidents (GDD §19) name a real roster member — the card
+        // reads their record, and the verdict will weigh it.
+        let incident = incidentContext(for: card)
         state.pendingEvent = GameEvent(
             id: UUID(), cardID: card.id, category: card.category,
-            isNegative: card.isNegative, title: card.title, body: card.body,
-            options: card.options, firedOn: state.date)
+            isNegative: card.isNegative, title: card.title,
+            body: incident?.body ?? card.body,
+            options: card.options, firedOn: state.date,
+            subjectID: incident?.subjectID)
         state.lastEventTotalWeek = state.date.totalWeeks
         logEvent(title: card.title, isNegative: card.isNegative)
         if card.isNegative {
             state.lastNegativeEventTotalWeek = state.date.totalWeeks
         }
+    }
+
+    /// Picks the accused for a lawsuit card and writes their record into
+    /// the body — the same facts the court will weigh.
+    private func incidentContext(for card: EventCard) -> (body: String, subjectID: UUID)? {
+        let role: StaffRole? = switch card.id {
+        case "teaSpill": .cabinCrew
+        case "hardLanding": .pilots
+        default: nil
+        }
+        guard let role, let pool = state.staff[role], !pool.members.isEmpty else { return nil }
+        let member = pool.members[Int.random(in: 0..<pool.members.count, using: &state.seedRNG)]
+        let tenure = max(0, state.date.totalWeeks - member.hiredOn.totalWeeks)
+        let record = String(format: "%.1f★ · %d wk with you", member.skill, tenure)
+        let counsel = "Counsel's read: a strong record wins a public trial; a thin one gets torn apart on the stand."
+        let body = switch card.id {
+        case "teaSpill":
+            "\(member.name) (\(record)) spilled scalding tea over a passenger during service, and the burns needed treatment. The passenger's lawyers want \(180_000.0.money). \(counsel)"
+        default:
+            "\(member.name) (\(record)) put one down hard enough to injure an elderly passenger's spine. The family's lawyers want \(300_000.0.money). \(counsel)"
+        }
+        return (body, member.id)
     }
 
     /// Applies one effect. Random-aircraft picks use the seeded RNG, so
@@ -997,6 +1024,54 @@ final class GameEngine {
             guard !candidates.isEmpty else { return }
             let pick = candidates[Int.random(in: 0..<candidates.count, using: &state.seedRNG)]
             state.fleet[pick].wear = min(100, state.fleet[pick].wear + amount)
+        case .courtVerdict(let baseFee):
+            resolveCourtCase(baseFee: baseFee)
+        }
+    }
+
+    /// The public trial (GDD §19). Credibility = the accused's skill stars
+    /// plus tenure with the airline; the verdict card lands immediately.
+    private func resolveCourtCase(baseFee: Double) {
+        var skill = 2.5
+        var tenureYears = 0.0
+        var name = "your crew member"
+        if let id = eventSubjectID {
+            for role in StaffRole.allCases {
+                if let member = state.staff[role]?.members.first(where: { $0.id == id }) {
+                    skill = member.skill
+                    tenureYears = Double(max(0, state.date.totalWeeks
+                        - member.hiredOn.totalWeeks)) / 52.0
+                    name = member.name
+                    break
+                }
+            }
+        }
+        // 20% floor + 12%/star + 15%/tenure-year (2y cap) → 44% for a green
+        // 2★ hire, ~90% for a 5★ veteran. The roster IS the defense.
+        let winChance = min(0.90, 0.20 + 0.12 * skill + 0.15 * min(2, tenureYears))
+        if Double.random(in: 0...1, using: &state.seedRNG) < winChance {
+            let legal = baseFee * 0.15
+            state.cash -= legal
+            state.reputation = min(5, state.reputation + 0.15)
+            logEvent(title: "Cleared in court", isNegative: false)
+            state.pendingEvent = GameEvent(
+                id: UUID(), cardID: "courtWon", category: .pr, isNegative: false,
+                title: "Cleared in Court",
+                body: "The claim fell apart under scrutiny: \(name)'s record and testimony held, and the judge dismissed the case as opportunistic. Legal costs ran \(legal.money) — and the papers ran YOUR side of the story.",
+                options: [EventOption(label: "Back to work", effects: [])],
+                firedOn: state.date)
+        } else {
+            let award = baseFee * 1.5
+            state.cash -= award
+            state.reputation = max(0.5, state.reputation - 0.8)
+            state.lastNegativeEventTotalWeek = state.date.totalWeeks
+            logEvent(title: "Found liable in court", isNegative: true)
+            state.pendingEvent = GameEvent(
+                id: UUID(), cardID: "courtLost", category: .pr, isNegative: true,
+                title: "Humiliated in Court",
+                body: "The cross-examination was brutal and the verdict worse: liable, with \(award.money) awarded — and every row of the gallery full of press. \(name)'s record did not survive the stand. The brand takes the bruise.",
+                options: [EventOption(label: "Take the hit", effects: [])],
+                firedOn: state.date)
         }
     }
 
@@ -1007,13 +1082,20 @@ final class GameEngine {
     // dictionary is a Swift exclusivity violation through @Observable's
     // _modify — it aborts at runtime. apply(_:) follows this pattern.
     func resolveEvent(option: EventOption) {
-        guard state.pendingEvent != nil else { return }
+        guard let event = state.pendingEvent else { return }
+        // Clear FIRST: a courtVerdict effect may present the verdict card,
+        // which must survive this resolution. The subject rides alongside.
+        eventSubjectID = event.subjectID
+        state.pendingEvent = nil
         for effect in option.effects {
             apply(effect)
         }
-        state.pendingEvent = nil
+        eventSubjectID = nil
         save()
     }
+
+    /// The roster member the event being resolved is about (GDD §19).
+    private var eventSubjectID: UUID?
 
     // ── Industry trends (GDD §14) ────────────────────────────────────────
     // One LONG economic regime is always in force; up to two SHORT shocks

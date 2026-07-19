@@ -688,6 +688,31 @@ enum Balance {
                             effects: [.satisfaction(-6), .reputation(-0.2)]),
             ],
             isEligible: { !$0.routes.isEmpty }),
+        // ── Lawsuit incidents (GDD §19): settle quietly or gamble on court.
+        // The body is personalized at present() with the accused member's
+        // name, stars, and tenure — the verdict weighs exactly those.
+        EventCard(id: "teaSpill", category: .pr,
+            title: "Scalding Tea, Furious Passenger",
+            body: "A crew member spilled hot tea on a passenger during service. Lawyers are involved.",
+            baseWeight: 0.8, isNegative: true, minTotalWeek: 10,
+            options: [
+                EventOption(label: "Settle quietly (−$180,000 · never makes the news)",
+                            effects: [.cash(-180_000)]),
+                EventOption(label: "Fight it in court (public · verdict rides on her record)",
+                            effects: [.courtVerdict(baseFee: 180_000)]),
+            ],
+            isEligible: { !$0.routes.isEmpty && $0.staff[.cabinCrew]?.members.isEmpty == false }),
+        EventCard(id: "hardLanding", category: .pr,
+            title: "Hard Landing, Injured Passenger",
+            body: "A hard landing injured an elderly passenger's spine. The family's lawyers are circling.",
+            baseWeight: 0.7, isNegative: true, minTotalWeek: 12,
+            options: [
+                EventOption(label: "Settle quietly (−$300,000 · never makes the news)",
+                            effects: [.cash(-300_000)]),
+                EventOption(label: "Fight it in court (public · verdict rides on their record)",
+                            effects: [.courtVerdict(baseFee: 300_000)]),
+            ],
+            isEligible: { !$0.routes.isEmpty && $0.staff[.pilots]?.members.isEmpty == false }),
     ]
 
     // ── Recruitment (GDD §4.4 as amended) ────────────────────────────────

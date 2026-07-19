@@ -467,3 +467,26 @@ tiers decode into platter/bento.
 
 *Why:* service depth with a hardware dependency — a promise you can
 make before you can keep it, which is exactly the tycoon trap.
+
+## 19. Amendment — Lawsuit incidents (2026-07-19)
+
+Two PR incident cards put a NAMED roster member at the center of a
+liability claim: a cabin crew member spills scalding tea on a passenger
+($180K claim), or a pilot's hard landing injures an elderly passenger's
+spine ($300K). The card shows the accused's record — skill stars and
+weeks of tenure — because the verdict weighs exactly that.
+
+Two ways out:
+- SETTLE QUIETLY: pay the full claim; it never makes the news
+  (no reputation effect).
+- FIGHT IN COURT (public): win chance = 20% + 12%/star +
+  15%/tenure-year (capped 2y), max 90%. CLEARED → 15% of the claim in
+  legal costs, +0.15 reputation (the papers run your side), verdict
+  card narrates it. LIABLE → 1.5× the claim awarded, −0.8 reputation
+  (public humiliation), verdict card narrates the bruise. Both
+  outcomes land in the event log and on the finance charts.
+
+*Why:* it makes hiring quality and retention legible in a new system —
+a 5★ veteran is a defense you can take to trial, a green 2★ hire is a
+settlement waiting to happen — and the settle-vs-fight call is a clean
+risk decision with hidden information priced in.

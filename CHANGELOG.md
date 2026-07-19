@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Lawsuit incidents (GDD §19)
+
+- Two new PR cards name a real roster member: scalding tea spilled on a passenger (cabin crew, $180K claim) or a hard landing injuring an elderly passenger's spine (pilot, $300K). The card quotes the accused's stars and tenure.
+- Settle quietly (pay in full, never makes the news) or fight in court: win odds run 20% + 12% per star + 15% per tenure year (max 90%) — cleared costs 15% in legal fees and gains +0.15 reputation; liable costs 1.5× the claim and −0.8 reputation, each narrated by an immediate verdict card and logged to the charts.
+
+*Why:* hiring quality becomes a legal defense — veterans win trials, green hires are settlements waiting to happen.
+
+
 ## The aunt signs her letters
 
 - Bundled Caveat (SIL OFL, credited) as the game's handwriting face, registered lazily at first use — no project-file changes, works in previews too. `Font.handwriting(size:)` is available for future handwritten touches.
