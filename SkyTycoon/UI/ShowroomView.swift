@@ -173,7 +173,7 @@ struct ShowroomView: View {
     // ── Lease: instant, no capital, forever ──────────────────────────────
 
     @ViewBuilder private var leaseCards: some View {
-        Text("Instant, no capital outlay. Payments never end.")
+        Text("Instant delivery, no capital outlay.")
             .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
         ForEach(AircraftType.allCases) { type in
             let spec = Balance.specs[type]!
@@ -189,8 +189,6 @@ struct ShowroomView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         TickerText(text: "\(weekly.money)/wk",
                                    font: .game(.title3, weight: .semibold))
-                        Text("Payments never end")
-                            .font(.game(.caption2)).foregroundStyle(Theme.textTertiary)
                     }
                     Spacer()
                     Button("Lease") {

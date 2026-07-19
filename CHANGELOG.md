@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Lease copy + Orion rename
+
+- Lease screen no longer says "Payments never end" (both the tab intro and the per-card caption) — the /wk price and the Return fee spec already carry the terms; intro now reads "Instant delivery, no capital outlay."
+- Vayu Aeroworks is now Orion Aeroworks; the utility line is the Orion 205/208/210/212.
+
+*Why:* per feedback — the "never ends" line read as a warning label on the game's recommended first purchase, and Orion carries more shine than Vayu while keeping the Cessna-style numbering. (Loyalty counts keyed to the old seller name lie dormant in existing saves; new Orion orders start their own ladder.)
+
+
 ## Globe map: device gesture + sync fixes
 
 - Killed SceneKit's implicit 0.25s ease on camera changes (`SCNTransaction.animationDuration = 0` in the representable's apply): the Canvas overlay draws instantly, so the eased globe lagged behind it — dots and arcs visibly slid off the terrain during every pan on device.

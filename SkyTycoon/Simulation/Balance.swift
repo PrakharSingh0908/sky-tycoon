@@ -35,7 +35,7 @@ enum Balance {
         switch engine {
         case .turboprop: cruise = 500; burnBase = 0.021; burnPerSeat = 0.00004
                          priceFactor = 1.00; maintFactor = 1.00; rangeFactor = 1.0
-                         primarySeller = "Vayu Aeroworks"; abreast = 2
+                         primarySeller = "Orion Aeroworks"; abreast = 2
         case .propeller: cruise = 480; burnBase = 0.019; burnPerSeat = 0.00004
                          priceFactor = 0.85; maintFactor = 1.15; rangeFactor = 1.0
                          primarySeller = "Northline Regional"; abreast = 4
@@ -75,15 +75,15 @@ enum Balance {
                                : (windows >= 14 ? 2 : 1))
     }
 
-    // Model names follow real-world conventions: Vayu numbers its utility
+    // Model names follow real-world conventions: Orion numbers its utility
     // line like Cessna (205/208/210), Northline names regionals for seat
     // count like ATR, Meridian's M-series tracks seats like the E-jets,
     // and Kestrel's KD/KJ lines are its Dash/CRJ-style competitors.
     static let specs: [AircraftType: AircraftSpec] = [
-        .turboprop5: makeSpec(windows: 5, engine: .turboprop, name: "Vayu 205"),
-        .turboprop8: makeSpec(windows: 8, engine: .turboprop, name: "Vayu 208"),
-        .turboprop10: makeSpec(windows: 10, engine: .turboprop, name: "Vayu 210"),
-        .turboprop12: makeSpec(windows: 12, engine: .turboprop, name: "Vayu 212"),
+        .turboprop5: makeSpec(windows: 5, engine: .turboprop, name: "Orion 205"),
+        .turboprop8: makeSpec(windows: 8, engine: .turboprop, name: "Orion 208"),
+        .turboprop10: makeSpec(windows: 10, engine: .turboprop, name: "Orion 210"),
+        .turboprop12: makeSpec(windows: 12, engine: .turboprop, name: "Orion 212"),
         .propeller24: makeSpec(windows: 24, engine: .propeller, name: "Northline NR-70"),
         .propeller24II: makeSpec(windows: 24, engine: .propeller, variantII: true, name: "Kestrel KD-72"),
         .propeller28: makeSpec(windows: 28, engine: .propeller, name: "Northline NR-85"),
