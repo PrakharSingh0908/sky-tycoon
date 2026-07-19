@@ -7,6 +7,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Split-flap hero score
+
+- Net worth now renders as a true split-flap row: one machined cell per character (28×44 gradient tile, hairline rim, the horizontal flap seam) with the glyph in lit 3D mono metal — red alloy when negative, silver when positive — and a numeric roll transition on change.
+- `MetalPanel` gained the double housing: a second inner hairline frame machined into the face, like the border-in-border of a real departure board.
+- Board-tile row pinned to equal heights.
+
+*Why:* the plain 3D text still read as styled type on empty space; giving every character its own flap cell makes the hero an actual departure-board instrument — denser, more detailed, and it turns the weekly settle into a visible flap-roll moment.
+
+
 ## Anodized chart palette + hero restructure
 
 - `Theme.chartPalette` replaced: the blue-ramp-into-grays made turbine pie slices indistinguishable. Now nine anodized-metal hues (steel blue, bronze, teal, violet, gold, copper rose, silver, slate, graphite) ordered so neighbors contrast; the blade root-to-tip shading keeps them metallic. Expense pie and industry share turbine both pick it up; ExpensePie slice indices are sequential now.

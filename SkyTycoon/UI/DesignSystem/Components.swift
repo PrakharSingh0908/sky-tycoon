@@ -494,6 +494,10 @@ struct MetalPanel<Content: View>: View {
                              Color.black.opacity(0.55)],
                     startPoint: .top, endPoint: .bottom),
                 lineWidth: 1))
+            // Inner frame: the board's second border, machined into the face.
+            .overlay(RoundedRectangle(cornerRadius: Theme.corner - 3)
+                .strokeBorder(Color.white.opacity(0.05), lineWidth: 1)
+                .padding(4))
             // The slab the panel sits proud of.
             .background(shape.fill(Color.black.opacity(0.9)).offset(y: 3))
             .compositingGroup()

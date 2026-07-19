@@ -138,7 +138,7 @@ struct DashboardView: View {
                 netWorthText
             }
             PanelGroove()
-            HStack(spacing: 8) {
+            HStack(alignment: .top, spacing: 8) {
                 reputationTile
                 if let report = engine.latestReport {
                     heroWell("Last wk",
@@ -148,32 +148,47 @@ struct DashboardView: View {
                 heroWell("Fleet", "\(engine.state.fleet.count)", Theme.textPrimary)
                 heroWell("Routes", "\(engine.state.routes.count)", Theme.textPrimary)
             }
+            .fixedSize(horizontal: false, vertical: true)
         }
     }
 
-    /// The score in extruded 3D metal type: stacked dark extrusion layers
-    /// under a lit gradient face, dropped onto the panel.
+    /// The score as a split-flap row: every character in its own machined
+    /// flap cell — gradient tile, hairline rim, the horizontal seam — with
+    /// the glyph in lit 3D metal (red alloy when negative, silver positive).
     private var netWorthText: some View {
         let value = engine.netWorth.money
         let negative = engine.netWorth < 0
-        let faceTop: Color = negative ? Color(red: 1.00, green: 0.66, blue: 0.60) : .white
-        let faceBottom: Color = negative ? Color(red: 0.70, green: 0.29, blue: 0.25) : Color(white: 0.60)
-        let depth: Color = negative ? Color(red: 0.32, green: 0.11, blue: 0.09) : Color(white: 0.16)
-        let font = Font.system(size: 40, weight: .semibold)
-        return ZStack(alignment: .leading) {
-            ForEach(1..<4, id: \.self) { i in
-                Text(value).font(font).monospacedDigit()
-                    .foregroundStyle(depth)
-                    .offset(y: CGFloat(i) * 1.2)
+        return HStack(spacing: 3) {
+            ForEach(Array(value.enumerated()), id: \.offset) { _, ch in
+                flapCell(String(ch), negative: negative)
             }
-            Text(value).font(font).monospacedDigit()
-                .foregroundStyle(LinearGradient(colors: [faceTop, faceBottom],
-                                                startPoint: .top, endPoint: .bottom))
         }
-        .shadow(color: .black.opacity(0.5), radius: 3, y: 3)
-        .lineLimit(1).minimumScaleFactor(0.6)
-        .contentTransition(.numericText())
         .animation(.snappy, value: value)
+    }
+
+    private func flapCell(_ glyph: String, negative: Bool) -> some View {
+        let faceTop: Color = negative ? Color(red: 1.00, green: 0.68, blue: 0.62) : .white
+        let faceBottom: Color = negative ? Color(red: 0.66, green: 0.27, blue: 0.23) : Color(white: 0.55)
+        let cell = RoundedRectangle(cornerRadius: 5)
+        return Text(glyph)
+            .font(.system(size: 26, weight: .semibold, design: .monospaced))
+            .foregroundStyle(LinearGradient(colors: [faceTop, faceBottom],
+                                            startPoint: .top, endPoint: .bottom))
+            .shadow(color: .black.opacity(0.55), radius: 0, y: 1.2)   // glyph extrusion
+            .contentTransition(.numericText())
+            .frame(width: 28, height: 44)
+            .background(cell.fill(LinearGradient(
+                colors: [Color(white: 0.15), Color(white: 0.06)],
+                startPoint: .top, endPoint: .bottom)))
+            .overlay {
+                // The seam every split-flap character breaks on.
+                Rectangle().fill(Color.black.opacity(0.55)).frame(height: 1.5)
+            }
+            .overlay(cell.strokeBorder(
+                LinearGradient(colors: [.white.opacity(0.16), .black.opacity(0.55)],
+                               startPoint: .top, endPoint: .bottom),
+                lineWidth: 1))
+            .shadow(color: .black.opacity(0.45), radius: 2, y: 2)
     }
 
     /// Reputation's board tile: the numeral with a single gold star, in the

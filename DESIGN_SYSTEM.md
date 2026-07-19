@@ -42,7 +42,11 @@ Warm Paper experiment (v3.0, rejected on sight).
   `InstrumentWell` (recessed BLACK board tile with inverted rim;
   values are mono caps glowing in their semantic color — profit,
   loss, white — with a 1px flap seam across the glyphs), and
-  `PanelGroove` (engraved divider). Buttons pop metallic (chrome/
+  `PanelGroove` (engraved divider). The hero score renders as
+  SPLIT-FLAP CELLS: one machined tile per character (gradient
+  face, hairline rim, horizontal seam), glyphs in lit 3D metal —
+  red alloy negative, silver positive. The panel face carries a
+  second inner hairline frame, like a board's double housing. Buttons pop metallic (chrome/
   bronze); panels stay dark — the glyphs carry the color, the way
   a departure board is black steel with luminous type.
   Labels on metal are engraved: mono caps with a 1px dark
