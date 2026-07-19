@@ -141,8 +141,7 @@ struct DashboardView: View {
                                color: engine.netWorth >= 0 ? Theme.textPrimary : Theme.loss)
                 }
                 Spacer(minLength: 8)
-                InstrumentWell(alignment: .trailing,
-                               tint: Color(red: 0.72, green: 0.53, blue: 0.20)) {
+                InstrumentWell(alignment: .trailing) {
                     VStack(alignment: .trailing, spacing: 5) {
                         StarRating(rating: engine.state.reputation, size: 12)
                         HStack(spacing: 4) {
@@ -159,14 +158,14 @@ struct DashboardView: View {
             PanelGroove()
             HStack(spacing: 8) {
                 heroWell("Cash", engine.state.cash.money,
-                         tint: engine.state.cash >= 0 ? Theme.profit : Theme.loss)
+                         engine.state.cash >= 0 ? Theme.profit : Theme.loss)
                 if let report = engine.latestReport {
                     heroWell("Last wk",
                              (report.profit >= 0 ? "+" : "") + report.profit.money,
-                             tint: report.profit >= 0 ? Theme.profit : Theme.loss)
+                             report.profit >= 0 ? Theme.profit : Theme.loss)
                 }
-                heroWell("Fleet", "\(engine.state.fleet.count)", tint: Theme.cornflower)
-                heroWell("Routes", "\(engine.state.routes.count)", tint: Theme.cornflower)
+                heroWell("Fleet", "\(engine.state.fleet.count)", Theme.textPrimary)
+                heroWell("Routes", "\(engine.state.routes.count)", Theme.textPrimary)
             }
         }
     }
@@ -180,14 +179,18 @@ struct DashboardView: View {
             .lineLimit(1)
     }
 
-    /// The anodized wash carries the semantics; the value stays white so it
-    /// pops off the colored floor.
-    private func heroWell(_ label: String, _ value: String, tint: Color) -> some View {
-        InstrumentWell(tint: tint) {
+    /// A split-flap board tile: mono caps value glowing in its semantic
+    /// color on the black floor, with the flap seam across the glyphs.
+    private func heroWell(_ label: String, _ value: String, _ color: Color) -> some View {
+        InstrumentWell {
             VStack(alignment: .leading, spacing: 3) {
-                TickerText(text: value,
-                           font: .game(.subheadline, weight: .semibold),
-                           color: .white)
+                TickerText(text: value.uppercased(),
+                           font: .data(.subheadline, weight: .semibold),
+                           color: color)
+                    .overlay {
+                        // The horizontal seam every split-flap character has.
+                        Rectangle().fill(Color.black.opacity(0.38)).frame(height: 1)
+                    }
                 engravedLabel(label)
             }
         }

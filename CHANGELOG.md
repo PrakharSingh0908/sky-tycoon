@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Departure-board hero (dark console)
+
+- Hero console re-darkened per feedback, restyled after a split-flap departure board: `MetalPanel` housing back to near-black with a faint sheen; `InstrumentWell` floors are black board tiles (the saturated anodized washes are dialed to a whisper and unused on the hero).
+- Well values are now mono uppercase glyphs glowing in their semantic color (profit green / loss red / white) with a 1px flap seam across the characters — the board's type carries the color, not the tile.
+
+*Why:* the bright brushed face + saturated wells washed out the score and fought the Blueprint near-black canvas; a departure board is the aviation-native reference for "dark steel, luminous type" and keeps the popping metallics reserved for the buttons.
+
+
 ## Machined hero console (MetalPanel v3.1.2)
 
 - New panel-scale metal components in the design system: `MetalPanel` (raised brushed face with diagonal sheen, light-catching rim, extruded base — the one hero surface per screen), `InstrumentWell` (recessed cutout with inverted rim and an optional anodized tint floor), and `PanelGroove` (engraved divider line).

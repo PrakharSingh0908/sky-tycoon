@@ -478,18 +478,19 @@ struct MetalPanel<Content: View>: View {
             .padding(Theme.cardPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background {
-                // Brushed face: vertical falloff plus a diagonal light sweep.
+                // Dark machined face (departure-board housing): near-black
+                // falloff plus a faint diagonal light sweep.
                 shape.fill(LinearGradient(
-                    colors: [Color(white: 0.30), Color(white: 0.12)],
+                    colors: [Color(white: 0.16), Color(white: 0.07)],
                     startPoint: .top, endPoint: .bottom))
                 shape.fill(LinearGradient(
-                    stops: [.init(color: .white.opacity(0.12), location: 0),
-                            .init(color: .clear, location: 0.5)],
+                    stops: [.init(color: .white.opacity(0.07), location: 0),
+                            .init(color: .clear, location: 0.45)],
                     startPoint: .topLeading, endPoint: .bottomTrailing))
             }
             .overlay(shape.strokeBorder(
                 LinearGradient(
-                    colors: [(highlight ?? .white).opacity(highlight == nil ? 0.55 : 0.95),
+                    colors: [(highlight ?? .white).opacity(highlight == nil ? 0.35 : 0.85),
                              Color.black.opacity(0.55)],
                     startPoint: .top, endPoint: .bottom),
                 lineWidth: 1))
@@ -517,21 +518,22 @@ struct InstrumentWell<Content: View>: View {
             .padding(.horizontal, 10).padding(.vertical, 8)
             .frame(maxWidth: .infinity, alignment: alignment)
             .background {
-                shape.fill(Color.black.opacity(0.32))
+                // Board-tile floor: black, so the glyphs carry the color.
+                shape.fill(Color.black.opacity(0.48))
                 if let tint {
                     shape.fill(LinearGradient(
-                        colors: [tint.opacity(0.42), tint.opacity(0.18)],
+                        colors: [tint.opacity(0.20), tint.opacity(0.08)],
                         startPoint: .top, endPoint: .bottom))
                 }
                 // Inner top shadow: the wall the well is sunk behind.
                 shape.fill(LinearGradient(
-                    stops: [.init(color: .black.opacity(0.35), location: 0),
+                    stops: [.init(color: .black.opacity(0.40), location: 0),
                             .init(color: .clear, location: 0.35)],
                     startPoint: .top, endPoint: .bottom))
             }
             .overlay(shape.strokeBorder(
                 LinearGradient(colors: [Color.black.opacity(0.65),
-                                        (tint ?? .white).opacity(tint == nil ? 0.10 : 0.35)],
+                                        (tint ?? .white).opacity(tint == nil ? 0.12 : 0.30)],
                                startPoint: .top, endPoint: .bottom),
                 lineWidth: 1))
     }

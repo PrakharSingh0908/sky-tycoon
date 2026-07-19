@@ -36,13 +36,15 @@ Warm Paper experiment (v3.0, rejected on sight).
   Every key has a gradient face, a light-catching top rim, an
   extruded base lip, and press-travel: it sinks 2.5pt into the
   panel when touched, with a subtle 0.97 scale give. v3.1.2
-  extends the language to PANEL scale: `MetalPanel` (raised
-  machined face — the ONE hero surface per screen),
-  `InstrumentWell` (recessed cutout with inverted rim: stats sit
-  IN the console; an anodized tint floor carries the semantics —
-  profit/loss, cornflower, gold — values stay white on top), and
-  `PanelGroove` (engraved divider). Metallic surfaces POP: bright
-  brushed faces and saturated anodized washes, never dull gray.
+  extends the language to PANEL scale, styled after a split-flap
+  DEPARTURE BOARD: `MetalPanel` (dark machined housing with a
+  faint diagonal sheen — the ONE hero surface per screen),
+  `InstrumentWell` (recessed BLACK board tile with inverted rim;
+  values are mono caps glowing in their semantic color — profit,
+  loss, white — with a 1px flap seam across the glyphs), and
+  `PanelGroove` (engraved divider). Buttons pop metallic (chrome/
+  bronze); panels stay dark — the glyphs carry the color, the way
+  a departure board is black steel with luminous type.
   Labels on metal are engraved: mono caps with a 1px dark
   under-edge. Surfaces everywhere else stay flat.
   Muted functional green/red/amber survive for P&L semantics only.
