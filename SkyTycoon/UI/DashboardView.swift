@@ -132,7 +132,9 @@ struct DashboardView: View {
     // v3.1.2: the score lives on a machined MetalPanel — raised metal face,
     // engraved labels, and the supporting stats sunk into instrument wells.
     private var heroCard: some View {
-        MetalPanel(highlight: settleFlash ? Theme.profit : accent) {
+        // No standing accent stroke — the machined housing carries the
+        // hierarchy; only the weekly settle still flashes the rim green.
+        MetalPanel(highlight: settleFlash ? Theme.profit : nil) {
             VStack(alignment: .leading, spacing: 5) {
                 engravedLabel("Net worth")
                 netWorthText

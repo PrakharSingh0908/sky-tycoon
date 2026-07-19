@@ -520,7 +520,8 @@ struct InstrumentWell<Content: View>: View {
     var body: some View {
         content
             .padding(.horizontal, 10).padding(.vertical, 8)
-            .frame(maxWidth: .infinity, alignment: alignment)
+            // maxHeight fills the row so sibling tiles machine to ONE height.
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: alignment)
             .background {
                 // Board-tile floor: black, so the glyphs carry the color.
                 shape.fill(Color.black.opacity(0.48))

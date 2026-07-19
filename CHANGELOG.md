@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Hero polish: no standing stroke, uniform tiles
+
+- Removed the standing cornflower rim from the hero panel — the machined housing carries the hierarchy on its own; the rim still flashes profit-green on the weekly settle.
+- `InstrumentWell` now fills its row height, so the Rating / Last wk / Fleet / Routes tiles machine to one consistent height.
+
+*Why:* the accent stroke was a leftover from the flat-card era and fought the departure-board housing; unequal tile heights broke the single-strip read of the board row.
+
+
 ## Split-flap hero score
 
 - Net worth now renders as a true split-flap row: one machined cell per character (28×44 gradient tile, hairline rim, the horizontal flap seam) with the glyph in lit 3D mono metal — red alloy when negative, silver when positive — and a numeric roll transition on change.
