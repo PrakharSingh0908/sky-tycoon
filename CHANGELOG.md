@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Machined meters (v3.1.4)
+
+- MeterBar, the progress bar behind Happiness, Workload, Load factor, Condition and every other 0 to 1 readout, is now a machined instrument channel: a recessed groove with a dark cut above and a catch-light below, quarter graduations engraved in the floor, and a milled metal slug of the semantic color riding 1pt inside it with a rolled specular top, shaded underside, polished end bevel, and a faint color bleed out of the groove. At zero the slug rests as a pilot-light dot; at 100% the channel lip stays visible around the metal. One component, every meter in the game inherits it. A "Meters" preview pins all fill levels and colors; design doc updated.
+
+*Why:* per direction, the flat capsule read as a default control. Meters are the game's most repeated surface, so this is the highest-leverage place to spend craft; the recess and slug put them in the same machined-metal family as the keys, panels, and wells.
+
+
 ## Skill number dropped from staff cards
 
 - The "2.0 skill" readout beside the stars on the People staff cards is gone; the gold-star rating carries the skill on its own.

@@ -147,8 +147,13 @@ Instrument hardware is rectilinear. Two radii, both tokens:
 All drawn UI — hairlines and rectangles. **No images, no gimmick
 graphics, no texture.**
 
-- **Gauges:** `MeterBar` is a rectangular track with graduation cuts
-  every 10% and a needle (1.5pt, overshooting the track) at the value.
+- **Gauges (v3.1.4):** `MeterBar` is a machined instrument channel: a
+  recessed groove (dark cut above, catch-light below) with quarter
+  graduations engraved in the floor, holding a milled metal slug of the
+  semantic color — rolled specular top, shaded underside, polished end
+  bevel, and a faint color bleed out of the groove. The slug rides 1pt
+  inside the channel so the lip stays visible even at 100%; at zero it
+  rests as a pilot-light dot.
 - **Placards:** `SectionHeader` = icon, UPPERCASE label, then a hairline
   rule running to the card edge. (Panel index numbers were tried and
   removed 2026-07-18 — they read as serial-number noise.)

@@ -189,22 +189,66 @@ struct StatTile: View {
     }
 }
 
-// ── MeterBar — any 0...1 quantity ────────────────────────────────────────
+// ── MeterBar — any 0...1 quantity (v3.1.4 machined) ─────────────────────
 
-/// A quiet rounded track (Warm Paper: gestural, no gridlines) — the fill
-/// color carries the health semantics.
+/// A machined instrument channel: a recessed groove engraved into the
+/// panel (dark cut above, catch-light below, quarter graduations) holding
+/// a milled metal slug of the semantic color — specular top edge, shaded
+/// underside, polished end cap, and a faint light bleed out of the groove.
 struct MeterBar: View {
     let value: Double          // 0...1
     var color: Color = Theme.profit
-    var height: CGFloat = 6
+    var height: CGFloat = 7
 
     var body: some View {
         GeometryReader { geo in
             let fraction = min(1, max(0, value))
+            // The slug rides 1pt inside the channel so the groove's lip
+            // stays visible around the metal even at 100%.
+            let slugWidth = max(height - 2, (geo.size.width - 2) * fraction)
             ZStack(alignment: .leading) {
-                Capsule().fill(Color.white.opacity(0.08))
-                Capsule().fill(color.opacity(0.85))
-                    .frame(width: max(height, geo.size.width * fraction))
+                // The channel: milled into the panel, darkest at the top
+                // lip where the cut shadows itself.
+                Capsule()
+                    .fill(LinearGradient(colors: [.black.opacity(0.55),
+                                                  .black.opacity(0.30)],
+                                         startPoint: .top, endPoint: .bottom))
+                    .overlay(Capsule()
+                        .strokeBorder(LinearGradient(
+                            colors: [.black.opacity(0.8), .white.opacity(0.14)],
+                            startPoint: .top, endPoint: .bottom),
+                            lineWidth: 1))
+                // Quarter graduations, engraved faint in the channel floor.
+                ForEach(1..<4) { quarter in
+                    Rectangle()
+                        .fill(Color.white.opacity(0.10))
+                        .frame(width: 1, height: height - 3)
+                        .offset(x: geo.size.width * Double(quarter) / 4)
+                }
+                // The slug: milled bar of the semantic metal — bright
+                // rolled top, shaded underside, its light bleeding out.
+                Capsule()
+                    .fill(color)
+                    .overlay(Capsule()
+                        .fill(LinearGradient(stops: [
+                            .init(color: .white.opacity(0.42), location: 0),
+                            .init(color: .white.opacity(0.06), location: 0.45),
+                            .init(color: .black.opacity(0.28), location: 1),
+                        ], startPoint: .top, endPoint: .bottom)))
+                    // Polished bevel where the metal ends.
+                    .overlay(alignment: .trailing) {
+                        Capsule()
+                            .fill(Color.white.opacity(0.55))
+                            .frame(width: 1.5)
+                            .padding(.trailing, 1.5)
+                            .padding(.vertical, 1.5)
+                            .blur(radius: 0.3)
+                    }
+                    .overlay(Capsule()
+                        .strokeBorder(Color.white.opacity(0.18), lineWidth: 0.5))
+                    .frame(width: slugWidth, height: height - 2)
+                    .padding(.leading, 1)
+                    .shadow(color: color.opacity(0.55), radius: 2.5)
             }
         }
         .frame(height: height)
@@ -820,6 +864,22 @@ struct GameScreen<Content: View>: View {
     }
 }
 
+
+// Machined meter pin: the instrument channel at every fill level and color.
+#Preview("Meters") {
+    GameCard {
+        MeterRow(label: "Happiness", value: 0.70, color: Theme.profit)
+        MeterRow(label: "Workload", value: 0.87, display: "87%", color: Theme.warn)
+        MeterRow(label: "Load factor", value: 0.42, color: Theme.warn)
+        MeterRow(label: "Condition", value: 0.20, display: "20/100", color: Theme.loss)
+        MeterRow(label: "Satisfaction", value: 0.55, color: Theme.sky)
+        MeterRow(label: "Empty", value: 0.0, color: Theme.profit)
+        MeterRow(label: "Full", value: 1.0, color: Theme.profit)
+    }
+    .padding(16)
+    .background(Theme.bg)
+    .preferredColorScheme(.dark)
+}
 
 #Preview("Metal keys") {
     VStack(spacing: 20) {
