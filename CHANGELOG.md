@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Showroom holds the clock (no event closes the buy/lease drawer)
+
+- The Showroom now holds the sim clock the whole time it's open, so no event can fire and dismiss the buy/lease drawer out from under you mid-decision. The browse screen had no clock hold (only the receipt sheet did); when the Showroom was presented as a sheet from a route's "Add planes" drawer, an event firing would present the event sheet and dismiss the Showroom. Now time is paused while you shop — on both the pushed (Fleet) and sheet (route drawer) paths — and resumes at your chosen speed when you leave.
+
+*Why:* per direction — an event yanking away the lease drawer mid-purchase was frustrating; shopping is a decision, and decisions hold the clock like every other sheet.
+
+
 ## Fix: frozen clock / dead speed control (GDD §24)
 
 - Fixed a mid-session bug where the sim clock stopped advancing and the speed control went dead. Root cause: the interaction "hold" that pauses the clock during decision UI was an integer counter incremented in ClockHoldModifier.onAppear and decremented in onDisappear — and SwiftUI does not fire those in balanced pairs, so a single leaked onAppear (sheet re-present, parent re-render, tab switch) left the counter stuck ≥1 and the tick's `holds == 0` guard never passed again.

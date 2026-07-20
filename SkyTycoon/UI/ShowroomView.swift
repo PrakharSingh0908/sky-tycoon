@@ -77,6 +77,9 @@ struct ShowroomView: View {
         .toolbarBackground(Theme.bgElevated, for: .navigationBar)
         .sheet(item: $receipt) { AcquisitionReceiptView(receipt: $0) }
         .sensoryFeedback(.success, trigger: receipt?.id) { _, new in new != nil }
+        // Hold the clock while browsing the showroom: no event may fire and
+        // dismiss the buy/lease drawer out from under the player.
+        .holdsSimClock()
     }
 
     /// The §22 lock: the metal is visible (aspiration), the buy path is
