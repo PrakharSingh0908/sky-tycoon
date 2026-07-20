@@ -23,14 +23,35 @@ struct MoneyView: View {
             marketingCard
             GameCard {
                 SectionHeader(title: "52-week P&L", icon: "chart.bar.fill", accent: accent)
-                Text("Profit bars · revenue line. Tap any statement line below for its formula.")
-                    .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
                 ProfitChart(reports: engine.state.reports)
+                pnlLegend
             }
             if let r = engine.latestReport { statementCard(r) }
             loansCard
         }
         .sheet(item: $explanation) { FormulaSheet(explanation: $0) }
+    }
+
+    // ── P&L chart legend: what the bars and the line mean ────────────────
+
+    private var pnlLegend: some View {
+        HStack(spacing: 16) {
+            pnlKey(.green, "Profit", line: false)
+            pnlKey(.red, "Loss", line: false)
+            pnlKey(.blue, "Revenue", line: true)
+            Spacer()
+        }
+    }
+
+    private func pnlKey(_ color: Color, _ text: String, line: Bool) -> some View {
+        HStack(spacing: 5) {
+            if line {
+                RoundedRectangle(cornerRadius: 1).fill(color).frame(width: 14, height: 2)
+            } else {
+                RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 9, height: 9)
+            }
+            Text(text).font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+        }
     }
 
     // ── Balance sheet (M7): what the airline is worth ────────────────────

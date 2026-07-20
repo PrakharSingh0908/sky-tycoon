@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## P&L chart gets a legend
+
+- The 52-week P&L card drops its "Profit bars · revenue line…" description line and gains a proper legend beneath the chart: green Profit and red Loss keys for the bars, and a blue Revenue line key. The tap-for-formula hint is gone from the copy since the statement rows below already carry the question-mark affordance.
+
+*Why:* per direction. A sentence describing the chart is weaker than a legend that labels its exact marks; the legend reads faster and matches the bar/line colors one-to-one.
+
+
 ## Gazette blends into its card; event-effects flow audited
 
 - The gazette clipping no longer draws its own black panel fill: the newspaper now sits directly on the Industry card surface, separated only by the divider above it.
