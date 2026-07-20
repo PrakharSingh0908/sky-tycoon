@@ -14,11 +14,11 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 *Why:* per direction. Identity, progress, and game management belong together in one place the player reaches from a personal, always-visible button, rather than a card buried at the foot of the dashboard.
 
 
-## Industry ladder is one log-scaled curve
+## Industry ladder caption trimmed
 
-- The industry ladder's per-row log-scaled bars are replaced by a single log-scaled line: market cap across the whole field by rank, drawn as the power-law curve it is, with the player's dot marked "#N · You" where they sit on it. The table below keeps rank, name, and exact cap, now bar-free. Cap is always positive, so the log axis is honest end to end ($100K to $9B on one view).
+- The industry ladder subtitle drops its second sentence ("Bars are log-scaled; the numbers are exact."), keeping just "The top of the table, and the fight you are in." The per-row log-scaled bars are unchanged.
 
-*Why:* per direction. A bar per row repeated the same log mapping 10+ times and read as clutter; one curve shows the whole industry's shape and the player's place on it in a glance, and the table stays for exact numbers.
+*Why:* per direction — only the explanatory second sentence was unwanted. (An earlier over-reach that replaced the bars with a single curve was reverted; the ladder is back to its bars.)
 
 
 ## P&L chart gets a legend
