@@ -16,6 +16,8 @@ struct DashboardView: View {
     @State private var showingIndustry = false
     @State private var gazettePage = 0
     @State private var eventsExpanded = false
+    /// Jump to the Fleet tab (worn-aircraft rows are tappable — service them).
+    var onOpenFleet: () -> Void = {}
     private let accent = Theme.sky
 
     enum TrendMetric: String, CaseIterable, Identifiable {
@@ -268,15 +270,25 @@ struct DashboardView: View {
             }
             ForEach(wornAircraft) { plane in
                 let critical = plane.wear >= Balance.wearDangerThreshold
-                HStack {
-                    StatusBadge(text: plane.nickname,
-                                color: critical ? Theme.loss : Theme.warn)
-                    Spacer()
-                    Text(critical ? "\(Int(plane.wear))% wear · ground it"
-                                  : "\(Int(plane.wear))% wear · service soon")
-                        .font(.game(.caption))
-                        .foregroundStyle(critical ? Theme.loss : Theme.textSecondary)
+                // Tap a worn plane to jump to the Fleet, where it leads the
+                // list (sorted worst-wear first) ready to service or ground.
+                Button {
+                    onOpenFleet()
+                } label: {
+                    HStack {
+                        StatusBadge(text: plane.nickname,
+                                    color: critical ? Theme.loss : Theme.warn)
+                        Spacer()
+                        Text(critical ? "\(Int(plane.wear))% wear · ground it"
+                                      : "\(Int(plane.wear))% wear · service soon")
+                            .font(.game(.caption))
+                            .foregroundStyle(critical ? Theme.loss : Theme.textSecondary)
+                        Image(systemName: "chevron.right")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(Theme.textTertiary)
+                    }
                 }
+                .buttonStyle(.plain)
             }
         }
     }

@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Worn-aircraft rows jump to the Fleet
+
+- The worn-plane rows in the Dashboard's Ops Conditions card ("95% wear · ground it") are now tappable, with a chevron affordance. Tapping jumps to the Fleet tab, where that plane leads the list (sorted worst-wear first) ready to Service or ground. Wired via an onOpenFleet closure from RootView that switches the tab.
+
+*Why:* per direction — the warning named the problem but was a dead end; now it's a one-tap path to the fix.
+
+
 ## Showroom holds the clock (no event closes the buy/lease drawer)
 
 - The Showroom now holds the sim clock the whole time it's open, so no event can fire and dismiss the buy/lease drawer out from under you mid-decision. The browse screen had no clock hold (only the receipt sheet did); when the Showroom was presented as a sheet from a route's "Add planes" drawer, an event firing would present the event sheet and dismiss the Showroom. Now time is paused while you shop — on both the pushed (Fleet) and sheet (route drawer) paths — and resumes at your chosen speed when you leave.
