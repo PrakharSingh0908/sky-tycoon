@@ -7,6 +7,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Living competition: routes must be defended (GDD §26, Pillar A)
+
+- Rival carriers are no longer a frozen number per route. A fat, busy, high-yield route now **attracts competitors** that split the market and erode your share and profit over time; a cheap or marginal route sheds them. Rivals only start entering after week 20 (founder grace) and drift gradually, not overnight.
+- You defend a route by cutting the fare (sheds rivals but lowers yield), adding capacity/frequency, or lifting comfort/catering/marketing (holds share without a price cut). A profitable route is now a position to defend, not free money.
+- **New Dashboard card, "Routes need attention,"** surfaces any flown route that's losing money, slipping off its recent load-factor peak, newly contested, or half-empty. Each row taps through to the route.
+
+*Why:* per direction — a profitable route you never touch made active play pointless. Now the margin itself summons the competition that eats it, so pricing, capacity, and service become an ongoing game. This is Pillar A of a five-part engagement plan (see GDD §26); maturity/slots/fleet-treadmill/ambition-ladder follow.
+
+
 ## Event cash figures scale with net worth
 
 - Every event's cash amount is now authored at founder scale and grows with the airline's net worth when the card fires (scale = net worth ÷ $1.5M, capped 40×). A fuel hedge that costs −$50K on day one costs ~−$550K at $16M net worth; the button label re-renders to match. Recurring cash flows (cargo income, fees, levies) scale the same way. Percentage effects (demand, fuel %) are already size-free and untouched; lawsuit claims keep their own market-cap scaling.

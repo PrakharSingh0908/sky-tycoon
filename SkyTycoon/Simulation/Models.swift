@@ -403,6 +403,11 @@ struct Route: Codable, Identifiable {
     var lastPunctuality: Double
     /// In-flight service level (GDD §18). Optional for save-compat: nil = none.
     var catering: CateringLevel? = nil
+    /// Living competition (GDD §26): the DYNAMIC rival count on this pair,
+    /// drifting up when the route is fat and busy and back down when it is
+    /// cheap or marginal. Seeds from the structural `competitorCount` floor
+    /// on first close. Optional for save-compat (nil → seed from the floor).
+    var rivalPressure: Double? = nil
 }
 
 enum StaffRole: String, Codable, CaseIterable, Identifiable {

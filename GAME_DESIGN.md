@@ -846,3 +846,58 @@ re-renders the "Action · −$X" label suffix to match. Percentage/timed
 effects (demand, fuel) are scale-free and untouched. Lawsuits keep their
 own market-cap scaling (litigation targets the public valuation, not the
 balance sheet), so they are excluded from this path to avoid double-scaling.
+
+---
+
+## §26 — Engagement: the edge must decay (2026-07-20)
+
+The problem: a profitable route was free money forever. Competition was a
+frozen hash per city-pair, demand only ever grew, and service quality was a
+stable attractor — so "open a good route and walk away" strictly dominated
+active play. This section is the roadmap to fix it. The thesis:
+
+> Every edge must decay unless maintained; growth must cost reinvestment
+> and force rebalancing; and there must always be a visible, expensive
+> next goal.
+
+### The five pillars (priority order)
+1. **Living competition** — dynamic rivals that enter fat, dominant routes
+   and erode share/yield until you defend (re-price, add seats, lift
+   service). *The core fix.* **SHIPPED (P1).**
+2. **Route maturity & capacity discipline** — an S-curve ramp on new routes
+   and an over-supply yield penalty, so right-sizing is ongoing. *Pending.*
+3. **Slot scarcity with periodic review** — reclaim under-used slots at busy
+   airports; expansion means choosing. Promotes the `slotAudit` event to a
+   real reclaim. *Pending.*
+4. **Fleet as rolling reinvestment** — sharper aging + lease renewals make
+   the fleet a treadmill, not a one-time buy. *Pending.*
+5. **Ambition ladder** — named goals beyond the aunt's arc (climb the rival
+   ladder, tiers, city count, market cap) that pull reinvestment. *Pending.*
+
+### P1 shipped — Living competition
+- `Route.rivalPressure: Double?` — the DYNAMIC rival count, seeded from the
+  structural `competitorCount` floor (nil on old saves).
+- `computeEconomics` reads `rivalPressure` (continuous) into the existing
+  `captureShare` / `marketPie` math instead of the static count.
+- `closeWeek` drifts each flown route's pressure toward a target from
+  `Balance.rivalTargetPressure(floor:loadFactor:yieldRatio:)`: busy +
+  high-yield routes pull the full field (cap `rivalMaxPerRoute = 5`), cheap
+  or marginal ones fall back to the floor. Drift `rivalDriftRate = 0.25`/wk;
+  rivals only ENTER past `rivalEntryGraceWeeks = 20` (they leave any time).
+  No RNG — determinism holds.
+- Player defends by cutting fare (sheds rivals, lowers yield), adding
+  capacity/frequency, or lifting comfort/catering/marketing (raises
+  `appeal`, holding share without a price cut).
+- **Attention signal:** `GameEngine.routesNeedingAttention` flags flown
+  routes that are losing money, slipping off their recent load peak, newly
+  contested (pressure > floor + 1), or half-empty; the Dashboard surfaces
+  them as tappable rows that open the route.
+- Verified in-engine: a fare at 1.25× reference pulls rivals to ~4.6;
+  undercutting to 0.90× sheds them back toward the floor.
+
+### Validation standard for future pillars
+Add a passive bot (opens good routes, never touches them) vs an active bot
+(defends share, re-prices, right-sizes). After ~3 in-game years the active
+bot's net worth must clearly beat the passive bot's, and passive routes must
+visibly erode. If passive still wins, the pressure is too weak — tune and
+re-run.

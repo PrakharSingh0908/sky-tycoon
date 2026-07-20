@@ -341,6 +341,29 @@ enum Balance {
     }
     /// The average rival's service appeal on a contested pair.
     static let rivalAppeal = 0.5
+
+    // ── Living competition (GDD §26) ─────────────────────────────────────
+    // A fat, dominant route is a magnet: rivals move IN to feed on the
+    // yield, splitting the pie until you defend it (re-price, add seats,
+    // lift service). Cheap or marginal routes shed rivals. This is what
+    // stops "set a profitable route and walk away."
+    /// Absolute ceiling on rivals a single pair can attract.
+    static let rivalMaxPerRoute = 5.0
+    /// How fast the rival count drifts toward its target each week (0…1).
+    static let rivalDriftRate = 0.25
+    /// Founder grace: rivals don't ENTER before this total week (they can
+    /// still leave). A first season shouldn't be swarmed.
+    static let rivalEntryGraceWeeks = 20
+    /// The rival count a pair trends toward, given how appetizing it looks:
+    /// busy (high load) and high-yield (fare above reference) pairs pull the
+    /// full field; empty or cheap ones fall back to the structural floor.
+    static func rivalTargetPressure(floor: Double, loadFactor: Double,
+                                     yieldRatio: Double) -> Double {
+        let loadAppeal = max(0, min(1, loadFactor))
+        let yieldAppeal = max(0, min(1, (yieldRatio - 0.9) / 0.6))
+        let appetite = 0.5 * loadAppeal + 0.5 * yieldAppeal      // 0…1
+        return floor + appetite * (rivalMaxPerRoute - floor)
+    }
     /// Competition stimulates a market: total pie grows per rival, so a
     /// STRONG product barely feels the competition while a weak one
     /// collapses to its sliver.

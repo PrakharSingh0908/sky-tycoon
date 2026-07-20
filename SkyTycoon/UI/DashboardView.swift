@@ -16,8 +16,12 @@ struct DashboardView: View {
     @State private var showingIndustry = false
     @State private var gazettePage = 0
     @State private var eventsExpanded = false
+    /// A route the player tapped to open from the attention card (GDD §26).
+    @State private var routeRef: RouteRef?
     /// Jump to the Fleet tab (worn-aircraft rows are tappable — service them).
     var onOpenFleet: () -> Void = {}
+
+    private struct RouteRef: Identifiable { let id: UUID }
     private let accent = Theme.sky
 
     enum TrendMetric: String, CaseIterable, Identifiable {
@@ -45,6 +49,9 @@ struct DashboardView: View {
             // same machined housing, until the airline flies.
             if !firstFlightDone { firstFlightCard }
             if engine.state.reputation < 2.0 { reputationCollapseBanner }
+            // Living competition (GDD §26): eroding routes surface here so a
+            // "set and forget" route can't quietly bleed.
+            if !engine.routesNeedingAttention.isEmpty { routeAttentionCard }
             if !engine.state.activeEffects.isEmpty || !wornAircraft.isEmpty {
                 opsConditionsCard
             }
@@ -63,6 +70,36 @@ struct DashboardView: View {
             guard settleFlash else { return }
             try? await Task.sleep(for: .seconds(0.9))
             withAnimation(.easeOut(duration: 0.7)) { settleFlash = false }
+        }
+        .sheet(item: $routeRef) { ref in
+            NavigationStack { RouteDetailView(routeID: ref.id) }
+        }
+    }
+
+    // ── Routes need attention: defend what you built (GDD §26) ───────────
+
+    private var routeAttentionCard: some View {
+        GameCard {
+            SectionHeader(title: "Routes need attention",
+                          icon: "exclamationmark.triangle.fill", accent: Theme.warn)
+            ForEach(engine.routesNeedingAttention) { alert in
+                Button {
+                    routeRef = RouteRef(id: alert.id)
+                } label: {
+                    HStack {
+                        StatusBadge(text: alert.title,
+                                    color: alert.critical ? Theme.loss : Theme.warn)
+                        Spacer()
+                        Text(alert.reason)
+                            .font(.game(.caption))
+                            .foregroundStyle(alert.critical ? Theme.loss : Theme.textSecondary)
+                        Image(systemName: "chevron.right")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(Theme.textTertiary)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
         }
     }
 

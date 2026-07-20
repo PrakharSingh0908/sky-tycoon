@@ -593,6 +593,31 @@ final class GameEngine {
             }
         }
 
+        // Living competition (GDD §26): rivals drift toward how appetizing
+        // each flown route looks — fat, busy routes attract entrants that
+        // split the pie; cheap or marginal ones shed them. No RNG, so
+        // determinism holds. Rivals only ENTER past the founder grace week;
+        // they can leave any time.
+        let compProfile = Balance.countryProfiles[state.country]!
+        let pastGrace = state.date.totalWeeks > Balance.rivalEntryGraceWeeks
+        for i in state.routes.indices {
+            let route = state.routes[i]
+            guard let origin = city(route.originID),
+                  let dest = city(route.destinationID) else { continue }
+            let floor = Double(Balance.competitorCount(origin, dest))
+            let flying = !route.assignedAircraftIDs.isEmpty && route.weeklyFrequency > 0
+            let referenceFare = route.distanceKm * Balance.referenceFarePerKm * compProfile.fareLevel
+            let yieldRatio = route.fare / max(referenceFare, 1)
+            let target = flying
+                ? Balance.rivalTargetPressure(floor: floor,
+                        loadFactor: route.lastLoadFactor, yieldRatio: yieldRatio)
+                : floor
+            var pressure = route.rivalPressure ?? floor
+            if target < pressure || pastGrace {
+                pressure += (target - pressure) * Balance.rivalDriftRate
+            }
+            state.routes[i].rivalPressure = max(0, min(Balance.rivalMaxPerRoute, pressure))
+        }
 
         // Airworthiness crash sweep (RNG, at most one hull loss/week).
         for i in state.fleet.indices {
@@ -807,7 +832,11 @@ final class GameEngine {
         // route's satisfaction decide your SHARE of the pair — unless you
         // are the only carrier. Rivals also grow the total pie, so a
         // strong product barely feels them while a weak one collapses.
-        let competitors = Balance.competitorCount(origin, dest)
+        // Living competition (GDD §26): the DYNAMIC rival count on this pair,
+        // seeded from the structural floor for routes that haven't closed a
+        // week yet (and old saves).
+        let competitors = route.rivalPressure
+            ?? Double(Balance.competitorCount(origin, dest))
         let affluence = (origin.businessIndex + dest.businessIndex) / 2
         var comfort = planes.isEmpty ? 0.4
             : planes.map(\.comfortScore).reduce(0, +) / Double(planes.count)
@@ -818,9 +847,9 @@ final class GameEngine {
         let wPrice = 0.45 - 0.30 * affluence
         let appeal = max(0.05, wComfort * comfort + wPrice * priceValue
             + 0.30 * (route.satisfaction / 100))
-        let captureShare = competitors == 0 ? 1.0
-            : appeal / (appeal + Double(competitors) * Balance.rivalAppeal * 0.8)
-        let marketPie = demand * (1 + Balance.marketGrowthPerRival * Double(competitors))
+        let captureShare = competitors < 0.05 ? 1.0
+            : appeal / (appeal + competitors * Balance.rivalAppeal * 0.8)
+        let marketPie = demand * (1 + Balance.marketGrowthPerRival * competitors)
 
         let pax = min(marketPie * captureShare, Double(seatsOffered))
         let loadFactor = seatsOffered > 0 ? pax / Double(seatsOffered) : 0
@@ -840,7 +869,7 @@ final class GameEngine {
                               seatsOffered: seatsOffered, pax: pax, loadFactor: loadFactor,
                               revenue: revenue, fuel: fuel, fairness: fairness,
                               breakevenLoadFactor: breakeven,
-                              competitors: competitors, affluence: affluence,
+                              competitors: Int(competitors.rounded()), affluence: affluence,
                               captureShare: captureShare)
     }
 
@@ -860,6 +889,48 @@ final class GameEngine {
         return computeEconomics(route: route, planes: planes,
                                 profile: Balance.countryProfiles[state.country]!,
                                 fuelEventMult: fuelMult, demandEventMult: demandMult)
+    }
+
+    /// A flying route that has slipped and wants a look (GDD §26).
+    struct RouteAttention: Identifiable {
+        let id: UUID
+        let title: String     // "DEL ✈︎ BOM"
+        let reason: String
+        let critical: Bool
+    }
+
+    /// Routes the Dashboard should surface so an eroding one doesn't hide —
+    /// the answer to "why touch a route that's running." Only flown routes.
+    var routesNeedingAttention: [RouteAttention] {
+        state.routes.compactMap { route in
+            guard !route.assignedAircraftIDs.isEmpty, route.weeklyFrequency > 0 else { return nil }
+            let title = "\(route.originID) ✈︎ \(route.destinationID)"
+            // Losing money is the loudest alarm.
+            if route.lastWeeklyProfit < 0 {
+                return RouteAttention(id: route.id, title: title,
+                                      reason: "Losing money", critical: true)
+            }
+            // Load factor slipping off its recent run (competition biting).
+            let recent = Array(route.loadFactorHistory.suffix(8))
+            if recent.count >= 6, let peak = recent.max(), peak > 0.1,
+               route.lastLoadFactor < peak - 0.12 {
+                return RouteAttention(id: route.id, title: title,
+                                      reason: "Load factor slipping", critical: false)
+            }
+            // New competition has moved in above the structural floor.
+            if let origin = city(route.originID), let dest = city(route.destinationID),
+               let p = route.rivalPressure,
+               p > Double(Balance.competitorCount(origin, dest)) + 1 {
+                return RouteAttention(id: route.id, title: title,
+                                      reason: "New competition", critical: false)
+            }
+            // Flying half-empty — capacity or fare is wrong.
+            if route.lastLoadFactor < 0.45 {
+                return RouteAttention(id: route.id, title: title,
+                                      reason: "Half-empty", critical: false)
+            }
+            return nil
+        }
     }
 
     /// Cap for the daily trend-history buffers: ~5 in-game years of days
