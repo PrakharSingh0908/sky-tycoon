@@ -265,10 +265,20 @@ private struct HiringSheet: View {
     /// A contract inked at the negotiation table waits here until that
     /// sheet finishes dismissing, then presents.
     @State private var pendingContract: SignedContract?
+    /// The last roster that had anyone in it. Once the desk empties, the
+    /// sheet dismisses — but it keeps rendering this frozen snapshot while
+    /// it slides away, so the empty state is never drawn even for a frame.
+    @State private var lastNonEmpty: [JobApplicant] = []
     private let accent = Theme.violet
 
     private var applicants: [JobApplicant] {
         engine.state.applicants.filter { $0.role == role }
+    }
+
+    /// What the list draws: live applicants, or the frozen last snapshot
+    /// during the dismissal that follows the desk emptying.
+    private var displayed: [JobApplicant] {
+        applicants.isEmpty ? lastNonEmpty : applicants
     }
 
     var body: some View {
@@ -277,11 +287,7 @@ private struct HiringSheet: View {
                 Text("Hiring · \(role.displayName)")
                     .font(.display(.title2)).foregroundStyle(Theme.textPrimary)
                     .padding(.top, 20)
-                if applicants.isEmpty {
-                    Text("Nobody at the desk. Applicants arrive while a job ad runs.")
-                        .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
-                }
-                ForEach(applicants) { applicant in
+                ForEach(displayed) { applicant in
                     applicantRow(applicant)
                 }
                 Button("Done") { dismiss() }
@@ -296,8 +302,12 @@ private struct HiringSheet: View {
         .presentationBackground(Theme.bgElevated)
         .preferredColorScheme(.dark)
         .holdsSimClock()   // patience doesn't drain while you're deciding
-        // The desk closes itself once the last applicant is dealt with.
-        .onChange(of: applicants.count) { _, _ in closeIfDeskEmpty() }
+        .onAppear { lastNonEmpty = applicants }
+        // Track the roster while it has people; empty it and the desk closes.
+        .onChange(of: applicants.count) { _, count in
+            if count > 0 { lastNonEmpty = applicants }
+            closeIfDeskEmpty()
+        }
         .sheet(item: $negotiating, onDismiss: {
             if let contract = pendingContract {
                 pendingContract = nil
@@ -313,11 +323,12 @@ private struct HiringSheet: View {
         }
     }
 
-    /// Dismiss the hiring desk the instant it empties — immediately, so the
-    /// "Nobody at the desk" state never flashes. Guarded so it only fires
-    /// once any contract card or negotiation on top has finished: hiring the
-    /// last applicant returns you straight from the contract to the People
-    /// screen, and a final rejection or walk-away closes without a blank beat.
+    /// Dismiss the hiring desk the instant it empties. The frozen roster
+    /// snapshot (displayed) covers the slide-away, so no empty state is ever
+    /// drawn. Guarded so it only fires once any contract card or negotiation
+    /// on top has finished: hiring the last applicant returns you straight
+    /// from the contract to the People screen, and a final rejection or
+    /// walk-away closes with the departing applicant sliding out.
     private func closeIfDeskEmpty() {
         guard applicants.isEmpty,
               negotiating == nil, signed == nil, pendingContract == nil else { return }
