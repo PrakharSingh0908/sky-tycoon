@@ -313,19 +313,15 @@ private struct HiringSheet: View {
         }
     }
 
-    /// Dismiss the hiring sheet the moment the desk is empty — but only
-    /// when no contract card or negotiation is still on top of it, so the
-    /// last hire's flow finishes before the desk folds away.
+    /// Dismiss the hiring desk the instant it empties — immediately, so the
+    /// "Nobody at the desk" state never flashes. Guarded so it only fires
+    /// once any contract card or negotiation on top has finished: hiring the
+    /// last applicant returns you straight from the contract to the People
+    /// screen, and a final rejection or walk-away closes without a blank beat.
     private func closeIfDeskEmpty() {
         guard applicants.isEmpty,
               negotiating == nil, signed == nil, pendingContract == nil else { return }
-        // A short beat lets the final row's removal animation land.
-        Task {
-            try? await Task.sleep(for: .seconds(0.35))
-            guard applicants.isEmpty,
-                  negotiating == nil, signed == nil, pendingContract == nil else { return }
-            dismiss()
-        }
+        dismiss()
     }
 
     // Info line first, keys on their own full-width row below — five
