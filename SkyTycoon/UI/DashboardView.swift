@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import Charts
 
 struct DashboardView: View {
     @Environment(GameEngine.self) private var engine
@@ -878,8 +879,9 @@ private struct IndustrySheet: View {
 
                 SectionHeader(title: "The ladder · \(carriers.count) carriers",
                               icon: "chart.bar.xaxis", accent: accent)
-                Text("The top of the table, and the fight you are in. Bars are log-scaled; the numbers are exact.")
+                Text("Market cap across the whole field, log-scaled — your dot marks where you stand on the curve. The table below is the top and your immediate fight.")
                     .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                ladderCurve
                 VStack(spacing: 8) {
                     ForEach(ladderRows, id: \.id) { row in
                         switch row {
@@ -964,39 +966,75 @@ private struct IndustrySheet: View {
         return rows
     }
 
+    /// The whole field as one descending, log-scaled curve of market cap by
+    /// rank — the power-law shape of the industry, with the player's dot
+    /// marking their place on it. Cap is always positive, so log is honest.
+    private var ladderCurve: some View {
+        let ranked = Array(carriers.enumerated())   // 0-based index = rank-1
+        let playerRank = (ranked.first { $0.element.isPlayer }?.offset ?? 0) + 1
+        return Chart {
+            ForEach(ranked, id: \.element.id) { index, carrier in
+                LineMark(x: .value("Rank", index + 1),
+                         y: .value("Market cap", max(carrier.cap, 1)))
+                    .foregroundStyle(Color.white.opacity(0.35))
+                    .interpolationMethod(.monotone)
+            }
+            if let player = ranked.first(where: { $0.element.isPlayer }) {
+                PointMark(x: .value("Rank", player.offset + 1),
+                          y: .value("Market cap", max(player.element.cap, 1)))
+                    .foregroundStyle(accent)
+                    .symbolSize(90)
+                    .annotation(position: .top, spacing: 4) {
+                        Text("#\(playerRank) · You")
+                            .font(.data(.caption2, weight: .bold))
+                            .foregroundStyle(accent)
+                    }
+            }
+        }
+        .chartYScale(type: .log)
+        .chartYAxis {
+            AxisMarks(position: .trailing) { value in
+                AxisGridLine().foregroundStyle(Theme.hairline)
+                AxisValueLabel {
+                    if let v = value.as(Double.self) {
+                        Text(v.money)
+                            .font(.system(.caption2, design: .monospaced))
+                            .foregroundStyle(Theme.textTertiary)
+                    }
+                }
+            }
+        }
+        .chartXAxis {
+            AxisMarks(values: .automatic(desiredCount: 4)) { value in
+                AxisValueLabel {
+                    if let v = value.as(Int.self) {
+                        Text("#\(v)")
+                            .font(.system(.caption2, design: .monospaced))
+                            .foregroundStyle(Theme.textTertiary)
+                    }
+                }
+            }
+        }
+        .frame(height: 150)
+    }
+
     private func capRow(rank: Int, _ carrier: Carrier) -> some View {
-        // Log scale: $8M and $9B on one axis without erasing the small end.
-        let maxCap = carriers.first?.cap ?? 1
-        let floorLog = 6.0   // $1M
-        let span = max(log10(maxCap) - floorLog, 0.1)
-        let fraction = max(0.04, (log10(max(carrier.cap, 1_500_000)) - floorLog) / span)
-        return HStack(spacing: 8) {
+        HStack(spacing: 8) {
             Text("#\(rank)")
                 .font(.data(.caption2, weight: .bold))
                 .foregroundStyle(Theme.textSecondary)
                 .frame(width: 26, alignment: .leading)
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 6) {
-                    Text(carrier.name)
-                        .font(.game(.caption, weight: carrier.isPlayer ? .bold : .semibold))
-                        .foregroundStyle(carrier.isPlayer ? accent : Theme.textPrimary)
-                    if carrier.isPlayer {
-                        StatusBadge(text: "You", color: accent)
-                    }
-                    Spacer()
-                    TickerText(text: carrier.cap.money,
-                               font: .game(.caption2, weight: .bold),
-                               color: Theme.textSecondary)
-                }
-                GeometryReader { geo in
-                    Capsule()
-                        .fill(carrier.isPlayer
-                              ? AnyShapeStyle(Theme.cornflower)
-                              : AnyShapeStyle(Color.white.opacity(0.14)))
-                        .frame(width: geo.size.width * fraction)
-                }
-                .frame(height: 6)
+            Text(carrier.name)
+                .font(.game(.caption, weight: carrier.isPlayer ? .bold : .semibold))
+                .foregroundStyle(carrier.isPlayer ? accent : Theme.textPrimary)
+                .lineLimit(1)
+            if carrier.isPlayer {
+                StatusBadge(text: "You", color: accent)
             }
+            Spacer(minLength: 8)
+            TickerText(text: carrier.cap.money,
+                       font: .game(.caption2, weight: .bold),
+                       color: Theme.textSecondary)
         }
     }
 }

@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Industry ladder is one log-scaled curve
+
+- The industry ladder's per-row log-scaled bars are replaced by a single log-scaled line: market cap across the whole field by rank, drawn as the power-law curve it is, with the player's dot marked "#N · You" where they sit on it. The table below keeps rank, name, and exact cap, now bar-free. Cap is always positive, so the log axis is honest end to end ($100K to $9B on one view).
+
+*Why:* per direction. A bar per row repeated the same log mapping 10+ times and read as clutter; one curve shows the whole industry's shape and the player's place on it in a glance, and the table stays for exact numbers.
+
+
 ## P&L chart gets a legend
 
 - The 52-week P&L card drops its "Profit bars · revenue line…" description line and gains a proper legend beneath the chart: green Profit and red Loss keys for the bars, and a blue Revenue line key. The tap-for-formula hint is gone from the copy since the statement rows below already carry the question-mark affordance.
