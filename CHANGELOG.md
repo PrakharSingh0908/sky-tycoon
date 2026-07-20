@@ -7,7 +7,12 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
-## Showroom shortcut on the Fleet title
+## Gazette blends into its card; event-effects flow audited
+
+- The gazette clipping no longer draws its own black panel fill: the newspaper now sits directly on the Industry card surface, separated only by the divider above it.
+- Audited the full event-effects pipeline end to end and confirmed every effect fires: the card button calls resolveEvent(option), which captures the event's subject (accused crew member / recalled model), clears the pending card, then applies each declared effect. All twelve EventEffect cases have working handlers (cash, happiness, satisfaction, reputation, raiseWage, fuelPrice, demand, groundRandomAircraft, wearRandomAircraft, courtVerdict, recallGround, recallDefer), and every effect used across the whole deck maps to one. Timed effects (fuelPrice, demand) are appended to activeEffects, consumed each tick in computeEconomics, and aged out at settle. Subject-dependent effects read the subject present() populated, gated by matching eligibility. No dropped or no-op effects found.
+
+*Why:* per direction. The panel fill boxed the newspaper off from its card; removing it lets the clipping read as part of the console. The effects audit confirms every choice a player makes on an event card actually lands in the simulation.
 
 - The Fleet screen's title row now carries a polished-silver cart icon at the top right that opens the Showroom directly, for quick access without scrolling to the card at the bottom (which stays). GameScreen gained an optional trailing accessory slot for the title row; all other screens are unchanged.
 

@@ -547,14 +547,8 @@ struct DashboardView: View {
                 }
             }
         }
-        .padding(14)
+        .padding(.top, 6)
         .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: Theme.corner)
-                .fill(Color(red: 0.06, green: 0.06, blue: 0.065))
-                .overlay(RoundedRectangle(cornerRadius: Theme.corner)
-                    .strokeBorder(Color.white.opacity(0.07), lineWidth: 1))
-        )
     }
 
     /// One story, told in a glance: kicker, serif headline, italic
