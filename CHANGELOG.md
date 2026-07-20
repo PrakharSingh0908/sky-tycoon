@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Wage lever feels alive: hold to step, morale reacts the same day
+
+- PillStepper keys (wage, fare, flights per week) now auto-repeat while held, so moving a wage $500 is a press, not ten taps.
+- Changing a wage moves the Happiness meter immediately: morale takes a 25% step toward the new pay target the moment the wage changes, then the weekly drift keeps settling it. The target formula is extracted into happinessTarget(role:weeklyWage:staffLoad:) which the weekly tick runs too, so the same-day step and the drift can never point in different directions.
+
+*Why:* per playtest feedback, the wage lever felt dead. You tapped, the number crept by $50, and happiness sat still until the next settle because morale only drifted weekly. A raise is news the day it lands; the immediacy rule says the instrument moves NOW even though the money still settles weekly.
+
+
 ## Poaching asks first
 
 - Tapping a plane under "On other routes" now raises a confirmation dialog instead of moving it silently: "Move AI-C off BOS ✈ PHL?" with "Move it here" and "Keep it there", and a one-line reminder that it stops flying its old route the moment it moves. Free planes and removals stay one-tap. The sim clock holds while the dialog is up, same as the cancel-route dialog.

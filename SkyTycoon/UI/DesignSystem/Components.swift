@@ -769,6 +769,8 @@ struct PillStepper: View {
                 .metalKey(prominent: false, pressed: false)
         }
         .buttonStyle(.plain)
+        // Hold to keep stepping — one tap per $50 was carpal tunnel.
+        .buttonRepeatBehavior(.enabled)
     }
 }
 

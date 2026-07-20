@@ -517,13 +517,10 @@ final class GameEngine {
             let staffLoad = capacity > 0
                 ? min(u, 1 + Balance.overtimeCapFactor) : 0
 
-            // Happiness target: pay vs market, minus overwork (GDD §4.4 —
-            // an overworked pool drifts down even at market wage). The
-            // penalty tracks the staff's own load, not contractor volume.
-            let payFactor = pool.weeklyWage / max(marketRate, 1)   // >1 = generous
-            let workloadPenalty = Balance.workloadHappinessPenalty
-                * min(Balance.maxStrainPerPool, max(0, staffLoad - 1))
-            let target = min(100, max(0, 50 + (payFactor - 1) * 120 - workloadPenalty))
+            // Happiness target: ONE formula for the weekly drift and the
+            // same-day reaction to a wage change (GDD §4.4).
+            let target = happinessTarget(role: role, weeklyWage: pool.weeklyWage,
+                                         staffLoad: staffLoad)
             pool.happiness += (target - pool.happiness) * 0.08
 
             // Below the attrition threshold, people quit each week. The
@@ -724,6 +721,18 @@ final class GameEngine {
         let demand = liveCrewDemandHours()[role] ?? 0
         let capacity = Double(state.staff[role]?.headcount ?? 0) * Balance.weeklyHoursPerStaff
         return capacity > 0 ? min(demand / capacity, 1 + Balance.overtimeCapFactor) : 0
+    }
+
+    /// Morale target from pay vs market minus overwork (GDD §4.4) — ONE
+    /// formula for the weekly drift and the same-day wage reaction. The
+    /// penalty tracks the staff's own load, not contractor volume.
+    func happinessTarget(role: StaffRole, weeklyWage: Double, staffLoad: Double) -> Double {
+        let marketRate = role.marketWage
+            * Balance.countryProfiles[state.country]!.laborCost
+        let payFactor = weeklyWage / max(marketRate, 1)   // >1 = generous
+        let workloadPenalty = Balance.workloadHappinessPenalty
+            * min(Balance.maxStrainPerPool, max(0, staffLoad - 1))
+        return min(100, max(0, 50 + (payFactor - 1) * 120 - workloadPenalty))
     }
 
     // ── Route economics: ONE formula for the tick and the UI ────────────
@@ -1792,6 +1801,14 @@ final class GameEngine {
         let factor = pool.weeklyWage > 0 ? target / pool.weeklyWage : 1
         for i in pool.members.indices { pool.members[i].weeklyWage *= factor }
         pool.weeklyWage = target
+        // Word of a raise (or a cut) travels the same day: morale takes a
+        // visible step toward the new pay target NOW, and the weekly drift
+        // keeps settling it from there. Same formula as the tick, so the
+        // step never disagrees with where the drift is headed.
+        let moraleTarget = happinessTarget(role: role, weeklyWage: target,
+                                           staffLoad: projectedUtilization(role: role))
+        pool.happiness = max(0, min(100,
+            pool.happiness + (moraleTarget - pool.happiness) * 0.25))
         state.staff[role] = pool
         save()
     }
