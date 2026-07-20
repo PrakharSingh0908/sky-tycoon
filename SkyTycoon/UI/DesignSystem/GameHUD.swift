@@ -32,11 +32,6 @@ struct SimClockPill: View {
     @Environment(GameEngine.self) private var engine
     @State private var expanded = false
 
-    private var stateIcon: String {
-        if engine.clockIsHeld { return "pause.circle.fill" }
-        return engine.speed == .paused ? "pause.fill" : "play.fill"
-    }
-
     var body: some View {
         VStack(alignment: .trailing, spacing: 0) {
             if expanded {
@@ -62,11 +57,6 @@ struct SimClockPill: View {
             } label: {
                 VStack(alignment: .leading, spacing: 5) {
                     HStack(spacing: 6) {
-                        if engine.clockIsHeld {
-                            Image(systemName: "pause.circle.fill")
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundStyle(Theme.warn)
-                        }
                         TickerText(text: "\(engine.state.date.description) · \(engine.simDayName)",
                                    font: .game(.caption, weight: .semibold),
                                    color: Theme.textPrimary)

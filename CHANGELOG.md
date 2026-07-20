@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Yellow pause indicator removed from the clock pill
+
+- The amber pause-circle icon that appeared before the date on the sim pill is gone for good. It was the clockIsHeld indicator; it surfaced whenever the clock was held (a decision sheet open, or the game otherwise not advancing) and read as clutter before the year/week. Pause/run state now lives solely in the speed control's segments where it belongs. Removed the icon and the unused stateIcon helper; the Step-day button still disables while the clock is held (behavior, not a visual).
+
+*Why:* per direction, repeated — no pause icon before the date. The speed control already shows whether time is running.
+
+
 ## No event card over the game-over screen
 
 - A grounded (bankrupt) airline no longer shows an event card. The weekly close draws events before it runs the fail-state check, so on the week bankruptcy landed an event could already be pending and float over the "Grounded" screen. Now bankruptcy clears any pending event, and the event sheet is gated on `!isBankrupt` as a second guard. Same fix covers a hull-loss card drawn the same week the airline dies.
