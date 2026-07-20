@@ -34,7 +34,8 @@ struct DashboardView: View {
     }
 
     var body: some View {
-        GameScreen(title: "Dashboard", accent: accent) {
+        GameScreen(title: "Dashboard", accent: accent,
+                   trailing: AnyView(profileButton)) {
             heroCard
             // The founder's checklist rides just under the score, on the
             // same machined housing, until the airline flies.
@@ -47,7 +48,6 @@ struct DashboardView: View {
             industryCard
             if let report = engine.latestReport { lastWeekCard(report) }
             milestonesCard
-            savedGamesCard
         }
         // One-shot settle flash: the hero border blinks profit-green when a
         // week's numbers land, then eases back. Nothing moves while reading.
@@ -405,33 +405,31 @@ struct DashboardView: View {
         }
     }
 
-    // ── Saved games: the three slots, one tap away ───────────────────────
+    // ── Profile: identity, year, milestone, and the save slots ───────────
 
-    @State private var showingSlots = false
+    @State private var showingProfile = false
 
-    private var savedGamesCard: some View {
-        Button {
-            showingSlots = true
-        } label: {
-            GameCard {
-                HStack {
-                    Image(systemName: "tray.full")
-                        .font(.subheadline).foregroundStyle(Theme.cornflower)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Saved games")
-                            .font(.game(.subheadline, weight: .medium))
-                            .foregroundStyle(Theme.textPrimary)
-                        Text("Load, start new, or clear one of 3 slots")
-                            .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
-                    }
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.caption2.weight(.semibold)).foregroundStyle(Theme.textSecondary)
-                }
-            }
+    /// The airline's monogram in a machined silver disc — the profile hub's
+    /// key, top-right of the dashboard.
+    private var profileButton: some View {
+        Button { showingProfile = true } label: {
+            Text(engine.fleetPrefix)
+                .font(.system(size: 14, weight: .heavy, design: .rounded))
+                .foregroundStyle(LinearGradient(colors: [.white, Color(white: 0.58)],
+                                                startPoint: .top, endPoint: .bottom))
+                .shadow(color: .white.opacity(0.5), radius: 3)
+                .frame(width: 40, height: 40)
+                .background(
+                    Circle().fill(LinearGradient(
+                        colors: [Color(white: 0.22), Color(white: 0.10)],
+                        startPoint: .top, endPoint: .bottom)))
+                .overlay(Circle().strokeBorder(LinearGradient(
+                    colors: [.white.opacity(0.45), .white.opacity(0.08)],
+                    startPoint: .top, endPoint: .bottom), lineWidth: 1))
+                .shadow(color: .black.opacity(0.4), radius: 3, y: 2)
         }
         .buttonStyle(.plain)
-        .sheet(isPresented: $showingSlots) { SaveSlotsView() }
+        .sheet(isPresented: $showingProfile) { ProfileSheet() }
     }
 
     // ── Industry standing: the ladder to climb (starts at the bottom) ────
@@ -1037,6 +1035,176 @@ private struct IndustrySheet: View {
                        color: Theme.textSecondary)
         }
     }
+}
+
+// ── The Profile hub ──────────────────────────────────────────────────────
+// One crafted sheet: who you are (airline name, country, year), where you
+// stand (milestone progress), and the save slots (load, new, delete).
+
+private struct ProfileSheet: View {
+    @Environment(GameEngine.self) private var engine
+    @Environment(GameSession.self) private var session
+    @Environment(\.dismiss) private var dismiss
+    @State private var deletingSlot: Int?
+    @State private var refresh = 0
+
+    private var done: Set<String> { engine.state.completedMilestones }
+    private var nextMilestone: MilestoneDef? {
+        Balance.milestones.first { !done.contains($0.id) }
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                identity
+                milestoneSummary
+                Divider().overlay(Theme.hairline)
+                SectionHeader(title: "Saved games", icon: "tray.full.fill", accent: accent)
+                Text("Three slots. The active game autosaves every week.")
+                    .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                ForEach(1...GameEngine.slotCount, id: \.self) { slot in
+                    slotCard(slot)
+                }
+                .id(refresh)
+                Button("Done") { dismiss() }
+                    .buttonStyle(GameButtonStyle(color: accent))
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 4).padding(.bottom, 24)
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 22)
+        }
+        .background(Theme.bgElevated)
+        .presentationDetents([.large])
+        .presentationBackground(Theme.bgElevated)
+        .preferredColorScheme(.dark)
+        .holdsSimClock()
+        .confirmationDialog("Delete this saved game? There is no undo.",
+                            isPresented: Binding(get: { deletingSlot != nil },
+                                                 set: { if !$0 { deletingSlot = nil } }),
+                            titleVisibility: .visible) {
+            Button("Delete save", role: .destructive) {
+                if let slot = deletingSlot { GameEngine.deleteSave(slot: slot); refresh += 1 }
+                deletingSlot = nil
+            }
+            Button("Keep it", role: .cancel) { deletingSlot = nil }
+        }
+    }
+
+    private let accent = Theme.sky
+
+    // ── Who you are ──────────────────────────────────────────────────────
+    private var identity: some View {
+        HStack(spacing: 14) {
+            Text(engine.fleetPrefix)
+                .font(.system(size: 24, weight: .heavy, design: .rounded))
+                .foregroundStyle(LinearGradient(colors: [.white, Color(white: 0.58)],
+                                                startPoint: .top, endPoint: .bottom))
+                .shadow(color: .white.opacity(0.5), radius: 4)
+                .frame(width: 68, height: 68)
+                .background(Circle().fill(LinearGradient(
+                    colors: [Color(white: 0.22), Color(white: 0.09)],
+                    startPoint: .top, endPoint: .bottom)))
+                .overlay(Circle().strokeBorder(LinearGradient(
+                    colors: [.white.opacity(0.45), .white.opacity(0.08)],
+                    startPoint: .top, endPoint: .bottom), lineWidth: 1.5))
+                .shadow(color: .black.opacity(0.4), radius: 4, y: 2)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(engine.state.airlineName)
+                    .font(.display(.title2)).foregroundStyle(Theme.textPrimary)
+                    .lineLimit(2).minimumScaleFactor(0.7)
+                Text("\(engine.state.country.displayName) · \((engine.state.difficulty ?? .standard).displayName)")
+                    .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+                Text("YEAR \(engine.state.date.year) · WEEK \(engine.state.date.week)")
+                    .font(.data(.caption2)).tracking(0.9)
+                    .foregroundStyle(Theme.cornflower)
+            }
+            Spacer(minLength: 0)
+        }
+    }
+
+    // ── Where you stand ──────────────────────────────────────────────────
+    private var milestoneSummary: some View {
+        GameCard {
+            HStack {
+                SectionHeader(title: "Milestones", icon: "flag.checkered", accent: accent)
+                Spacer()
+                Text("\(done.count)/\(Balance.milestones.count)")
+                    .font(.game(.caption, weight: .bold)).foregroundStyle(Theme.textSecondary)
+            }
+            MeterBar(value: Double(done.count) / Double(max(1, Balance.milestones.count)),
+                     color: Theme.profit)
+            if let next = nextMilestone {
+                HStack(spacing: 8) {
+                    Image(systemName: "circle")
+                        .font(.caption2).foregroundStyle(Theme.textSecondary)
+                    Text(next.displayTitle(for: engine.state.country))
+                        .font(.game(.subheadline)).foregroundStyle(Theme.textPrimary)
+                        .lineLimit(1).minimumScaleFactor(0.8)
+                    Spacer(minLength: 8)
+                    Text("+\(next.reward.money)")
+                        .font(.game(.caption, weight: .semibold)).foregroundStyle(Theme.profit)
+                }
+                .padding(.top, 2)
+            } else {
+                Text("All milestones complete. The sandbox is yours.")
+                    .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+            }
+        }
+    }
+
+    // ── Save slots (load / new / delete), housed here ────────────────────
+    @ViewBuilder private func slotCard(_ slot: Int) -> some View {
+        let isActive = slot == GameEngine.activeSlot && session.engine != nil
+        GameCard(highlight: isActive ? Theme.cornflower : nil) {
+            HStack {
+                Text("SLOT \(slot)")
+                    .font(.data(.caption2)).tracking(0.85).foregroundStyle(Theme.textSecondary)
+                Spacer()
+                if isActive { StatusBadge(text: "Playing", color: Theme.cornflower) }
+            }
+            if let state = GameEngine.slotState(slot) {
+                HStack(alignment: .firstTextBaseline) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(state.airlineName)
+                            .font(.game(.headline, weight: .semibold))
+                            .foregroundStyle(Theme.textPrimary).lineLimit(1)
+                        Text("\(state.country.displayName) · \(state.date.description)")
+                            .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                    }
+                    Spacer()
+                    TickerText(text: state.cash.money,
+                               font: .game(.subheadline, weight: .semibold),
+                               color: state.cash >= 0 ? Theme.profit : Theme.loss)
+                }
+                HStack(spacing: 8) {
+                    if !isActive {
+                        Button("Load") { session.activate(slot: slot); dismiss() }
+                            .buttonStyle(GameButtonStyle(color: accent, prominent: true))
+                    }
+                    Button("New game") { session.beginNewGame(inSlot: slot); dismiss() }
+                        .buttonStyle(GameButtonStyle(color: accent))
+                    Spacer()
+                    if !isActive {
+                        Button("Delete") { deletingSlot = slot }
+                            .buttonStyle(GameButtonStyle(color: Theme.loss))
+                    }
+                }
+            } else {
+                Text("Empty slot")
+                    .font(.game(.subheadline)).foregroundStyle(Theme.textTertiary)
+                Button("New game") { session.beginNewGame(inSlot: slot); dismiss() }
+                    .buttonStyle(GameButtonStyle(color: accent, prominent: true))
+            }
+        }
+    }
+}
+
+#Preview("Profile") {
+    ProfileSheet()
+        .environment(GameSession())
+        .environment(GameEngine.previewGame())
+        .preferredColorScheme(.dark)
 }
 
 #Preview("Foundation start") {

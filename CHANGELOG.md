@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Profile hub on the Dashboard title
+
+- A machined silver monogram button (the airline's initials) sits at the top right of the Dashboard and opens a crafted Profile sheet that houses the airline's identity (name, country, difficulty, YEAR / WEEK), a milestone summary (progress bar, completed count, and the next milestone with its reward), and the save slots (load, start new, delete across three slots). The old bottom "Saved games" card is removed, its function absorbed into the profile.
+
+*Why:* per direction. Identity, progress, and game management belong together in one place the player reaches from a personal, always-visible button, rather than a card buried at the foot of the dashboard.
+
+
 ## Industry ladder is one log-scaled curve
 
 - The industry ladder's per-row log-scaled bars are replaced by a single log-scaled line: market cap across the whole field by rank, drawn as the power-law curve it is, with the player's dot marked "#N · You" where they sit on it. The table below keeps rank, name, and exact cap, now bar-free. Cap is always positive, so the log axis is honest end to end ($100K to $9B on one view).
