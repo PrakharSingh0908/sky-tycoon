@@ -1290,6 +1290,7 @@ final class GameEngine {
         // options and body are rebuilt from the scaled fee at fire time.
         // Every other card's founder-scale cash figures grow with net worth.
         let options = incident.map { lawsuitOptions(cardID: card.id, fee: $0.fee) }
+            ?? poach.map { poachOptions(raise: $0.raise) }
             ?? scaledOptions(card.options)
         state.pendingEvent = GameEvent(
             id: UUID(), cardID: card.id, category: card.category,
@@ -1391,12 +1392,24 @@ final class GameEngine {
     }
 
     /// A rival poaching one of your pilots names a real one (GDD §25) — the
-    /// same subject the "let them go" option removes.
-    private func poachContext(for card: EventCard) -> (body: String, subjectID: UUID)? {
+    /// same subject the "let them go" option removes. The match-raise is
+    /// rolled 15–21% (a veteran costs real money to keep).
+    private func poachContext(for card: EventCard) -> (body: String, subjectID: UUID, raise: Double)? {
         guard card.id == "pilotPoach",
               let pool = state.staff[.pilots], !pool.members.isEmpty else { return nil }
         let member = pool.members[Int.random(in: 0..<pool.members.count, using: &state.seedRNG)]
-        return (poachBody(member: member), member.id)
+        let raise = Double(Int.random(in: 15...21, using: &state.seedRNG)) / 100.0
+        return (poachBody(member: member), member.id, raise)
+    }
+
+    /// The two poach options, priced from the rolled match-raise.
+    private func poachOptions(raise: Double) -> [EventOption] {
+        [EventOption(label: "Match it · +\(Int((raise * 100).rounded()))% pilot pay",
+                     effects: [.raiseWage(role: .pilots, factor: 1 + raise),
+                               .happiness(role: .pilots, delta: 8)]),
+         EventOption(label: "Wish them well",
+                     effects: [.poachStaff(role: .pilots),
+                               .happiness(role: .pilots, delta: -6)])]
     }
 
     /// Names a plausible collapsing rival for the acquisition card (GDD §27)
@@ -1454,7 +1467,7 @@ final class GameEngine {
             event.incidentFee = fee
         } else if let id = event.subjectID, let member = staffMember(id: id),
                   event.cardID == "pilotPoach" {
-            event.options = card.options
+            // Keep the persisted (rolled 15–21%) options; only refresh copy.
             event.body = poachBody(member: member)
         } else if let type = event.subjectAircraftType {
             event.options = card.options

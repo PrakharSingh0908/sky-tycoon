@@ -1164,8 +1164,10 @@ enum Balance {
             body: "A rival is dangling a fat contract at one of your pilots. Match it with a raise, or let a good pilot walk.",
             baseWeight: 0.7, isNegative: true, minTotalWeek: 12,
             options: [
-                EventOption(label: "Match it · +8% pilot pay",
-                            effects: [.raiseWage(role: .pilots, factor: 1.08),
+                // The actual raise is rolled 15–21% at fire time
+                // (poachOptions); this is only the fallback label.
+                EventOption(label: "Match it · +18% pilot pay",
+                            effects: [.raiseWage(role: .pilots, factor: 1.18),
                                       .happiness(role: .pilots, delta: 8)]),
                 EventOption(label: "Wish them well",
                             effects: [.poachStaff(role: .pilots),

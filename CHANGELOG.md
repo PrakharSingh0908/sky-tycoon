@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Pilot-poach match raise is now 15–21%
+
+- Keeping a poached pilot used to cost a flat +8% raise. It's now rolled 15–21% per event, so retaining a veteran is a real, painful commitment (their pay jumps, permanently). The button shows the exact rolled figure, and it survives a reload.
+
+*Why:* per feedback — +8% was too cheap to always be worth it; a fatter, variable raise makes "match or let them walk" a genuine call.
+
+
 ## Cost inflation: 5% a year on everything (GDD §28)
 
 - Wages now rise a mandatory 5% per year, generalized into an economy-wide inflation index that lifts **every cost** the airline books: base and overtime wages, contractors, maintenance, leases, cabin upkeep and catering, HQ overhead, and fuel. The index compounds from the sim date (×1.05 by year 2, ×1.28 by year 6, ×1.63 by year 11).
