@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## The Industry Gazette (v3.1.5)
+
+- Industry trends now open as a newspaper. The Industry card's trend rows became "THE GAZETTE" with a serif masthead teaser; tapping it presents a full-screen gazette on black newsprint (a drawn grain-and-vignette paper texture), set entirely in serif type. Each active trend is its own front-page article: masthead ("THE SKYWARD GAZETTE", country edition, in-game dateline), a LONG-RANGE FORECAST / MARKET BULLETIN kicker, a large serif headline, an italic standfirst, a drop-capped two-paragraph body composed from the trend's own facts, and a ruled pull-stat (the lever's percent and duration). Multiple trends are flipped through with horizontal paging and a ruled "PAGE i OF n" turner with chevron nav. The clock holds while reading. The Industry standing (rank/cap/share) still taps through to the ladder as before.
+
+*Why:* per direction — make the trend list a crafted newspaper you flip through. Reusing the trends' own copy as headline/standfirst keeps it authored, not generated-feeling, and the black-paper serif treatment gives the market's weather a voice with real character.
+
+
 ## Event pauses stop hijacking the speed control
 
 - An event card no longer force-sets the sim speed to Paused, and no longer lights any pause indicator. The clock still stops while a card is up (via the pendingEvent guard in the tick), but the speed control keeps showing the player's chosen speed, the sim pill shows its running state (not the yellow held icon), and time resumes at that same speed the instant the event is answered. Because the event sheet self-sizes and leaves the pill visible behind it, an event was showing a false pause on the shorter cards; that is gone.
