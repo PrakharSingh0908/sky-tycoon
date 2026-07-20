@@ -11,6 +11,12 @@ import SwiftUI
 struct PeopleView: View {
     @Environment(GameEngine.self) private var engine
     @State private var hiringRole: StaffRole?
+    /// The last hire's contract waits here while the hiring sheet dismisses,
+    /// then presents on its own — so signing the final applicant closes the
+    /// desk first and the contract returns you straight to People, never to
+    /// an empty hiring tab.
+    @State private var pendingFinalContract: SignedContract?
+    @State private var finalContract: SignedContract?
     private let accent = Theme.violet
 
     var body: some View {
@@ -22,7 +28,14 @@ struct PeopleView: View {
                 }
             }
         }
-        .sheet(item: $hiringRole) { HiringSheet(role: $0) }
+        .sheet(item: $hiringRole, onDismiss: {
+            // The desk has left; now raise the final hire's contract.
+            if let contract = pendingFinalContract {
+                pendingFinalContract = nil
+                finalContract = contract
+            }
+        }) { HiringSheet(role: $0, onLastHire: { pendingFinalContract = $0 }) }
+        .sheet(item: $finalContract) { ContractSignedCard(contract: $0) }
     }
 }
 
@@ -260,6 +273,9 @@ private struct HiringSheet: View {
     @Environment(GameEngine.self) private var engine
     @Environment(\.dismiss) private var dismiss
     let role: StaffRole
+    /// Called when the hire that just happened emptied the desk: the parent
+    /// takes the contract and presents it after this sheet dismisses.
+    var onLastHire: (SignedContract) -> Void = { _ in }
     @State private var negotiating: JobApplicant?
     @State private var signed: SignedContract?
     /// A contract inked at the negotiation table waits here until that
@@ -311,7 +327,7 @@ private struct HiringSheet: View {
         .sheet(item: $negotiating, onDismiss: {
             if let contract = pendingContract {
                 pendingContract = nil
-                signed = contract
+                presentContract(contract)
             } else {
                 closeIfDeskEmpty()
             }
@@ -323,12 +339,23 @@ private struct HiringSheet: View {
         }
     }
 
-    /// Dismiss the hiring desk the instant it empties. The frozen roster
-    /// snapshot (displayed) covers the slide-away, so no empty state is ever
-    /// drawn. Guarded so it only fires once any contract card or negotiation
-    /// on top has finished: hiring the last applicant returns you straight
-    /// from the contract to the People screen, and a final rejection or
-    /// walk-away closes with the departing applicant sliding out.
+    /// Route a freshly-signed contract. If more applicants are waiting, the
+    /// contract card rides over the desk so hiring can continue. If that was
+    /// the LAST applicant, hand the contract to the parent and dismiss now —
+    /// so the desk closes first and its contract card returns you straight to
+    /// People, never flashing an empty tab behind it.
+    private func presentContract(_ contract: SignedContract) {
+        if applicants.isEmpty {
+            onLastHire(contract)
+            dismiss()
+        } else {
+            signed = contract
+        }
+    }
+
+    /// Dismiss the hiring desk the instant it empties by rejection or a
+    /// walk-away (hires route through presentContract). The frozen roster
+    /// snapshot covers the slide-away, so no empty state is ever drawn.
     private func closeIfDeskEmpty() {
         guard applicants.isEmpty,
               negotiating == nil, signed == nil, pendingContract == nil else { return }
@@ -384,7 +411,7 @@ private struct HiringSheet: View {
                     let contract = SignedContract(applicant: applicant,
                                                   wage: applicant.askingWage)
                     if engine.hireApplicant(applicantID: applicant.id) {
-                        signed = contract
+                        presentContract(contract)
                     }
                 } label: {
                     Text("Hire · \(applicant.askingWage.wageMoney)/wk").frame(maxWidth: .infinity)
