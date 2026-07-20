@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Haptics while swiping to buy/lease
+
+- The slide-to-commit key now buzzes as you drag it: a light tick each notch of travel (ten across the groove), a firmer bump the moment it arms past the commit line, and the existing success thud when the deal signs. Applies to both the lease and buy slides (shared SlideKey control), so throwing the pin feels physical.
+
+*Why:* per request — a swipe to spend real money should feel tactile and deliberate, not silent.
+
+
 ## Leases reprice fleet-wide + fuel up another 20%
 
 - **The lease rate now applies to your whole leased fleet, not just new signings.** Leases used to lock their weekly cost at signing, so the earlier +35% bump was invisible on planes you already leased. They now reprice to the current balance rate on load, so a rate change is felt across the fleet immediately (verified: an old-rate lease jumped ×1.35 on reload).

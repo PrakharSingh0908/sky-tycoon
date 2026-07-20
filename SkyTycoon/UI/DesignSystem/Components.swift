@@ -642,6 +642,10 @@ struct SlideKey: View {
 
     @State private var offset: CGFloat = 0
     @State private var committed = false
+    // Haptics while swiping: a light tick per notch of travel, and a firmer
+    // bump the moment the slide arms past the commit threshold.
+    @State private var detent = 0
+    @State private var armed = false
 
     private let thumbWidth: CGFloat = 60
     private let height: CGFloat = 46
@@ -695,6 +699,9 @@ struct SlideKey: View {
                             .onChanged { value in
                                 guard enabled, !committed else { return }
                                 offset = min(max(0, value.translation.width), travel)
+                                let p = offset / travel
+                                detent = Int(p * 10)     // ten notches of travel
+                                armed = p > 0.85
                             }
                             .onEnded { _ in
                                 guard enabled, !committed else { return }
@@ -707,9 +714,11 @@ struct SlideKey: View {
                                         try? await Task.sleep(for: .seconds(0.8))
                                         withAnimation(.spring(duration: 0.4)) { offset = 0 }
                                         committed = false
+                                        detent = 0; armed = false
                                     }
                                 } else {
                                     withAnimation(.spring(duration: 0.35)) { offset = 0 }
+                                    detent = 0; armed = false
                                 }
                             }
                     )
@@ -718,6 +727,11 @@ struct SlideKey: View {
         .frame(height: height)
         .opacity(enabled ? 1 : 0.4)
         .allowsHitTesting(enabled)
+        // A light tick as the key crosses each notch while swiping…
+        .sensoryFeedback(.selection, trigger: detent)
+        // …a firmer bump when it arms past the commit line…
+        .sensoryFeedback(.impact(weight: .medium), trigger: armed) { _, new in new }
+        // …and the success thud when the deal signs.
         .sensoryFeedback(.success, trigger: committed) { _, new in new }
     }
 }
