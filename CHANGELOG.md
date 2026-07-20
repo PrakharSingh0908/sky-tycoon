@@ -7,6 +7,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Fuller ambition ladder in the profile + leases up 35%
+
+- The **ambition ladder now lives in the Profile menu** as a full climb: every rung listed with a done/current/locked state, a progress bar, and each rung's reward. The current goal shows its live progress %.
+- **Five new rungs** (14 → 19): a 4.2★ and a 4.6★ reputation, a 16-city network, a $500M market cap, and a 30-aircraft fleet — more to chase across the mid-to-late game.
+- **Leases cost 35% more.** `leaseRatePerWeek` 0.0014 → 0.00189 (~7.3%/yr → ~9.8%/yr of hull value). New leases only — existing leases keep their signed rate. This widens the owning-vs-leasing gap: leasing stays the low-capital option, but owning is now more clearly the better long-run economics.
+
+*Why:* per request — surface the ambitions where you check your standing, give more of them to aim at, and make leasing a costlier convenience so the buy-vs-lease decision has real weight.
+
+
 ## Rival collapse: buy their jets and crews (GDD §27)
 
 - "A Rival Has Collapsed" is now a full acquisition scenario, not just a used-market price dip. It's a major (paused) card that names a real carrier ranked below you going bankrupt, with three choices: **Buy jets & crews** (a net-worth-scaled fire-sale price that drops three used regional aircraft straight into your fleet plus ~11 ready-made crew across pilots/cabin/ground), **Hire their crews only** (cheap talent, no jets, but you take on their wages), or **Let the market have it** (the old used-metal glut that discounts purchases for a while).

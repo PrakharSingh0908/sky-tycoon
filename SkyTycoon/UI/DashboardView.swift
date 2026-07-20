@@ -1185,6 +1185,7 @@ private struct ProfileSheet: View {
             VStack(alignment: .leading, spacing: 18) {
                 identity
                 milestoneSummary
+                ambitionsCard
                 Divider().overlay(Theme.hairline)
                 SectionHeader(title: "Saved games", icon: "tray.full.fill", accent: accent)
                 Text("Three slots. The active game autosaves every week.")
@@ -1276,6 +1277,48 @@ private struct ProfileSheet: View {
             } else {
                 Text("All milestones complete. The sandbox is yours.")
                     .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+            }
+        }
+    }
+
+    // ── The ambition ladder, full climb (GDD §26 Pillar 5) ───────────────
+    private var ambitionsCard: some View {
+        let done = engine.state.completedAmbitions ?? []
+        let current = engine.currentAmbition
+        return GameCard {
+            HStack {
+                SectionHeader(title: "Ambitions", icon: "trophy.fill", accent: accent)
+                Spacer()
+                Text("\(done.count)/\(Balance.ambitions.count)")
+                    .font(.game(.caption, weight: .bold)).foregroundStyle(Theme.textSecondary)
+            }
+            MeterBar(value: Double(done.count) / Double(max(1, Balance.ambitions.count)),
+                     color: accent)
+            ForEach(Balance.ambitions) { a in
+                let isDone = done.contains(a.id)
+                let isCurrent = current?.id == a.id
+                HStack(spacing: 8) {
+                    Image(systemName: isDone ? "checkmark.circle.fill"
+                          : isCurrent ? "trophy.fill" : "lock.fill")
+                        .font(.caption2)
+                        .foregroundStyle(isDone ? Theme.profit
+                                         : isCurrent ? accent : Theme.textTertiary)
+                    Text(a.title)
+                        .font(.game(.subheadline))
+                        .foregroundStyle(isDone || isCurrent ? Theme.textPrimary : Theme.textSecondary)
+                        .lineLimit(1).minimumScaleFactor(0.8)
+                    Spacer(minLength: 8)
+                    if isDone {
+                        Text("Done").font(.game(.caption2, weight: .semibold))
+                            .foregroundStyle(Theme.profit)
+                    } else if isCurrent {
+                        Text("\(Int(engine.ambitionProgress(a) * 100))% · +\(a.reward.money)")
+                            .font(.game(.caption2, weight: .semibold)).foregroundStyle(accent)
+                    } else {
+                        Text("+\(a.reward.money)")
+                            .font(.game(.caption2)).foregroundStyle(Theme.textTertiary)
+                    }
+                }
             }
         }
     }

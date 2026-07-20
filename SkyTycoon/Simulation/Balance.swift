@@ -742,22 +742,32 @@ enum Balance {
               detail: "Double digits on the flight line.", kind: .fleetSize(10)),
         .init(id: "rank50", title: "Break into the top 50", reward: 200_000,
               detail: "Climb above the 50th-ranked carrier.", kind: .beatRank(50)),
+        .init(id: "rep42", title: "A trusted name", reward: 250_000,
+              detail: "Reach a 4.2★ reputation.", kind: .reputation(4.2)),
         .init(id: "cap50m", title: "Fifty million", reward: 300_000,
               detail: "Reach a $50M market cap.", kind: .marketCap(50_000_000)),
         .init(id: "cities12", title: "A dozen cities", reward: 300_000,
               detail: "Twelve cities on the network.", kind: .cities(12)),
         .init(id: "rank25", title: "A top-25 carrier", reward: 500_000,
               detail: "Climb above the 25th-ranked carrier.", kind: .beatRank(25)),
-        .init(id: "cap200m", title: "Two hundred million", reward: 800_000,
-              detail: "Reach a $200M market cap.", kind: .marketCap(200_000_000)),
         .init(id: "fleet20", title: "Twenty in the air", reward: 800_000,
               detail: "A serious mainline fleet.", kind: .fleetSize(20)),
+        .init(id: "cap200m", title: "Two hundred million", reward: 800_000,
+              detail: "Reach a $200M market cap.", kind: .marketCap(200_000_000)),
+        .init(id: "cities16", title: "Sixteen cities", reward: 900_000,
+              detail: "A genuinely national network.", kind: .cities(16)),
         .init(id: "rank10", title: "Top ten", reward: 1_500_000,
               detail: "Climb into the industry's top ten.", kind: .beatRank(10)),
+        .init(id: "rep46", title: "A beloved carrier", reward: 1_500_000,
+              detail: "Reach a 4.6★ reputation.", kind: .reputation(4.6)),
+        .init(id: "cap500m", title: "Half a billion", reward: 2_000_000,
+              detail: "Reach a $500M market cap.", kind: .marketCap(500_000_000)),
         .init(id: "cap1b", title: "A billion-dollar carrier", reward: 3_000_000,
               detail: "Reach a $1B market cap.", kind: .marketCap(1_000_000_000)),
         .init(id: "rank3", title: "The podium", reward: 3_000_000,
               detail: "Reach the industry's top three.", kind: .beatRank(3)),
+        .init(id: "fleet30", title: "Thirty aircraft", reward: 3_000_000,
+              detail: "A major carrier's flight line.", kind: .fleetSize(30)),
         .init(id: "rank1", title: "Top of the table", reward: 5_000_000,
               detail: "Become the country's largest carrier.", kind: .beatRank(1)),
     ]
@@ -1507,7 +1517,7 @@ enum Balance {
     /// "the safest first plane for a cautious player" (§4.1). 0.18% makes a
     /// well-run leased turboprop marginally profitable: viable, but clearly
     /// worse than owning — the intended cash-flow-vs-equity tradeoff.
-    static let leaseRatePerWeek = 0.0014    // ~7.3%/yr of hull value (2026-07-18 balance pass)
+    static let leaseRatePerWeek = 0.00189   // +35% (2026-07-20); ~9.8%/yr of hull value
     /// Returning a leased aircraft costs this many weeks of payments.
     static let leaseTerminationWeeks = 4.0
 
