@@ -727,10 +727,10 @@ struct SlideKey: View {
         .frame(height: height)
         .opacity(enabled ? 1 : 0.4)
         .allowsHitTesting(enabled)
-        // A light tick as the key crosses each notch while swiping…
-        .sensoryFeedback(.selection, trigger: detent)
-        // …a firmer bump when it arms past the commit line…
-        .sensoryFeedback(.impact(weight: .medium), trigger: armed) { _, new in new }
+        // A firm tick as the key crosses each notch while swiping…
+        .sensoryFeedback(.impact(weight: .medium, intensity: 0.9), trigger: detent)
+        // …a heavy thunk when it arms past the commit line…
+        .sensoryFeedback(.impact(weight: .heavy, intensity: 1.0), trigger: armed) { _, new in new }
         // …and the success thud when the deal signs.
         .sensoryFeedback(.success, trigger: committed) { _, new in new }
     }
