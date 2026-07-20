@@ -723,3 +723,45 @@ like steering a ship by mail. Daily feedback makes it controllable — you
 see a fare change, a hire, or a route tweak land the next day — without
 speeding the economy up or cheapening the slow-build fantasy: the money per
 day is small, the climb is just as long, but now it is legible day by day.
+
+---
+
+## 24. Postmortem — The frozen clock (2026-07-20)
+
+### Symptom
+Mid-session, the sim clock stopped advancing and the speed control went
+dead — tapping any speed did nothing. Force-quitting and reopening cleared
+it (the hold state is transient, rebuilt at launch).
+
+### Root cause
+The clock is suppressed while decision UI is open, via an interaction
+**hold**. That hold was a plain integer counter: `+1` in
+`ClockHoldModifier.onAppear`, `−1` in `onDisappear`. SwiftUI does **not**
+guarantee those fire in balanced pairs — a sheet re-presenting, a parent
+re-render, a tab switch, or the DEBUG hot-reload can fire `onAppear` again
+without a matching `onDisappear`. One leaked `+1` left the counter ≥ 1
+forever, so the tick's `interactionHolds == 0` guard never passed again:
+the clock froze and every speed tap was ignored.
+
+### Fix (three layers, defense in depth)
+1. **Token set, not a counter.** Holds are now a `Set<UUID>`; each holder
+   owns a stable token. A repeated `begin` is idempotent, so the dominant
+   leak (double `onAppear`) cannot accumulate, and a single `end` fully
+   releases regardless of how many times begin fired.
+2. **`.task` lifetime, not `onDisappear`.** The hold is taken inside a
+   `.task` whose cancellation on view removal is reliable where
+   `onDisappear` is not; `onDisappear` remains as an idempotent backup.
+3. **Self-healing safety net.** Choosing a running speed calls
+   `releaseStuckHolds()` — the player asking for time to move is proof any
+   lingering hold is stale. Legitimate open sheets re-register instantly
+   through their `.task`.
+
+### Guard against recurrence
+- No `beginInteraction`/`endInteraction` may be called without a stable
+  token; there is no no-arg overload to leak through.
+- Verified in-engine: double-begin + single-end releases the hold (a
+  counter would stay stuck), and a leaked hold clears on the next speed tap
+  with the clock resuming.
+- General rule: never gate the core loop on a counter mutated from
+  `onAppear`/`onDisappear`. Model "held while X is on screen" as membership
+  (a token that exists iff the holder exists), not arithmetic.

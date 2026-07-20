@@ -7,6 +7,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Fix: frozen clock / dead speed control (GDD §24)
+
+- Fixed a mid-session bug where the sim clock stopped advancing and the speed control went dead. Root cause: the interaction "hold" that pauses the clock during decision UI was an integer counter incremented in ClockHoldModifier.onAppear and decremented in onDisappear — and SwiftUI does not fire those in balanced pairs, so a single leaked onAppear (sheet re-present, parent re-render, tab switch) left the counter stuck ≥1 and the tick's `holds == 0` guard never passed again.
+- The hold is now a Set<UUID> of stable per-holder tokens (idempotent begins can't accumulate; a single end fully releases), taken via `.task` (cancellation on view removal is reliable where onDisappear isn't) with onDisappear as an idempotent backup. Added a self-healing net: choosing a running speed clears any stale hold (legit sheets re-register instantly). The two confirmation-dialog holds use stable tokens too. No no-arg begin/end remains to leak through.
+- Verified in-engine: double-begin + single-end releases the hold (the old counter would stay stuck), and a leaked hold clears on the next speed tap with the clock resuming. Documented as a postmortem in GDD §24 with the general rule: never gate the core loop on an onAppear/onDisappear counter.
+
+*Why:* per direction — the clock froze the game; this removes the leak at the source, adds a reliable lifetime and a safety net, and records the finding so it can't recur.
+
+
 ## Yellow pause indicator removed from the clock pill
 
 - The amber pause-circle icon that appeared before the date on the sim pill is gone for good. It was the clockIsHeld indicator; it surfaced whenever the clock was held (a decision sheet open, or the game otherwise not advancing) and read as clutter before the year/week. Pause/run state now lives solely in the speed control's segments where it belongs. Removed the icon and the unused stateIcon helper; the Step-day button still disables while the clock is held (behavior, not a visual).

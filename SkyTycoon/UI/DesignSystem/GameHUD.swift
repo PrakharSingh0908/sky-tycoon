@@ -14,10 +14,23 @@ import SwiftUI
 /// resumes when it closes. Apply to sheet CONTENT (fires on appear/disappear).
 struct ClockHoldModifier: ViewModifier {
     @Environment(GameEngine.self) private var engine
+    /// A stable per-holder token: repeated begins are idempotent, so a
+    /// double onAppear cannot leak a hold (bug fix 2026-07-20, GDD §24).
+    @State private var token = UUID()
+
     func body(content: Content) -> some View {
         content
-            .onAppear { engine.beginInteraction() }
-            .onDisappear { engine.endInteraction() }
+            // `.task` starts on appear and is CANCELLED when the view is
+            // removed — reliable where onDisappear is not. The long sleep
+            // just keeps the hold alive; cancellation runs the defer.
+            .task {
+                engine.beginInteraction(token)
+                defer { engine.endInteraction(token) }
+                try? await Task.sleep(for: .seconds(60 * 60 * 24 * 365))
+            }
+            // Backups: releasing the same token is idempotent, so these can
+            // only ever help, never double-count.
+            .onDisappear { engine.endInteraction(token) }
     }
 }
 
@@ -155,6 +168,10 @@ struct SpeedControl: View {
         HStack(spacing: 2) {
             ForEach(GameEngine.SimSpeed.allCases, id: \.self) { speed in
                 Button {
+                    // Choosing a running speed means the player wants time to
+                    // move: clear any stale hold so a leaked one can't freeze
+                    // the sim (safety net, GDD §24). Open sheets re-register.
+                    if speed != .paused { engine.releaseStuckHolds() }
                     engine.speed = speed
                 } label: {
                     glyph(for: speed)

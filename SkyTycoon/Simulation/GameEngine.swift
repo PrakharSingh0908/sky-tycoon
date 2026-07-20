@@ -50,19 +50,23 @@ final class GameEngine {
 
     /// Transient UI hold: while decision UI is open (negotiation, purchase
     /// receipts, confirmations), the clock doesn't advance — the player's
-    /// chosen speed resumes when the last one closes. Counted so nested
-    /// sheets stack safely. Not part of the save.
-    private var interactionHolds = 0
-    /// True only for decision UI holds (negotiation, receipts, confirmations)
-    /// that show the neutral "held" indicator. An event card also stops the
-    /// clock — but through the pendingEvent guard in clockFired, NOT here — so
-    /// it neither flips the speed control to paused NOR lights the held
-    /// indicator: the player's chosen speed simply resumes when the card is
-    /// answered. (The event sheet self-sizes, so the pill stays visible
-    /// behind it; showing a pause there for an event read as a false pause.)
-    var clockIsHeld: Bool { interactionHolds > 0 }
-    func beginInteraction() { interactionHolds += 1 }
-    func endInteraction() { interactionHolds = max(0, interactionHolds - 1) }
+    /// chosen speed resumes when the last one closes. Not part of the save.
+    ///
+    /// A SET of hold tokens, NOT a counter (fix 2026-07-20): a plain +1/−1
+    /// counter leaks whenever SwiftUI fires onAppear without a matching
+    /// onDisappear (sheet re-present, parent re-render, tab switch). One
+    /// leaked +1 froze the clock forever and the speed control went dead.
+    /// A token set makes a repeated begin idempotent, so the dominant leak
+    /// cannot accumulate; holders also register via `.task`, whose
+    /// cancellation on view removal is reliable where onDisappear is not.
+    private var interactionTokens: Set<UUID> = []
+    var clockIsHeld: Bool { !interactionTokens.isEmpty }
+    func beginInteraction(_ token: UUID) { interactionTokens.insert(token) }
+    func endInteraction(_ token: UUID) { interactionTokens.remove(token) }
+    /// Belt-and-suspenders: any explicit player speed change means the player
+    /// expects time to move, so a stuck hold is stale — clear it. Called from
+    /// the speed control. Legit sheets re-register through `.task` immediately.
+    func releaseStuckHolds() { interactionTokens.removeAll() }
 
     // ── Init / new game ──────────────────────────────────────────────────
 
@@ -293,7 +297,7 @@ final class GameEngine {
     /// while paused → step → read the day). Deterministic — the same
     /// advanceDay the clock drives.
     func stepOneDay() {
-        guard state.pendingEvent == nil, interactionHolds == 0,
+        guard state.pendingEvent == nil, !clockIsHeld,
               !state.isBankrupt else { return }
         speed = .paused
         accumulator = 0
@@ -301,7 +305,7 @@ final class GameEngine {
     }
 
     private func clockFired(delta: Double) {
-        guard speed != .paused, state.pendingEvent == nil, interactionHolds == 0,
+        guard speed != .paused, state.pendingEvent == nil, !clockIsHeld,
               !state.isBankrupt else { return }
         accumulator += delta * speed.rawValue
         while accumulator >= secondsPerDay {

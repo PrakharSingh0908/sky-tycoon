@@ -250,6 +250,7 @@ private struct BoardingPassCard: View {
     let accent: Color
     @State private var confirmingCancel = false
     @State private var showingAircraft = false
+    @State private var clockToken = UUID()
 
     private let stubHeight: CGFloat = 124
 
@@ -306,8 +307,10 @@ private struct BoardingPassCard: View {
             .padding(.horizontal, Theme.cardPadding)
             .frame(height: stubHeight)
             .onChange(of: confirmingCancel) { _, showing in
-                // Dialogs have no content lifecycle — hold the clock manually.
-                if showing { engine.beginInteraction() } else { engine.endInteraction() }
+                // Dialogs have no content lifecycle — hold the clock manually
+                // via a stable token (idempotent, cannot leak).
+                if showing { engine.beginInteraction(clockToken) }
+                else { engine.endInteraction(clockToken) }
             }
             .confirmationDialog(
                 "Cancel \(route.originID) ✈︎ \(route.destinationID)? Assigned aircraft go idle and the fares and schedule are lost.",
@@ -423,6 +426,7 @@ struct RouteDetailView: View {
     @State private var showOtherRoutes = false
     /// A busy plane tapped for this route waits here for the go-ahead.
     @State private var poaching: Aircraft?
+    @State private var clockToken = UUID()
     private let accent = Theme.teal
 
     var body: some View {
@@ -500,8 +504,9 @@ struct RouteDetailView: View {
                 NavigationStack { ShowroomView(fittingRoute: route) }
             }
             .onChange(of: poaching?.id) { _, moving in
-                // Dialogs have no content lifecycle — hold the clock manually.
-                if moving != nil { engine.beginInteraction() } else { engine.endInteraction() }
+                // Dialogs have no content lifecycle — hold via a stable token.
+                if moving != nil { engine.beginInteraction(clockToken) }
+                else { engine.endInteraction(clockToken) }
             }
             .confirmationDialog(
                 poachTitle(for: route),
