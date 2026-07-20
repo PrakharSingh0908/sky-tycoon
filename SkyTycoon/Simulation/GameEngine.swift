@@ -19,7 +19,8 @@ final class GameEngine {
     var speed: SimSpeed = .paused
 
     enum SimSpeed: Double, CaseIterable {
-        case paused = 0, x1 = 1, x2 = 2, x4 = 4
+        // x4 removed 2026-07-20 (it ran too fast to read the day).
+        case paused = 0, x1 = 1, x2 = 2
     }
 
     /// Real seconds per WEEK at 1x; a day is 1/7 of it (GDD §23). A full
@@ -519,6 +520,13 @@ final class GameEngine {
         }
         report.marketingCost += state.weeklyMarketingSpend * f
         report.overheadCost += Balance.hqOverhead(fleetCount: state.fleet.count) * difficulty.costFactor * f
+
+        // 5b. Event cash flows (GDD §25) — cargo/charter income books as
+        // revenue, fees/levies as overhead; a day's 1/7 share, aged weekly.
+        for e in state.activeEffects where e.kind == .cashFlow {
+            if e.multiplier >= 0 { report.revenue += e.multiplier * f }
+            else { report.overheadCost += (-e.multiplier) * f }
+        }
 
         // 6. Loans — book a day's share of the weekly payment (principal
         // amortizes on the weekly close).
@@ -1089,6 +1097,7 @@ final class GameEngine {
         // (GDD §20) name a real model in your fleet. The card reads the
         // facts, and the resolution weighs exactly those.
         let incident = incidentContext(for: card)
+        let poach = poachContext(for: card)
         let recall = recallContext(for: card)
         // A lawsuit's claim scales with the airline's public value, so the
         // options and body are rebuilt from the scaled fee at fire time.
@@ -1097,9 +1106,9 @@ final class GameEngine {
         state.pendingEvent = GameEvent(
             id: UUID(), cardID: card.id, category: card.category,
             isNegative: card.isNegative, title: card.title,
-            body: incident?.body ?? recall?.body ?? card.body,
+            body: incident?.body ?? poach?.body ?? recall?.body ?? card.body,
             options: options, firedOn: state.date,
-            subjectID: incident?.subjectID,
+            subjectID: incident?.subjectID ?? poach?.subjectID,
             subjectAircraftType: recall?.type,
             severity: card.severity,
             autoResolveDay: card.severity == .ambient
@@ -1158,6 +1167,22 @@ final class GameEngine {
          EventOption(label: "Fight it in court", effects: [.courtVerdict(baseFee: fee)])]
     }
 
+    /// A rival poaching one of your pilots names a real one (GDD §25) — the
+    /// same subject the "let them go" option removes.
+    private func poachContext(for card: EventCard) -> (body: String, subjectID: UUID)? {
+        guard card.id == "pilotPoach",
+              let pool = state.staff[.pilots], !pool.members.isEmpty else { return nil }
+        let member = pool.members[Int.random(in: 0..<pool.members.count, using: &state.seedRNG)]
+        return (poachBody(member: member), member.id)
+    }
+
+    /// The poach body from stored facts only (no RNG) — refresh-safe.
+    private func poachBody(member: StaffMember) -> String {
+        let tenure = max(0, state.date.totalWeeks - member.hiredOn.totalWeeks)
+        let record = String(format: "%.1f★ · %d wk with you", member.skill, tenure)
+        return "A rival is dangling a fat contract at \(member.name) (\(record)). Match it with a raise, or shake hands and let a good pilot walk."
+    }
+
     /// The lawsuit body from stored facts only (no RNG) — reused when a
     /// persisted pending card refreshes its copy on load.
     private func lawsuitBody(cardID: String, member: StaffMember, fee: Double) -> String {
@@ -1185,13 +1210,18 @@ final class GameEngine {
               let card = Balance.eventDeck.first(where: { $0.id == event.cardID })
         else { return }
         event.title = card.title
-        if let id = event.subjectID, let member = staffMember(id: id) {
+        if let id = event.subjectID, let member = staffMember(id: id),
+           event.cardID == "teaSpill" || event.cardID == "hardLanding" {
             // Lawsuit: rebuild body AND options from the persisted scaled
             // fee, so the reloaded card matches what the player was shown.
             let fee = event.incidentFee ?? incidentFee(cardID: event.cardID)
             event.body = lawsuitBody(cardID: event.cardID, member: member, fee: fee)
             event.options = lawsuitOptions(cardID: event.cardID, fee: fee)
             event.incidentFee = fee
+        } else if let id = event.subjectID, let member = staffMember(id: id),
+                  event.cardID == "pilotPoach" {
+            event.options = card.options
+            event.body = poachBody(member: member)
         } else if let type = event.subjectAircraftType {
             event.options = card.options
             event.body = recallBody(type: type)
@@ -1280,6 +1310,57 @@ final class GameEngine {
             state.cash -= Double(deferred) * finePerPlane
             state.reputation = max(0.5, state.reputation - 0.1)
             logEvent(title: "Recall deferred: defect still flying", isNegative: true)
+
+        // ── Events expansion (GDD §25) ───────────────────────────────────
+        case .recurringCashFlow(let weekly, let weeks, let label):
+            state.activeEffects.append(TimedEffect(
+                id: UUID(), kind: .cashFlow, multiplier: weekly,
+                weeksRemaining: weeks, label: label))
+        case .skillBoost(let role, let delta):
+            for r in StaffRole.allCases where role == nil || role == r {
+                guard var pool = state.staff[r], !pool.members.isEmpty else { continue }
+                for i in pool.members.indices {
+                    pool.members[i].skill = min(5, max(1, pool.members[i].skill + delta))
+                }
+                recomputeAggregates(&pool)
+                state.staff[r] = pool
+            }
+        case .poachStaff(let role):
+            guard var pool = state.staff[role], !pool.members.isEmpty else { return }
+            // The named subject walks if the card carried one; else a
+            // seeded-random member (determinism preserved).
+            let idx = eventSubjectID.flatMap { id in
+                pool.members.firstIndex { $0.id == id }
+            } ?? Int.random(in: 0..<pool.members.count, using: &state.seedRNG)
+            pool.members.remove(at: idx)
+            pool.headcount = pool.members.count
+            recomputeAggregates(&pool)
+            state.staff[role] = pool
+        case .groundFleetShare(let fraction, let weeks):
+            let candidates = state.fleet.indices.filter {
+                state.fleet[$0].status != .onOrder
+                && state.fleet[$0].groundedWeeksRemaining == 0
+            }
+            guard !candidates.isEmpty else { return }
+            let n = max(1, Int((Double(candidates.count) * fraction).rounded()))
+            for idx in candidates.prefix(n) {
+                state.fleet[idx].status = .inMaintenance
+                state.fleet[idx].groundedWeeksRemaining =
+                    max(state.fleet[idx].groundedWeeksRemaining, weeks)
+            }
+        case .adjustFleetWear(let delta):
+            for i in state.fleet.indices where state.fleet[i].status != .onOrder {
+                state.fleet[i].wear = min(100, max(0, state.fleet[i].wear + delta))
+            }
+        case .aircraftMarketShock(let multiplier, let weeks):
+            var trends = industryTrends
+            trends.removeAll { $0.key == "metal_glut" }
+            trends.append(IndustryTrend(
+                id: UUID(), key: "metal_glut", name: "Used-metal glut",
+                detail: "A carrier's collapse floods the market with cheap jets.",
+                kind: .aircraftPrices, horizon: .short,
+                multiplier: multiplier, weeksRemaining: weeks))
+            state.industryTrends = trends
         }
     }
 

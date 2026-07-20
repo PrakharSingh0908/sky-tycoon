@@ -809,3 +809,27 @@ rounded to a clean $10K. The scaled fee is computed at fire time, baked
 into the card's options and body, and **persisted** on the `GameEvent`
 (`incidentFee`) so a reloaded pending card rebuilds identical copy. Early
 game is unchanged (the floor dominates); late game, a suit finally stings.
+
+### §25 addendum — the deck expansion (2026-07-20)
+
+The deck grew from 12 MVP cards to 42 drawable (45 counting system cards),
+spanning every category. Six new `EventEffect` cases carry the mechanics
+that the old deck couldn't express:
+
+- `recurringCashFlow(weekly:weeks:label:)` — a signed weekly amount for a
+  spell, accrued 1/7 per day (income books as revenue, cost as overhead)
+  and aged with the other timed effects. Powers cargo/charter income and
+  landing-fee / carbon-levy / rate-hike costs.
+- `skillBoost(role:delta:)` — a training course lifts a pool's skill.
+- `poachStaff(role:)` — a rival hires away the card's named subject (or a
+  seeded-random member); headcount drops by one.
+- `groundFleetShare(fraction:weeks:)` — an ash cloud / regional shutdown
+  grounds a share of the airborne fleet.
+- `adjustFleetWear(_:)` — fleet-wide wear delta (negative = an avionics
+  refresh; positive = strain).
+- `aircraftMarketShock(multiplier:weeks:)` — a rival's collapse injects a
+  metal-glut trend that discounts aircraft prices while it runs.
+
+Tuning: the ambient decision window is `ambientEventGraceDays = 8` (was 7).
+The sim clock lost its x4 setting — it outran readability of the daily
+loop; speeds are pause / x1 / x2.

@@ -7,6 +7,16 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## 30 new events, 8-day decision window, x4 speed removed
+
+- **The event deck tripled** (15 → 45 cards) across every category: price wars, landing-fee hikes, currency swings, credit downgrades, ash clouds, heatwaves, fog seasons, a rival poaching a named pilot, a training academy, flu season, long-service milestones, bird strikes, airworthiness directives, an avionics refresh, tired cabins, a codeshare alliance, belly-cargo and charter contracts, livery sponsorship, regional subsidies, a carbon levy, slot audits, passenger-rights rules, influencer reviews, overbooking, a data breach, a viral meal, a well-handled emergency, a rival's collapse (cheap used metal), and an award nod.
+- Six new effect types power them: recurring weekly cash flows (cargo income / fees / levies, accrued daily), pool-wide skill boosts, staff poaching, fleet-share groundings, fleet-wide wear adjustment, and a used-market price shock.
+- **Every event now gives at least 8 sim-days to decide** (ambient grace 7 → 8) before it unfolds on its own.
+- **The x4 "ultra-fast" speed is gone** — it ran too fast to read the day. Speeds are now pause / x1 / x2.
+
+*Why:* per direction — the old 12-card deck felt repetitive; a deep, varied deck keeps events feeling like fresh consequences. The extra day gives room to weigh a decision, and dropping x4 keeps the daily loop legible.
+
+
 ## Ambient events on the Dashboard + scaled lawsuit claims (GDD §25)
 
 - **Events now come in two registers.** Only *major* cards (lawsuits, manufacturer recall, strike vote, and system reckonings like a hull loss, court verdict, tier unlock, and the aunt's quarterly letter) still pause the sim and take the full screen. Everything else is *ambient*: it appears as a quiet "Decision" card on the Dashboard while time keeps running.

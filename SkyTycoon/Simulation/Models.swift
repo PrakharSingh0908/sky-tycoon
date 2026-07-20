@@ -518,6 +518,25 @@ enum EventEffect: Codable, Equatable {
     /// Manufacturer recall, deferred: fly on with the defect — fines per
     /// airframe, wear added to each, and a regulatory reputation scratch.
     case recallDefer(finePerPlane: Double, wearPerPlane: Double)
+    // ── Events expansion (GDD §25) ───────────────────────────────────────
+    /// A recurring weekly cash flow for a spell: positive income (cargo,
+    /// charters), negative a cost (fees, levies, a rate hike). Accrued daily.
+    case recurringCashFlow(weekly: Double, weeks: Int, label: String)
+    /// Lift every member of a pool's skill (nil = all pools) — a training
+    /// course. Clamped to the 1…5 band.
+    case skillBoost(role: StaffRole?, delta: Double)
+    /// A rival poaches one member of a pool — the named subject if the card
+    /// carries one, else a seeded-random pick. Headcount drops by one.
+    case poachStaff(role: StaffRole)
+    /// Ground a share of the flying fleet for a spell (an ash cloud, a
+    /// regional shutdown). Fraction 0…1 of delivered, airborne airframes.
+    case groundFleetShare(fraction: Double, weeks: Int)
+    /// Adjust wear across every delivered airframe (negative freshens — an
+    /// avionics/reliability upgrade; positive is fleet-wide strain).
+    case adjustFleetWear(Double)
+    /// Flood the used-aircraft market: injects a metal-glut trend that
+    /// discounts purchase/lease prices while it runs (a rival's collapse).
+    case aircraftMarketShock(multiplier: Double, weeks: Int)
 }
 
 /// A running timed modifier ("Fuel +30% · 4 wk"), applied each tick.
@@ -528,7 +547,10 @@ struct TimedEffect: Codable, Identifiable, Equatable {
     var weeksRemaining: Int
     var label: String
 
-    enum Kind: String, Codable { case fuelPrice, demand }
+    /// cashFlow (GDD §25): `multiplier` holds a WEEKLY dollar amount, signed
+    /// — positive is income (cargo, charters), negative a recurring cost
+    /// (landing fees, a carbon levy, a rate hike). Accrued 1/7 per day.
+    enum Kind: String, Codable { case fuelPrice, demand, cashFlow }
 }
 
 // ── Industry trends (GDD §14) ────────────────────────────────────────────

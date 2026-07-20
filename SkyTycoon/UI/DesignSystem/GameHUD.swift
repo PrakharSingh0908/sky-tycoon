@@ -201,7 +201,6 @@ struct SpeedControl: View {
             case .paused: 0
             case .x1: 1
             case .x2: 2
-            case .x4: 3
             }
             HStack(spacing: -2.5) {
                 ForEach(0..<chevrons, id: \.self) { _ in
