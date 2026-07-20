@@ -643,6 +643,24 @@ enum Balance {
     /// Court settlement per life lost.
     static let settlementPerLife = 200_000.0
 
+    // ── Incident claims & event surfacing (GDD §25) ──────────────────────
+    /// A plaintiff's lawyers size the claim to the target: a fixed fine that
+    /// stings a founder is a rounding error to a flag carrier. So a lawsuit
+    /// claim is the greater of its base floor and a slice of the airline's
+    /// public value (market cap), capped so no single suit is instantly
+    /// ruinous. Rounded to a clean $10K for the headline.
+    static func scaledIncidentFee(base: Double, fraction: Double, marketCap: Double) -> Double {
+        let scaled = max(0, marketCap) * fraction
+        let fee = max(base, min(base * 12, scaled))
+        return (fee / 10_000).rounded() * 10_000
+    }
+    static let teaSpillMarketCapFraction = 0.020
+    static let hardLandingMarketCapFraction = 0.035
+    /// An ambient event left unattended this many sim days unfolds on its
+    /// own, taking its passive (default) option — so the Dashboard never
+    /// silently stockpiles undecided cards.
+    static let ambientEventGraceDays = 7
+
     // ── Catering (GDD §18) ───────────────────────────────────────────────
     /// One-time galley oven fit per airframe (instant — immediacy rule).
     static let galleyOvenCost = 40_000.0
@@ -729,6 +747,7 @@ enum Balance {
                             effects: [.happiness(role: nil, delta: -10), .satisfaction(-8),
                                       .reputation(-0.3), .demand(multiplier: 0.85, weeks: 2)]),
             ],
+            severity: .major,
             isEligible: { state in
                 StaffRole.allCases.contains {
                     (state.staff[$0]?.headcount ?? 0) > 0
@@ -838,6 +857,7 @@ enum Balance {
                 EventOption(label: "Fight it in court",
                             effects: [.courtVerdict(baseFee: 180_000)]),
             ],
+            severity: .major,
             // Past the opening months AND only once the airline can absorb
             // the settlement — a founder's first season shouldn't be ended
             // by a lawsuit (2026-07-20).
@@ -855,6 +875,7 @@ enum Balance {
                 EventOption(label: "Defer · −$25K each",
                             effects: [.recallDefer(finePerPlane: 25_000, wearPerPlane: 12)]),
             ],
+            severity: .major,
             isEligible: { state in state.fleet.contains { $0.status != .onOrder } }),
         EventCard(id: "hardLanding", category: .pr,
             title: "Hard Landing, Injured Passenger",
@@ -866,6 +887,7 @@ enum Balance {
                 EventOption(label: "Fight it in court",
                             effects: [.courtVerdict(baseFee: 300_000)]),
             ],
+            severity: .major,
             // Deeper into the timeline and a stiffer cushion — the $300K
             // settlement dwarfs a young airline's whole balance sheet.
             isEligible: { !$0.routes.isEmpty && $0.staff[.pilots]?.members.isEmpty == false

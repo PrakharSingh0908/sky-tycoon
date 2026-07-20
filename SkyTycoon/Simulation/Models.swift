@@ -484,6 +484,12 @@ enum EventCategory: String, Codable, CaseIterable {
     case story   // trust-fund arc beats — never drawn from the deck
 }
 
+/// How loudly an event announces itself (GDD §25). MAJOR cards halt time
+/// and take over the screen — a real decision that deserves the pause.
+/// AMBIENT cards ride quietly on the Dashboard while the sim keeps running,
+/// and unfold on their own (their passive option) if left unattended.
+enum EventSeverity: String, Codable { case major, ambient }
+
 /// One concrete consequence of choosing an event option.
 enum EventEffect: Codable, Equatable {
     case cash(Double)
@@ -577,6 +583,9 @@ struct EventCard: Identifiable {
     /// Earliest week (total) this card can appear.
     let minTotalWeek: Int
     let options: [EventOption]
+    /// MAJOR interrupts and pauses; AMBIENT rides on the Dashboard (GDD §25).
+    /// Defaults to ambient — only the heavy cards opt into interrupting.
+    var severity: EventSeverity = .ambient
     /// Extra eligibility beyond minTotalWeek (fleet exists, strike risk…).
     let isEligible: (GameState) -> Bool
 }
@@ -597,6 +606,19 @@ struct GameEvent: Codable, Identifiable {
     /// The aircraft model at the center of the incident, when there is one
     /// (recall cards, GDD §20). Optional for save-compat.
     var subjectAircraftType: AircraftType? = nil
+    /// MAJOR pauses and takes the screen; AMBIENT sits on the Dashboard and
+    /// keeps time running (GDD §25). Defaults to major so a pending card
+    /// persisted by an older build still interrupts, exactly as before.
+    var severity: EventSeverity = .major
+    /// The sim day by which an unattended AMBIENT card unfolds on its own;
+    /// nil for major cards (they wait for the player). Save-compat: nil.
+    var autoResolveDay: Int? = nil
+    /// The option index that unfolds by default when an ambient card is
+    /// ignored — the passive, do-nothing course (usually the last option).
+    var defaultOptionIndex: Int = 0
+    /// The (size-scaled) claim on a lawsuit card — persisted so a reloaded
+    /// pending card rebuilds identical copy and options (GDD §19, §25).
+    var incidentFee: Double? = nil
 }
 
 struct EventOption: Codable, Identifiable {

@@ -765,3 +765,47 @@ the clock froze and every speed tap was ignored.
 - General rule: never gate the core loop on a counter mutated from
   `onAppear`/`onDisappear`. Model "held while X is on screen" as membership
   (a token that exists iff the holder exists), not arithmetic.
+
+---
+
+## §25 — Ambient events & scaled incidents (2026-07-20)
+
+The event system spoke in one register: every card slammed the game to a
+halt and took the whole screen. Frequent, low-stakes cards (a fuel wobble,
+a viral crew clip) broke the flow as loudly as a hull loss, and the deck
+started to feel repetitive because each draw carried the same interruption
+weight. Two fixes, plus a balance correction.
+
+### Severity: major vs ambient
+Every card now declares a `severity`:
+
+- **Major** — a real decision that deserves the pause. It stops the clock
+  (`blockingEvent`) and presents full-screen, exactly as before. The heavy
+  cards: lawsuits (tea spill, hard landing), the manufacturer recall, the
+  strike vote, and every system reckoning (hull loss, court verdict, tier
+  unlock, the aunt's quarterly letter).
+- **Ambient** — everything else. It rides quietly on the Dashboard as a
+  "Decision" card while **time keeps running**, so the feel of the game is
+  never broken by the small stuff.
+
+`GameEvent.severity` defaults to `.major` for save-compat (a card persisted
+by an older build still interrupts). `EventCard.severity` defaults to
+`.ambient` — only the heavy cards opt in to interrupting.
+
+### Default unfolding (no silent stockpile)
+An ambient card left unattended for `ambientEventGraceDays` (7) unfolds on
+its own, taking its **passive** option — by construction the last-listed
+one (ride it out / defer / decline / refuse / wing it). `advanceDay` checks
+the deadline (`autoResolveDay`, in `totalDays`) at the top of the tick and
+resolves it through the same `resolveEvent` path a tap would. The Dashboard
+card shows the countdown ("Left undecided, we 'Ride it out' in 4 days.").
+
+### Scaled incident claims
+A fixed fine that ended a founder was a rounding error to a flag carrier.
+Lawsuit claims are now `scaledIncidentFee(base:fraction:marketCap:)` — the
+greater of a base floor and a slice of market cap (tea spill 2%, hard
+landing 3.5%), capped at 12× base so no single suit is instantly ruinous,
+rounded to a clean $10K. The scaled fee is computed at fire time, baked
+into the card's options and body, and **persisted** on the `GameEvent`
+(`incidentFee`) so a reloaded pending card rebuilds identical copy. Early
+game is unchanged (the floor dominates); late game, a suit finally stings.

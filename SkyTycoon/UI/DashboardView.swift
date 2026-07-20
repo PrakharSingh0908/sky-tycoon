@@ -38,6 +38,9 @@ struct DashboardView: View {
         GameScreen(title: "Dashboard", accent: accent,
                    trailing: AnyView(profileButton)) {
             heroCard
+            // An ambient event (GDD §25) sits here as a quiet decision —
+            // time keeps running, and it unfolds on its own if ignored.
+            if let ambient = engine.ambientEvent { ambientEventCard(ambient) }
             // The founder's checklist rides just under the score, on the
             // same machined housing, until the airline flies.
             if !firstFlightDone { firstFlightCard }
@@ -240,6 +243,67 @@ struct DashboardView: View {
             Text("+\(milestone.reward.money)")
                 .font(.game(.caption, weight: .semibold))
                 .foregroundStyle(done ? Theme.textSecondary : Theme.profit)
+        }
+    }
+
+    // ── Ambient event: a decision that doesn't stop the clock (GDD §25) ──
+
+    private func ambientIcon(for category: EventCategory) -> String {
+        switch category {
+        case .market: "chart.line.downtrend.xyaxis"
+        case .weather: "cloud.bolt.rain.fill"
+        case .labor: "person.3.fill"
+        case .technical: "wrench.and.screwdriver.fill"
+        case .opportunity: "sparkles"
+        case .regulatory: "checkmark.shield.fill"
+        case .pr: "megaphone.fill"
+        case .story: "envelope.open.fill"
+        }
+    }
+
+    @ViewBuilder
+    private func ambientEventCard(_ event: GameEvent) -> some View {
+        let tint = event.isNegative ? Theme.warn : Theme.profit
+        let daysLeft = max(0, (event.autoResolveDay ?? 0) - engine.state.date.totalDays)
+        let defaultIdx = min(max(0, event.defaultOptionIndex), event.options.count - 1)
+        GameCard {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle().fill(tint.opacity(0.15)).frame(width: 44, height: 44)
+                    Image(systemName: ambientIcon(for: event.category))
+                        .font(.system(size: 19)).foregroundStyle(tint)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Decision".uppercased())
+                        .font(.data(.caption2)).tracking(1.2)
+                        .foregroundStyle(tint)
+                    Text(event.title)
+                        .font(.display(.title3)).foregroundStyle(Theme.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+            }
+            // Ambient bodies are a single short paragraph; the counsel line
+            // (major lawsuit cards only) never reaches here.
+            Text(event.body)
+                .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            VStack(spacing: 8) {
+                ForEach(Array(event.options.enumerated()), id: \.element.id) { index, option in
+                    Button {
+                        engine.resolveEvent(option: option)
+                    } label: {
+                        Text(option.label).frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(GameButtonStyle(color: tint, prominent: index == 0))
+                }
+            }
+            .padding(.top, 2)
+            Text(daysLeft <= 0
+                 ? "Unattended, this settles now as \u{201C}\(event.options[defaultIdx].label)\u{201D}."
+                 : "Left undecided, we \u{201C}\(event.options[defaultIdx].label)\u{201D} in \(daysLeft) day\(daysLeft == 1 ? "" : "s").")
+                .font(.game(.caption2)).foregroundStyle(Theme.textTertiary)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 

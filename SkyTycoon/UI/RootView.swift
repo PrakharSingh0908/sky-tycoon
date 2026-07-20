@@ -69,9 +69,10 @@ struct RootView: View {
         .background(Theme.bg)
         .preferredColorScheme(.dark)
         .sheet(item: Binding(
-            // A grounded airline never shows an event card (edge case: an
-            // event drawn the same week bankruptcy landed).
-            get: { engine.state.isBankrupt ? nil : engine.state.pendingEvent },
+            // Only MAJOR events take the screen and pause the sim (GDD §25);
+            // ambient cards live on the Dashboard. A grounded airline never
+            // shows a card (edge case: one drawn the week bankruptcy landed).
+            get: { engine.state.isBankrupt ? nil : engine.blockingEvent },
             set: { _ in }   // dismissal only via choosing an option
         )) { event in
             EventCardView(event: event).interactiveDismissDisabled()

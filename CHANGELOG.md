@@ -7,6 +7,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Ambient events on the Dashboard + scaled lawsuit claims (GDD §25)
+
+- **Events now come in two registers.** Only *major* cards (lawsuits, manufacturer recall, strike vote, and system reckonings like a hull loss, court verdict, tier unlock, and the aunt's quarterly letter) still pause the sim and take the full screen. Everything else is *ambient*: it appears as a quiet "Decision" card on the Dashboard while time keeps running.
+- **Ambient cards unfold on their own if ignored.** Left unattended for 7 sim days, an ambient card resolves to its passive option (ride it out / defer / decline), through the same path a tap would take. The card shows the countdown.
+- **Lawsuit claims scale with the airline's size.** A tea-spill or hard-landing claim is now the greater of its old floor ($180K / $300K) and a slice of market cap (2% / 3.5%), capped at 12× the floor so a single suit is never instantly fatal. The scaled fee is persisted so a reloaded pending card reads identically.
+
+*Why:* per direction — the deck felt repetitive because every card interrupted with equal weight, and fixed fines were trivial late-game. Ambient surfacing keeps the small stuff from breaking the game's feel; default-unfolding means the Dashboard never silently piles up undecided cards; scaled claims make incidents sting again once the airline is worth suing.
+
+
 ## Fuel prices ramped 15%
 
 - `Balance.fuelPricePerUnit` bumped 1.0 → 1.15, tightening the fuel line on every route. Per-country `profile.fuelCost` multipliers still stack on top, so relatively fuel-heavy campaigns (India 1.3×, UK 1.1×) feel it a touch more.

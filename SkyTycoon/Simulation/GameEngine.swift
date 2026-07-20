@@ -293,11 +293,24 @@ final class GameEngine {
     }
     func stopClock() { timer?.invalidate(); timer = nil }
 
+    /// The pending event ONLY if it's a major one — the kind that takes the
+    /// screen and stops the clock (GDD §25). Ambient cards return nil here.
+    var blockingEvent: GameEvent? {
+        guard let e = state.pendingEvent, e.severity == .major else { return nil }
+        return e
+    }
+    /// The pending event if it's ambient — surfaced quietly on the Dashboard
+    /// while time keeps running, and unfolded on its own if left too long.
+    var ambientEvent: GameEvent? {
+        guard let e = state.pendingEvent, e.severity == .ambient else { return nil }
+        return e
+    }
+
     /// Step exactly one day and hold: the deliberate-play loop (adjust
     /// while paused → step → read the day). Deterministic — the same
     /// advanceDay the clock drives.
     func stepOneDay() {
-        guard state.pendingEvent == nil, !clockIsHeld,
+        guard blockingEvent == nil, !clockIsHeld,
               !state.isBankrupt else { return }
         speed = .paused
         accumulator = 0
@@ -305,17 +318,17 @@ final class GameEngine {
     }
 
     private func clockFired(delta: Double) {
-        guard speed != .paused, state.pendingEvent == nil, !clockIsHeld,
+        guard speed != .paused, blockingEvent == nil, !clockIsHeld,
               !state.isBankrupt else { return }
         accumulator += delta * speed.rawValue
         while accumulator >= secondsPerDay {
             accumulator -= secondsPerDay
             advanceDay()
-            // An event holds the clock (clockIsHeld) without disturbing the
-            // player's speed: the loop stops here, and time resumes at that
-            // same speed once the card is dealt with. No pause is stamped
-            // into the speed control, and the timeline doesn't lurch.
-            if state.pendingEvent != nil { accumulator = 0; break }
+            // A MAJOR event holds the clock (clockIsHeld) without disturbing
+            // the player's speed: the loop stops here, and time resumes at
+            // that same speed once the card is dealt with. Ambient cards let
+            // the loop run on — they never lurch the timeline.
+            if blockingEvent != nil { accumulator = 0; break }
         }
     }
 
@@ -334,6 +347,18 @@ final class GameEngine {
 
     func advanceDay() {
         guard !state.isBankrupt else { return }
+
+        // An ambient card left unattended past its grace window unfolds on
+        // its own — the passive default option — so the Dashboard never
+        // silently piles up undecided cards (GDD §25).
+        if let e = ambientEvent, let deadline = e.autoResolveDay,
+           state.date.totalDays >= deadline {
+            let idx = min(max(0, e.defaultOptionIndex), e.options.count - 1)
+            if e.options.indices.contains(idx) {
+                resolveEvent(option: e.options[idx])
+            }
+        }
+
         let f = 1.0 / 7.0                       // this day's share of the week
         let close = (state.date.day ?? 1) >= 7  // the 7th day finalizes the week
         let profile = Balance.countryProfiles[state.country]!
@@ -1065,13 +1090,22 @@ final class GameEngine {
         // facts, and the resolution weighs exactly those.
         let incident = incidentContext(for: card)
         let recall = recallContext(for: card)
+        // A lawsuit's claim scales with the airline's public value, so the
+        // options and body are rebuilt from the scaled fee at fire time.
+        let options = incident.map { lawsuitOptions(cardID: card.id, fee: $0.fee) }
+            ?? card.options
         state.pendingEvent = GameEvent(
             id: UUID(), cardID: card.id, category: card.category,
             isNegative: card.isNegative, title: card.title,
             body: incident?.body ?? recall?.body ?? card.body,
-            options: card.options, firedOn: state.date,
+            options: options, firedOn: state.date,
             subjectID: incident?.subjectID,
-            subjectAircraftType: recall?.type)
+            subjectAircraftType: recall?.type,
+            severity: card.severity,
+            autoResolveDay: card.severity == .ambient
+                ? state.date.totalDays + Balance.ambientEventGraceDays : nil,
+            defaultOptionIndex: max(0, options.count - 1),
+            incidentFee: incident?.fee)
         state.lastEventTotalWeek = state.date.totalWeeks
         logEvent(title: card.title, isNegative: card.isNegative)
         if card.isNegative {
@@ -1097,7 +1131,7 @@ final class GameEngine {
 
     /// Picks the accused for a lawsuit card and writes their record into
     /// the body — the same facts the court will weigh.
-    private func incidentContext(for card: EventCard) -> (body: String, subjectID: UUID)? {
+    private func incidentContext(for card: EventCard) -> (body: String, subjectID: UUID, fee: Double)? {
         let role: StaffRole? = switch card.id {
         case "teaSpill": .cabinCrew
         case "hardLanding": .pilots
@@ -1105,18 +1139,34 @@ final class GameEngine {
         }
         guard let role, let pool = state.staff[role], !pool.members.isEmpty else { return nil }
         let member = pool.members[Int.random(in: 0..<pool.members.count, using: &state.seedRNG)]
-        return (lawsuitBody(cardID: card.id, member: member), member.id)
+        let fee = incidentFee(cardID: card.id)
+        return (lawsuitBody(cardID: card.id, member: member, fee: fee), member.id, fee)
+    }
+
+    /// The size-scaled claim for a lawsuit card (GDD §25): a fixed floor
+    /// early, a slice of market cap once the airline is worth suing.
+    private func incidentFee(cardID: String) -> Double {
+        let (base, fraction): (Double, Double) = cardID == "teaSpill"
+            ? (180_000, Balance.teaSpillMarketCapFraction)
+            : (300_000, Balance.hardLandingMarketCapFraction)
+        return Balance.scaledIncidentFee(base: base, fraction: fraction, marketCap: marketCap)
+    }
+
+    /// The two lawsuit options, priced from the scaled fee.
+    private func lawsuitOptions(cardID: String, fee: Double) -> [EventOption] {
+        [EventOption(label: "Settle quietly · −\(fee.money)", effects: [.cash(-fee)]),
+         EventOption(label: "Fight it in court", effects: [.courtVerdict(baseFee: fee)])]
     }
 
     /// The lawsuit body from stored facts only (no RNG) — reused when a
     /// persisted pending card refreshes its copy on load.
-    private func lawsuitBody(cardID: String, member: StaffMember) -> String {
+    private func lawsuitBody(cardID: String, member: StaffMember, fee: Double) -> String {
         let tenure = max(0, state.date.totalWeeks - member.hiredOn.totalWeeks)
         let record = String(format: "%.1f★ · %d wk with you", member.skill, tenure)
         let counsel = "Counsel: settling stays out of the news. Court is public, and the verdict rides on their record."
         return cardID == "teaSpill"
-            ? "\(member.name) (\(record)) spilled scalding tea on a passenger. The burns needed treatment. Their lawyers want \(180_000.0.money).\n\n\(counsel)"
-            : "\(member.name) (\(record)) landed hard. An elderly passenger's spine was injured. The family's lawyers want \(300_000.0.money).\n\n\(counsel)"
+            ? "\(member.name) (\(record)) spilled scalding tea on a passenger. The burns needed treatment. Their lawyers want \(fee.money).\n\n\(counsel)"
+            : "\(member.name) (\(record)) landed hard. An elderly passenger's spine was injured. The family's lawyers want \(fee.money).\n\n\(counsel)"
     }
 
     /// The recall body from a stored type (no RNG) — same refresh use.
@@ -1135,12 +1185,18 @@ final class GameEngine {
               let card = Balance.eventDeck.first(where: { $0.id == event.cardID })
         else { return }
         event.title = card.title
-        event.options = card.options
         if let id = event.subjectID, let member = staffMember(id: id) {
-            event.body = lawsuitBody(cardID: event.cardID, member: member)
+            // Lawsuit: rebuild body AND options from the persisted scaled
+            // fee, so the reloaded card matches what the player was shown.
+            let fee = event.incidentFee ?? incidentFee(cardID: event.cardID)
+            event.body = lawsuitBody(cardID: event.cardID, member: member, fee: fee)
+            event.options = lawsuitOptions(cardID: event.cardID, fee: fee)
+            event.incidentFee = fee
         } else if let type = event.subjectAircraftType {
+            event.options = card.options
             event.body = recallBody(type: type)
-        } else if event.subjectID == nil {
+        } else {
+            event.options = card.options
             event.body = card.body
         }
         state.pendingEvent = event
