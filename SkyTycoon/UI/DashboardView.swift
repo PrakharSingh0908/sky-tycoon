@@ -492,28 +492,12 @@ struct DashboardView: View {
             }
             .buttonStyle(.plain)
 
-            // The market's weather (GDD §14) reads as a newspaper: the rows
-            // are the front page, a tap opens the Gazette to flip through.
-            if !trends.isEmpty {
+            // The market's weather (GDD §14) reads as a folded newspaper: a
+            // concise clipping with the lead story; a tap opens the Gazette.
+            if let lead = trends.first {
                 Divider().overlay(Theme.hairline)
                 Button { showingGazette = true } label: {
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack(spacing: 8) {
-                            Text("THE GAZETTE")
-                                .font(.system(size: 11, weight: .bold, design: .serif))
-                                .tracking(1.4)
-                                .foregroundStyle(Theme.textSecondary)
-                            Rectangle().fill(Theme.hairline).frame(height: 1)
-                            Text("\(trends.count) \(trends.count == 1 ? "story" : "stories")")
-                                .font(.system(size: 10, design: .serif)).italic()
-                                .foregroundStyle(Theme.textTertiary)
-                            Image(systemName: "chevron.right")
-                                .font(.caption2.weight(.semibold)).foregroundStyle(Theme.textSecondary)
-                        }
-                        ForEach(trends) { trend in
-                            trendRow(trend)
-                        }
-                    }
+                    gazetteTeaser(lead: lead, count: trends.count)
                 }
                 .buttonStyle(.plain)
             }
@@ -525,37 +509,55 @@ struct DashboardView: View {
         }
     }
 
-    // One aligned line per fact: tag + name + a single mono readout
-    // (effect · weeks); the story gets its own full-width line beneath.
-    private func trendRow(_ trend: IndustryTrend) -> some View {
-        let pct = Int(((trend.multiplier - 1) * 100).rounded())
-        let kind = switch trend.kind {
-        case .demand: "demand"; case .fuel: "fuel"
-        case .wages: "wages"; case .aircraftPrices: "aircraft"
-        }
-        return VStack(alignment: .leading, spacing: 3) {
+    // A folded newspaper clipping: masthead, the lead headline, a one-line
+    // standfirst, and the count — set on a small black-paper panel. The full
+    // Gazette (flip through every story) is one tap away.
+    private func gazetteTeaser(lead: IndustryTrend, count: Int) -> some View {
+        let ink = Color(red: 0.93, green: 0.91, blue: 0.85)
+        let inkSoft = Color(red: 0.68, green: 0.66, blue: 0.61)
+        func rule() -> some View { Rectangle().fill(inkSoft.opacity(0.4)).frame(height: 1) }
+        return VStack(spacing: 8) {
             HStack(spacing: 8) {
-                Text(trend.horizon == .long ? "LONG" : "SHORT")
-                    .font(.data(.caption2)).tracking(0.85)
-                    .foregroundStyle(trend.horizon == .long ? Theme.cornflower : Theme.warn)
-                    .frame(width: 46, alignment: .leading)
-                Text(trend.name)
-                    .font(.game(.subheadline, weight: .medium))
-                    .foregroundStyle(Theme.textPrimary)
-                    .lineLimit(1).minimumScaleFactor(0.85)
-                Spacer(minLength: 8)
-                (Text("\(pct >= 0 ? "+" : "")\(pct)% \(kind)")
-                    .foregroundStyle(trend.favorsPlayer ? Theme.profit : Theme.loss)
-                 + Text(" · \(trend.weeksRemaining)wk")
-                    .foregroundStyle(Theme.textTertiary))
-                    .font(.data(.caption2, weight: .semibold))
-                    .lineLimit(1).fixedSize()
+                rule()
+                Text("THE SKYWARD GAZETTE")
+                    .font(.system(size: 9, weight: .heavy, design: .serif))
+                    .tracking(1.2).foregroundStyle(ink)
+                    .fixedSize()
+                rule()
             }
-            Text(trend.detail)
-                .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+            Text(lead.name)
+                .font(.system(size: 19, weight: .bold, design: .serif))
+                .foregroundStyle(ink)
+                .multilineTextAlignment(.center)
+                .lineLimit(2).minimumScaleFactor(0.8)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(lead.detail)
+                .font(.system(size: 12, design: .serif)).italic()
+                .foregroundStyle(inkSoft)
+                .multilineTextAlignment(.center)
                 .lineLimit(1)
-                .padding(.leading, 54)
+            rule().padding(.top, 2)
+            HStack {
+                Text("\(count) \(count == 1 ? "story" : "stories") today")
+                    .font(.system(size: 10, design: .serif)).italic()
+                    .foregroundStyle(inkSoft)
+                Spacer()
+                HStack(spacing: 4) {
+                    Text("Read the Gazette")
+                        .font(.system(size: 10, weight: .semibold, design: .serif))
+                    Image(systemName: "chevron.right").font(.system(size: 8, weight: .bold))
+                }
+                .foregroundStyle(ink)
+            }
         }
+        .padding(14)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: Theme.corner)
+                .fill(Color(red: 0.06, green: 0.06, blue: 0.065))
+                .overlay(RoundedRectangle(cornerRadius: Theme.corner)
+                    .strokeBorder(Color.white.opacity(0.07), lineWidth: 1))
+        )
     }
 
     // ── Trends ───────────────────────────────────────────────────────────
