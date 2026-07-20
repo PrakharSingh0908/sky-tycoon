@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Fuel prices ramped 15%
+
+- `Balance.fuelPricePerUnit` bumped 1.0 → 1.15, tightening the fuel line on every route. Per-country `profile.fuelCost` multipliers still stack on top, so relatively fuel-heavy campaigns (India 1.3×, UK 1.1×) feel it a touch more.
+
+*Why:* playtesting showed money came too easily. A modest across-the-board fuel ramp squeezes margins into a more deliberate game without gutting any single route.
+
+
 ## Worn-aircraft rows jump to the Fleet
 
 - The worn-plane rows in the Dashboard's Ops Conditions card ("95% wear · ground it") are now tappable, with a chevron affordance. Tapping jumps to the Fleet tab, where that plane leads the list (sorted worst-wear first) ready to Service or ground. Wired via an onOpenFleet closure from RootView that switches the tab.
