@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Leases reprice fleet-wide + fuel up another 20%
+
+- **The lease rate now applies to your whole leased fleet, not just new signings.** Leases used to lock their weekly cost at signing, so the earlier +35% bump was invisible on planes you already leased. They now reprice to the current balance rate on load, so a rate change is felt across the fleet immediately (verified: an old-rate lease jumped ×1.35 on reload).
+- **Fuel up another 20%** — `fuelPricePerUnit` 1.15 → 1.38. Fuel is the single biggest cost, so this keeps route margins honest; per-country fuel multipliers still stack on top.
+
+*Why:* per feedback — the lease increase wasn't showing because existing contracts were frozen; making leases track the live rate fixes that. And a further fuel ramp continues squeezing the too-easy margins.
+
+
 ## Aircraft condition ages irreversibly + 11-day event window
 
 - **Condition now has a permanent, age-based ceiling.** Time in service leaves marks you can't buff out: an airframe stays serviceable to 100% for its first two years, then its maximum recoverable condition falls about 4 points/year (6 yrs → 84%, 10 → 68%, 15 → 48%, floored at 40%). A heavy check still restores condition, but only up to that ceiling — no service brings an old jet back to factory-fresh. Used-market listings and acquired fleets respect the ceiling too, so an old hull can't list as pristine.

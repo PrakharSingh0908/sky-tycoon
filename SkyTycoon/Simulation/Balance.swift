@@ -534,10 +534,10 @@ enum Balance {
 
     /// How many daily bars the P&L chart keeps (GDD §23) — ~13 weeks.
     static let plChartDays = 91
-    /// Global fuel price lever (2026-07-20): bumped 1.0 → 1.15. Playtesting
-    /// showed margins ran too easy; a 15% fuel ramp tightens every route's
-    /// P&L without gutting it. Per-country `profile.fuelCost` still stacks.
-    static let fuelPricePerUnit = 1.15
+    /// Global fuel price lever (2026-07-20): 1.0 → 1.15 → 1.38 (a further
+    /// +20%). Margins still ran easy; fuel is the biggest single cost, so
+    /// this keeps every route honest. Per-country `profile.fuelCost` stacks.
+    static let fuelPricePerUnit = 1.38
     /// HQ overhead scales with the operation (§22): a founder's desk costs
     /// little; a fleet needs a real headquarters. Replaces the flat $15K
     /// that would end a $200K start in 13 weeks by itself.

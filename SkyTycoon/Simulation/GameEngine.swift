@@ -75,6 +75,7 @@ final class GameEngine {
         self.state = state
         backfillAvatars()
         retagFleet()
+        repriceLeases()
         refreshPendingEventCopy()
         // §22 grandfather: saves from before fleet tiers keep everything.
         if self.state.unlockedFleetTier == nil {
@@ -147,6 +148,17 @@ final class GameEngine {
         let n = state.fleet.count
         let letter = letters[letters.index(letters.startIndex, offsetBy: n % 26)]
         return "\(fleetPrefix)-\(letter)\(n / 26 == 0 ? "" : String(n / 26))"
+    }
+
+    /// Leases now track the current balance lease rate (2026-07-20): a rate
+    /// change applies to the WHOLE leased fleet on load, not just new
+    /// signings, so game-wide tuning is visible immediately. (Previously each
+    /// lease locked its weekly cost at signing.) Idempotent.
+    private func repriceLeases() {
+        for i in state.fleet.indices where state.fleet[i].acquisition == .leased {
+            let spec = Balance.specs[state.fleet[i].type]!
+            state.fleet[i].weeklyLeaseCost = spec.purchasePrice * Balance.leaseRatePerWeek
+        }
     }
 
     /// Re-registers auto-issued tail codes (XX-A pattern) under the current
