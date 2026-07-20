@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Crashes and lawsuits now dent quarter profit
+
+- Settlements from crashes and lawsuit/recall verdicts now book into a new "Incidents" line on the weekly report, so they reduce quarter profit and show in the statement + expense pie. Previously they were paid straight from cash and never touched the profit line — which let a quarter with two hull losses still read profitable and count toward the trust-fund arc. The cash still leaves the instant the incident happens; the Incidents line makes the P&L and the quarter reflect it, with no double-charge (it's folded in only at week close, which never touches cash). The lost aircraft's capital value stays reflected in net worth only, to avoid double-counting.
+- Verified: a $70K operating week with a $180K settlement now reports −$110K; no-incident weeks are unchanged.
+
+*Why:* per direction. "How am I profitable when two planes crashed?" was a real accounting gap — the quarter grade ignored the single biggest losses a player can suffer. Now a crash-filled quarter swings toward the loss it actually is.
+
+
 ## Every chart daily too
 
 - The trend charts now record a point per day, not per week. History buffers (net worth, cash, reputation, debt) append daily and are bucketed into weeks/months/quarters for display — so the window stays a stable span while the tip advances every day. New daily profit/revenue buffers drive the P&L chart, retitled "Daily P&L · 13 weeks" (daily bars + revenue line); the load-factor sparkline is daily; the Money balance-sheet net-worth chart buckets daily history into a 13-week window. History caps raised to ~5 years of days.

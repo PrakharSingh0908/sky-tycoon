@@ -29,6 +29,7 @@ extension WeeklyReport {
             ExpenseSlice(label: "Cabin & catering", amount: cabinCost, color: Theme.chartPalette[5]),
             ExpenseSlice(label: "Marketing", amount: marketingCost, color: Theme.chartPalette[6]),
             ExpenseSlice(label: "Overhead", amount: overheadCost, color: Theme.chartPalette[7]),
+            ExpenseSlice(label: "Incidents", amount: incidentCost ?? 0, color: Theme.loss),
         ]
         .filter { $0.amount > 0 }
         .sorted { $0.amount > $1.amount }

@@ -33,6 +33,11 @@ final class GameEngine {
     /// 7-day close finalizes it. Transient: saves happen only at week close.
     @ObservationIgnored private var weekReport: WeeklyReport?
 
+    /// Settlement cash already paid out this week (crashes, lawsuit/recall
+    /// verdicts) — folded into the week's report as its Incidents line at
+    /// close (GDD §23), so it dents quarter profit without re-charging cash.
+    @ObservationIgnored private var pendingIncident: Double = 0
+
     /// Presentation only: how far through the CURRENT day the clock has
     /// accrued (the sim advances in whole days).
     var dayProgress: Double { min(accumulator / secondsPerDay, 0.999) }
@@ -525,7 +530,8 @@ final class GameEngine {
 
     /// The 7-day close: the discrete, seeded-random systems and bookkeeping
     /// — run once per week, drawing the RNG in a fixed order (deterministic).
-    private func closeWeek(_ report: WeeklyReport) {
+    private func closeWeek(_ reportIn: WeeklyReport) {
+        var report = reportIn
         // Deliveries + maintenance countdowns.
         for i in state.fleet.indices where state.fleet[i].status == .onOrder {
             state.fleet[i].deliveryWeeksRemaining -= 1
@@ -625,6 +631,13 @@ final class GameEngine {
             state.weeksUntilMarketRefresh = Int.random(
                 in: Balance.usedMarketRefreshWeeksMin...Balance.usedMarketRefreshWeeksMax,
                 using: &state.seedRNG)
+        }
+
+        // Fold this week's settlements into the Incidents line (GDD §23) so
+        // quarter profit reflects them; the cash already left when they hit.
+        if pendingIncident != 0 {
+            report.incidentCost = (report.incidentCost ?? 0) + pendingIncident
+            pendingIncident = 0
         }
 
         // Finalize the week's report (the statement stays weekly). The
@@ -1004,6 +1017,7 @@ final class GameEngine {
         }
         let settlement = Double(souls) * Balance.settlementPerLife
         state.cash -= settlement
+        pendingIncident += settlement   // dents this week's P&L / quarter profit
 
         // The market recoils: a safety scare lands as an industry trend.
         var trends = industryTrends
@@ -1257,6 +1271,10 @@ final class GameEngine {
     // local copy. An optional-chained write whose RHS reads the same
     // dictionary is a Swift exclusivity violation through @Observable's
     // _modify — it aborts at runtime. apply(_:) follows this pattern.
+    /// Incident cards whose settlements dent the P&L (GDD §23): lawsuits and
+    /// recalls. Their cash outflow this resolution becomes an Incidents cost.
+    private static let incidentCards: Set<String> = ["teaSpill", "hardLanding", "fleetRecall"]
+
     func resolveEvent(option: EventOption) {
         guard let event = state.pendingEvent else { return }
         // Clear FIRST: a courtVerdict effect may present the verdict card,
@@ -1264,8 +1282,14 @@ final class GameEngine {
         eventSubjectID = event.subjectID
         eventSubjectAircraftType = event.subjectAircraftType
         state.pendingEvent = nil
+        // Cash spent settling an incident is booked as an Incidents cost so
+        // the quarter reflects it (the cash itself still leaves immediately).
+        let cashBefore = state.cash
         for effect in option.effects {
             apply(effect)
+        }
+        if Self.incidentCards.contains(event.cardID) {
+            pendingIncident += max(0, cashBefore - state.cash)
         }
         eventSubjectID = nil
         eventSubjectAircraftType = nil

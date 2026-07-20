@@ -629,7 +629,13 @@ struct WeeklyReport: Codable, Identifiable {
     /// Overflow hours flown at market × 1.8 — split from wages (2026-07-20)
     /// so staffing up visibly kills this line. Optional: old saves decode nil.
     var contractorCost: Double? = nil
-    var profit: Double { revenue - fuelCost - wageCost - (contractorCost ?? 0) - maintenanceCost - loanCost - leaseCost - cabinCost - marketingCost - overheadCost }
+    /// One-off settlements this period — crash payouts, lawsuit/recall
+    /// settlements (GDD §23). The cash already left when the incident hit;
+    /// this line makes the P&L and quarter profit reflect it. Optional so
+    /// old saves decode nil. (The lost hull's capital value is NOT here —
+    /// that already shows in net worth; booking it would double-count.)
+    var incidentCost: Double? = nil
+    var profit: Double { revenue - fuelCost - wageCost - (contractorCost ?? 0) - maintenanceCost - loanCost - leaseCost - cabinCost - marketingCost - overheadCost - (incidentCost ?? 0) }
 }
 
 // ── The objectives layer (GDD §3.1 + §6, M6) ─────────────────────────────

@@ -229,6 +229,14 @@ struct MoneyView: View {
                                    ("Fleet size", "\(engine.state.fleet.count)")],
                             formula: "overhead = \(Balance.hqOverheadBase.money) + \(Balance.hqOverheadPerAircraft.money) × fleet")
             }
+            if (r.incidentCost ?? 0) > 0 {
+                statementRow("Incidents", -(r.incidentCost ?? 0)) {
+                    Explanation(title: "Incidents",
+                                subtitle: "One-off settlements paid this week",
+                                rows: [("Crash & lawsuit payouts", (r.incidentCost ?? 0).money)],
+                                formula: "Settlements from crashes and lawsuits hit cash when\nthey happen; this line books them into the week's P&L\nand the quarter. Lost aircraft value shows in net worth.")
+                }
+            }
             Divider().overlay(Theme.hairline)
             HStack {
                 Text("Profit").font(.game(.headline, weight: .bold))
