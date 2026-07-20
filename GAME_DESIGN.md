@@ -677,10 +677,13 @@ Two kinds of systems, two cadences:
   revenue and fuel, wages, contractors, maintenance, lease, cabin, marketing,
   overhead, loan interest → cash moves daily. Wear accrual, condition decay,
   route satisfaction drift, and reputation drift also step daily. The net
-  worth board, the cash number, and every meter refresh each day. (The
-  trend *charts* keep one sampled point per week — a chart is history, and
-  a weekly sample keeps its window and axes stable; the live numbers above
-  them are what move day to day.)
+  worth board, the cash number, and every meter refresh each day. The trend
+  charts record a point PER DAY too: the history buffers append daily and
+  the charts bucket them into weeks/months/quarters for display, so the
+  window stays a stable span while the newest bucket (the tip) advances
+  every day. The P&L chart shows daily profit bars over the last ~13 weeks;
+  the load-factor sparkline is daily; only the formal weekly P&L *statement*
+  (the tap-for-formula rows and quarter letters) stays a weekly close.
 - **Discrete — resolved on the 7-day boundary (unchanged balance & RNG):**
   the event deck draw, industry-trend aging, staff attrition and recruitment,
   delivery and maintenance countdowns (still counted in weeks), aircraft

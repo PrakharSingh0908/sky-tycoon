@@ -337,7 +337,8 @@ final class GameEngine {
                                       overheadCost: 0)
         }
         var report = weekReport!
-        let profitBefore = report.profit   // cash books only THIS day's delta
+        let profitBefore = report.profit     // cash books only THIS day's delta
+        let revenueBefore = report.revenue   // P&L chart books this day's revenue
 
         // 2. CREW-HOURS (GDD §4.4) — demand vs roster capacity, for strain
         // and punctuality (which feed satisfaction). Non-mutating.
@@ -384,6 +385,7 @@ final class GameEngine {
                 state.routes[r].lastWeeklyProfit = 0
                 state.routes[r].lastWeeklyRevenue = 0
                 state.routes[r].lastWeeklyFuel = 0
+                appendLoadFactor(0, routeIndex: r)
                 continue
             }
             let econ = computeEconomics(route: route, planes: activePlanes,
@@ -403,6 +405,7 @@ final class GameEngine {
             state.routes[r].lastWeeklyProfit = econ.revenue - econ.fuel
             state.routes[r].lastWeeklyRevenue = econ.revenue
             state.routes[r].lastWeeklyFuel = econ.fuel
+            appendLoadFactor(econ.loadFactor, routeIndex: r)
             // Wear: this day's share of the week's block hours.
             for plane in activePlanes {
                 if let idx = state.fleet.firstIndex(where: { $0.id == plane.id }) {
@@ -505,6 +508,17 @@ final class GameEngine {
         let repTarget = 1 + (paxWeightedSat / 100) * 4
         state.reputation += (repTarget - state.reputation) * 0.06 * f
 
+        // DAILY history — every chart tips forward each day (GDD §23). The
+        // trend charts bucket these into weeks/months/quarters for display.
+        appendHistory(\.netWorthHistory, netWorth)
+        appendHistory(\.cashHistory, state.cash)
+        appendHistory(\.reputationHistory, state.reputation)
+        state.debtHistory = Array(((state.debtHistory ?? []) + [totalDebt]).suffix(historyCap))
+        state.dailyProfit = Array(((state.dailyProfit ?? [])
+            + [report.profit - profitBefore]).suffix(Balance.plChartDays))
+        state.dailyRevenue = Array(((state.dailyRevenue ?? [])
+            + [report.revenue - revenueBefore]).suffix(Balance.plChartDays))
+
         if close { closeWeek(report) }
         state.date.advanceDay()
     }
@@ -536,11 +550,6 @@ final class GameEngine {
             }
         }
 
-        // Load-factor sparkline: one point per week.
-        for r in state.routes.indices {
-            appendLoadFactor(state.routes[r].weeklyFrequency > 0 ? state.routes[r].lastLoadFactor : 0,
-                             routeIndex: r)
-        }
 
         // Airworthiness crash sweep (RNG, at most one hull loss/week).
         for i in state.fleet.indices {
@@ -618,14 +627,11 @@ final class GameEngine {
                 using: &state.seedRNG)
         }
 
-        // Finalize the week's report + weekly-sampled history.
+        // Finalize the week's report (the statement stays weekly). The
+        // trend histories are appended DAILY in advanceDay, not here.
         state.reports.append(report)
         if state.reports.count > 52 { state.reports.removeFirst() }
         weekReport = nil
-        appendHistory(\.netWorthHistory, netWorth)
-        appendHistory(\.cashHistory, state.cash)
-        appendHistory(\.reputationHistory, state.reputation)
-        state.debtHistory = Array(((state.debtHistory ?? []) + [totalDebt]).suffix(260))
 
         // Milestones (paid once, never blocking).
         for milestone in Balance.milestones
@@ -802,16 +808,20 @@ final class GameEngine {
                                 fuelEventMult: fuelMult, demandEventMult: demandMult)
     }
 
-    /// Appends to a capped 260-week (5-year) history buffer.
+    /// Cap for the daily trend-history buffers: ~5 in-game years of days
+    /// (GDD §23). Enough for the yearly (quarter-bucketed) chart window.
+    var historyCap: Int { 52 * 7 * 5 }
+
+    /// Appends to a capped daily history buffer.
     private func appendHistory(_ keyPath: WritableKeyPath<GameState, [Double]>, _ value: Double) {
         state[keyPath: keyPath].append(value)
-        if state[keyPath: keyPath].count > 260 { state[keyPath: keyPath].removeFirst() }
+        if state[keyPath: keyPath].count > historyCap { state[keyPath: keyPath].removeFirst() }
     }
 
-    /// Appends to a route's capped 26-week load-factor sparkline buffer.
+    /// Appends to a route's daily load-factor sparkline buffer (last ~13 wk).
     private func appendLoadFactor(_ value: Double, routeIndex: Int) {
         state.routes[routeIndex].loadFactorHistory.append(value)
-        if state.routes[routeIndex].loadFactorHistory.count > 26 {
+        if state.routes[routeIndex].loadFactorHistory.count > 91 {
             state.routes[routeIndex].loadFactorHistory.removeFirst()
         }
     }

@@ -22,8 +22,9 @@ struct MoneyView: View {
             balanceSheetCard
             marketingCard
             GameCard {
-                SectionHeader(title: "52-week P&L", icon: "chart.bar.fill", accent: accent)
-                ProfitChart(reports: engine.state.reports)
+                SectionHeader(title: "Daily P&L · 13 weeks", icon: "chart.bar.fill", accent: accent)
+                ProfitChart(dailyProfit: engine.state.dailyProfit ?? [],
+                            dailyRevenue: engine.state.dailyRevenue ?? [])
                 pnlLegend
             }
             if let r = engine.latestReport { statementCard(r) }
@@ -68,8 +69,19 @@ struct MoneyView: View {
                 StatTile(label: "Net worth", value: engine.netWorth.money,
                          color: engine.netWorth >= 0 ? Theme.textPrimary : Theme.loss)
             }
-            TrendChart(values: engine.state.netWorthHistory, color: Theme.cornflower)
+            // Daily history bucketed into ~13 weeks (GDD §23): the tip
+            // advances every day, the window stays a stable quarter.
+            TrendChart(values: weeklyBuckets(engine.state.netWorthHistory),
+                       color: Theme.cornflower, window: 13, unit: "w")
         }
+    }
+
+    /// Last ~13 weeks as one point per 7-day bucket (last value per bucket).
+    private func weeklyBuckets(_ raw: [Double]) -> [Double] {
+        var out: [Double] = []
+        var i = raw.count
+        while i > 0 && out.count < 13 { out.append(raw[i - 1]); i -= 7 }
+        return out.reversed()
     }
 
     // ── Marketing (M5): buy awareness, awareness buys demand ─────────────

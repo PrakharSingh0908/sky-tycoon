@@ -697,8 +697,9 @@ struct DashboardView: View {
     /// points, 4-week months, 13-week quarters).
     private var chartEventMarks: [ChartEventMark] {
         let now = engine.state.date.totalWeeks
+        // Weeks per chart bucket: 1 (W), ~4.3 (M, 30-day), 13 (Y, quarter).
         let divisor: Double = switch financeRange {
-        case .weekly: 1; case .monthly: 4; case .yearly: 13
+        case .weekly: 1; case .monthly: 30.0 / 7.0; case .yearly: 13
         }
         return (engine.state.eventLog ?? []).map {
             ChartEventMark(id: $0.id,
@@ -767,16 +768,15 @@ struct DashboardView: View {
         }
     }
 
-    /// Downsample a weekly level series into the selected range's buckets
-    /// (last value per bucket, aligned to now).
+    /// Downsample the DAILY level series into the selected range's buckets
+    /// (last value per bucket, aligned to now) — GDD §23. The newest bucket
+    /// takes today's value, so the chart's tip advances every day while the
+    /// week/month/quarter granularity holds steady.
     private func rangeSeries(_ raw: [Double]) -> [Double] {
         switch financeRange {
-        case .weekly:
-            return Array(raw.suffix(13))
-        case .monthly:
-            return bucketLast(raw, size: 4, keep: 12)
-        case .yearly:
-            return bucketLast(raw, size: 13, keep: 20)
+        case .weekly:  return bucketLast(raw, size: 7, keep: 13)   // ~13 weeks
+        case .monthly: return bucketLast(raw, size: 30, keep: 12)  // ~12 months
+        case .yearly:  return bucketLast(raw, size: 91, keep: 20)  // ~5 years, by quarter
         }
     }
 

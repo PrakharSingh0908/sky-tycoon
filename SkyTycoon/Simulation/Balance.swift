@@ -457,6 +457,9 @@ enum Balance {
     // P&L-positive quarters) was unreachable even for a well-run airline
     // (verified by 160-week sims). Tune further in the M8 playtest pass.
     static let demandK = 550.0  // 2026-07-18 balance pass
+
+    /// How many daily bars the P&L chart keeps (GDD §23) — ~13 weeks.
+    static let plChartDays = 91
     static let fuelPricePerUnit = 1.0
     /// HQ overhead scales with the operation (§22): a founder's desk costs
     /// little; a fleet needs a real headquarters. Replaces the flat $15K

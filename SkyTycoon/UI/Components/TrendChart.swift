@@ -130,34 +130,36 @@ struct TrendChart: View {
     }
 }
 
-/// Weekly profit bars (green/red) with a revenue line — the P&L's shape
-/// at a glance, from the last 52 weekly reports. Weeks before the airline
-/// had history pad LEFT at ZERO (nothing was earned) and the x-domain is
-/// pinned, so the line runs the full width instead of starting mid-air.
+/// Daily profit bars (green/red) with a revenue line — the P&L's shape at a
+/// glance, from the last ~13 weeks of DAILY figures (GDD §23). Days before
+/// the airline had history pad LEFT at ZERO and the x-domain is pinned, so
+/// the line runs the full width instead of starting mid-air.
 struct ProfitChart: View {
-    let reports: [WeeklyReport]
-    var window: Int = 52
+    let dailyProfit: [Double]
+    let dailyRevenue: [Double]
+    var window: Int = 91
 
     var body: some View {
-        if reports.count < 2 {
-            Text("Charts appear after a couple of weeks of play.")
+        if dailyProfit.count < 2 {
+            Text("Charts appear after a few days of play.")
                 .font(.caption).foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, minHeight: 120)
         } else {
-            let pad = Array(repeating: 0.0, count: max(0, window - reports.count))
-            let profits = pad + reports.map(\.profit)
-            let revenues = pad + reports.map(\.revenue)
+            let pPad = Array(repeating: 0.0, count: max(0, window - dailyProfit.count))
+            let rPad = Array(repeating: 0.0, count: max(0, window - dailyRevenue.count))
+            let profits = pPad + dailyProfit.suffix(window)
+            let revenues = rPad + dailyRevenue.suffix(window)
             Chart {
                 ForEach(Array(profits.enumerated()), id: \.offset) { index, profit in
                     BarMark(
-                        x: .value("Week", index - profits.count + 1),
+                        x: .value("Day", index - profits.count + 1),
                         y: .value("Profit", profit)
                     )
                     .foregroundStyle(profit >= 0 ? Color.green : Color.red)
                 }
                 ForEach(Array(revenues.enumerated()), id: \.offset) { index, revenue in
                     LineMark(
-                        x: .value("Week", index - revenues.count + 1),
+                        x: .value("Day", index - revenues.count + 1),
                         y: .value("Revenue", revenue)
                     )
                     .foregroundStyle(.blue)
@@ -180,10 +182,10 @@ struct ProfitChart: View {
     }
 }
 
-/// Compact 0–100% sparkline for a route's recent load factors.
+/// Compact 0–100% sparkline for a route's recent load factors (daily, GDD §23).
 struct LoadFactorSparkline: View {
     let history: [Double]
-    var window: Int = 26
+    var window: Int = 91
 
     /// Flat-padded like TrendChart: no invented slope before the route existed.
     private var padded: [Double] {
@@ -194,7 +196,7 @@ struct LoadFactorSparkline: View {
     var body: some View {
         let history = padded
         if history.count < 2 {
-            Text("Fly this route a few weeks to see its load-factor trend.")
+            Text("Fly this route a few days to see its load-factor trend.")
                 .font(.caption).foregroundStyle(.secondary)
         } else {
             Chart(Array(history.enumerated()), id: \.offset) { index, value in

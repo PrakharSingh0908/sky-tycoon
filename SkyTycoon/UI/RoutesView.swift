@@ -432,7 +432,7 @@ struct RouteDetailView: View {
                     .frame(height: 200)
                     .clipShape(RoundedRectangle(cornerRadius: Theme.corner))
                 GameCard {
-                    SectionHeader(title: "Load factor · 26 weeks", icon: "chart.xyaxis.line", accent: accent)
+                    SectionHeader(title: "Load factor · 13 weeks", icon: "chart.xyaxis.line", accent: accent)
                     LoadFactorSparkline(history: route.loadFactorHistory)
                 }
                 GameCard {

@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Every chart daily too
+
+- The trend charts now record a point per day, not per week. History buffers (net worth, cash, reputation, debt) append daily and are bucketed into weeks/months/quarters for display — so the window stays a stable span while the tip advances every day. New daily profit/revenue buffers drive the P&L chart, retitled "Daily P&L · 13 weeks" (daily bars + revenue line); the load-factor sparkline is daily; the Money balance-sheet net-worth chart buckets daily history into a 13-week window. History caps raised to ~5 years of days.
+- Back-checked: over 14 days all six history buffers grow to exactly 14 points, two weekly reports close, and the last 7 daily profits sum to the exact weekly report profit (−$8,150) — the P&L chart reconciles to the statement. Fixed one integration miss the check surfaced: the balance-sheet chart was plotting raw daily points labeled as weeks ("−200w"); it now buckets to 13 weeks.
+
+*Why:* per direction — "every chart daily." Only the formal weekly P&L statement rows and quarter letters remain a weekly close; everything that trends now moves day by day.
+
+
 ## The daily loop (GDD §23)
 
 - The sim now settles daily instead of weekly. `advanceWeek` is split into `advanceDay` (continuous accrual) + `closeWeek` (discrete systems). Each day books 1/7 of the week's economics — revenue, fuel, wages, contractors, maintenance, lease, cabin, marketing, overhead, loan interest — so cash moves every day; wear, condition, satisfaction, and reputation also drift daily. The discrete, seeded-random block (deliveries, maintenance countdowns, crash sweep, events, trends, attrition, recruitment, used-market refresh, milestones, fail-state, quarter close) runs once on the 7-day boundary, drawing the RNG in a fixed order exactly as before. `GameDate` gains an optional `day` (old saves load at day 1); the clock ticks a day per (secondsPerWeek/7); "Step wk" is now "Step day"; the pill's seven-segment strip fills one segment per settled day. The P&L statement and trend charts stay weekly-sampled; the live cash number, net-worth board, and meters refresh daily.

@@ -800,13 +800,18 @@ struct GameState: Codable {
     /// Highest fleet tier earned (GDD §22). Optional for save-compat:
     /// pre-feature saves decode nil and are grandfathered at the top.
     var unlockedFleetTier: Int? = nil
-    var reports: [WeeklyReport]       // capped ring buffer (last 52)
+    var reports: [WeeklyReport]       // weekly statement ring buffer (last 52)
 
-    /// Per-week history buffers for trend charts, newest last
-    /// (capped at 260 weeks = 5 in-game years).
+    /// Per-DAY history buffers for the trend charts (GDD §23), newest last
+    /// (capped at ~5 in-game years of days). The charts bucket these into
+    /// weeks/months/quarters for display; the newest bucket grows daily.
     var netWorthHistory: [Double]
     var cashHistory: [Double]
     var reputationHistory: [Double]
-    /// Total debt per week (2026-07-20) — optional so old saves decode.
+    /// Total debt per day — optional so old saves decode.
     var debtHistory: [Double]? = nil
+    /// Per-day operating profit and revenue for the P&L chart (GDD §23).
+    /// Optional for save-compat; capped to a year of daily bars.
+    var dailyProfit: [Double]? = nil
+    var dailyRevenue: [Double]? = nil
 }
