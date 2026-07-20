@@ -26,6 +26,9 @@ struct RootView: View {
     @State private var celebration: MilestoneDef?
     @State private var seenMilestones: Set<String>?
     @State private var quarterReport: QuarterlyLetter?
+    // Ambition-ladder win moments (GDD §26 Pillar 5).
+    @State private var ambitionWin: AmbitionDef?
+    @State private var seenAmbitions: Set<String>?
 
     enum GameTab: Hashable {
         case dashboard, fleet, routes, people, money
@@ -105,6 +108,32 @@ struct RootView: View {
             guard celebration != nil else { return }
             try? await Task.sleep(for: .seconds(3.5))
             withAnimation(.easeOut(duration: 0.5)) { celebration = nil }
+        }
+        // ── Ambition celebration: a bigger win, same treatment ────────────
+        .overlay(alignment: .top) {
+            if let ambitionWin {
+                CelebrationBanner(title: "Ambition: \(ambitionWin.title)",
+                                  subtitle: "Reward \(ambitionWin.reward.money) banked",
+                                  accent: Theme.sky, icon: "trophy.fill")
+                    .padding(.top, 4)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .onAppear { if seenAmbitions == nil { seenAmbitions = engine.state.completedAmbitions ?? [] } }
+        .onChange(of: engine.state.completedAmbitions) { _, new in
+            let newSet = new ?? []
+            guard let seen = seenAmbitions else { seenAmbitions = newSet; return }
+            if let fresh = Balance.ambitions.first(where: {
+                newSet.contains($0.id) && !seen.contains($0.id)
+            }) {
+                withAnimation(.snappy) { ambitionWin = fresh }
+            }
+            seenAmbitions = newSet
+        }
+        .task(id: ambitionWin?.id) {
+            guard ambitionWin != nil else { return }
+            try? await Task.sleep(for: .seconds(3.5))
+            withAnimation(.easeOut(duration: 0.5)) { ambitionWin = nil }
         }
         // ── Quarter close: the report card moment ─────────────────────────
         .onChange(of: engine.state.letters.count) { old, new in

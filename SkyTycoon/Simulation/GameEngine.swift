@@ -508,8 +508,10 @@ final class GameEngine {
         // 5. Maintenance / lease / cabin upkeep / marketing / overhead — day's share.
         for plane in state.fleet where plane.status != .onOrder {
             let spec = Balance.specs[plane.type]!
+            // Age tax (GDD §26 Pillar 4): old airframes cost ever more to keep.
             report.maintenanceCost += spec.baseMaintPerWeek
                 * (1 + plane.wear / 200) * (1.6 - 0.6 * plane.condition / 100)
+                * Balance.ageMaintenanceMultiplier(ageYears: plane.ageYears)
                 * difficulty.costFactor * f
         }
         for plane in state.fleet where plane.acquisition == .leased {
@@ -536,10 +538,14 @@ final class GameEngine {
             report.loanCost += payment * f
         }
 
-        // Aircraft aging + condition decay — a day's share.
+        // Aircraft aging + condition decay — a day's share. Past its prime a
+        // hull slides faster and can fall below the usual floor (Pillar 4).
         for i in state.fleet.indices where state.fleet[i].status != .onOrder {
-            state.fleet[i].ageYears += (1.0 / 52.0) * f
-            state.fleet[i].condition = max(20, state.fleet[i].condition - 0.06 * f)
+            let age = state.fleet[i].ageYears
+            state.fleet[i].ageYears = age + (1.0 / 52.0) * f
+            let decay = 0.06 * Balance.ageConditionDecayMultiplier(ageYears: age) * f
+            state.fleet[i].condition = max(Balance.agedConditionFloor,
+                                           state.fleet[i].condition - decay)
         }
 
         // 7. SETTLE — cash books only THIS day's profit; reputation drifts daily.
@@ -723,6 +729,8 @@ final class GameEngine {
             state.completedMilestones.insert(milestone.id)
             state.cash += milestone.reward
         }
+        // Ambition ladder (GDD §26 Pillar 5): pay newly-reached rungs.
+        checkAmbitions()
 
         // Fail state (GDD §3.2): 8 insolvent weeks with nothing to sell.
         state.weeksInsolvent = state.cash < 0 ? state.weeksInsolvent + 1 : 0
@@ -2256,6 +2264,72 @@ final class GameEngine {
         return Balance.rivals(for: state.country)
             .filter { $0.marketCap > cap }
             .min { $0.marketCap < $1.marketCap }
+    }
+
+    // ── Ambition ladder (GDD §26 Pillar 5) ───────────────────────────────
+
+    /// Delivered airframes actually in the fleet (not on order).
+    private var deliveredCount: Int {
+        state.fleet.filter { $0.status != .onOrder }.count
+    }
+    /// Distinct cities the network touches.
+    private var servedCityCount: Int {
+        Set(state.routes.flatMap { [$0.originID, $0.destinationID] }).count
+    }
+
+    func ambitionComplete(_ a: AmbitionDef) -> Bool {
+        switch a.kind {
+        case .fleetSize(let n):   deliveredCount >= n
+        case .cities(let n):      servedCityCount >= n
+        case .marketCap(let v):   marketCap >= v
+        case .reputation(let v):  state.reputation >= v
+        case .beatRank(let r):    industryRank.rank <= r
+        }
+    }
+
+    /// 0…1 progress toward an ambition, for the Dashboard bar.
+    func ambitionProgress(_ a: AmbitionDef) -> Double {
+        switch a.kind {
+        case .fleetSize(let n):  return min(1, Double(deliveredCount) / Double(n))
+        case .cities(let n):     return min(1, Double(servedCityCount) / Double(n))
+        case .marketCap(let v):  return min(1, marketCap / v)
+        case .reputation(let v): return min(1, state.reputation / v)
+        case .beatRank(let r):
+            let (rank, total) = industryRank
+            guard total > r else { return 1 }
+            return min(1, max(0, Double(total - rank) / Double(total - r)))
+        }
+    }
+
+    /// The rung currently being chased — first not yet achieved.
+    var currentAmbition: AmbitionDef? {
+        let done = state.completedAmbitions ?? []
+        return Balance.ambitions.first { !done.contains($0.id) }
+    }
+
+    /// Pays out newly-achieved rungs (once each). On first encounter it
+    /// grandfathers existing progress UNPAID, so loading this build into a
+    /// grown airline doesn't dump a lump of cash.
+    private func checkAmbitions() {
+        guard state.completedAmbitions != nil else {
+            state.completedAmbitions = Set(Balance.ambitions.filter { ambitionComplete($0) }.map(\.id))
+            return
+        }
+        var done = state.completedAmbitions!
+        for a in Balance.ambitions where !done.contains(a.id) && ambitionComplete(a) {
+            done.insert(a.id)
+            state.cash += a.reward
+            logEvent(title: "Ambition: \(a.title)", isNegative: false)
+        }
+        state.completedAmbitions = done
+    }
+
+    /// Delivered airframes old enough to plan replacement (GDD §26 Pillar 4),
+    /// oldest first — surfaced on the Dashboard as a reinvestment nudge.
+    var agingAircraft: [Aircraft] {
+        state.fleet
+            .filter { $0.status != .onOrder && $0.ageYears >= Balance.aircraftRetireFlagYears }
+            .sorted { $0.ageYears > $1.ageYears }
     }
 
     // ── Persistence: three save slots (2026-07-18) ───────────────────────

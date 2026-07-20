@@ -557,6 +557,27 @@ enum Balance {
         1.0 + (100.0 - condition) / 100.0 * 0.15
     }
 
+    // ── Fleet as rolling reinvestment (GDD §26 Pillar 4) ─────────────────
+    // Airframes have a prime, then a costly dotage: past their prime years
+    // maintenance escalates and condition slides faster, so an old plane
+    // eventually costs more to run than it earns and must be replaced. The
+    // fleet becomes a treadmill, not a one-time buy.
+    /// Years before age starts to bite hard.
+    static let aircraftPrimeYears = 18.0
+    /// The age at which the Dashboard flags a plane for replacement.
+    static let aircraftRetireFlagYears = 22.0
+    /// Extra maintenance per year past prime (+6%/yr → +72% at 30 years).
+    static func ageMaintenanceMultiplier(ageYears: Double) -> Double {
+        1.0 + 0.06 * max(0, ageYears - aircraftPrimeYears)
+    }
+    /// Condition decays faster with age: +4%/yr past prime on top of base.
+    static func ageConditionDecayMultiplier(ageYears: Double) -> Double {
+        1.0 + 0.04 * max(0, ageYears - aircraftPrimeYears)
+    }
+    /// Old airframes may fall below the MVP condition floor (20) — an aged
+    /// hull is allowed to become genuinely decrepit.
+    static let agedConditionFloor = 12.0
+
     // ── Crew-hours model (GDD §4.4, M2) ──────────────────────────────────
 
     static let weeklyHoursPerStaff = 40.0
@@ -703,6 +724,42 @@ enum Balance {
                          let touched = Set(state.routes.flatMap { [$0.originID, $0.destinationID] })
                          return touched.count >= 6
                      }),
+    ]
+
+    // ── The ambition ladder (GDD §26 Pillar 5) ──────────────────────────
+    // Escalating, named goals beyond the aunt's four-quarter arc. Each pays
+    // a one-time reward and, more importantly, names the next thing to chase
+    // — a reason to plough profit back in instead of coasting. Evaluated in
+    // order; the Dashboard shows the current rung with a progress bar.
+    static let ambitions: [AmbitionDef] = [
+        .init(id: "fleet5", title: "Build a fleet of five", reward: 40_000,
+              detail: "Five aircraft is a real operation, not a hobby.", kind: .fleetSize(5)),
+        .init(id: "cities8", title: "Serve eight cities", reward: 60_000,
+              detail: "A network starts to look like a map.", kind: .cities(8)),
+        .init(id: "cap10m", title: "A ten-million airline", reward: 100_000,
+              detail: "Reach a $10M market cap.", kind: .marketCap(10_000_000)),
+        .init(id: "fleet10", title: "Ten aircraft strong", reward: 150_000,
+              detail: "Double digits on the flight line.", kind: .fleetSize(10)),
+        .init(id: "rank50", title: "Break into the top 50", reward: 200_000,
+              detail: "Climb above the 50th-ranked carrier.", kind: .beatRank(50)),
+        .init(id: "cap50m", title: "Fifty million", reward: 300_000,
+              detail: "Reach a $50M market cap.", kind: .marketCap(50_000_000)),
+        .init(id: "cities12", title: "A dozen cities", reward: 300_000,
+              detail: "Twelve cities on the network.", kind: .cities(12)),
+        .init(id: "rank25", title: "A top-25 carrier", reward: 500_000,
+              detail: "Climb above the 25th-ranked carrier.", kind: .beatRank(25)),
+        .init(id: "cap200m", title: "Two hundred million", reward: 800_000,
+              detail: "Reach a $200M market cap.", kind: .marketCap(200_000_000)),
+        .init(id: "fleet20", title: "Twenty in the air", reward: 800_000,
+              detail: "A serious mainline fleet.", kind: .fleetSize(20)),
+        .init(id: "rank10", title: "Top ten", reward: 1_500_000,
+              detail: "Climb into the industry's top ten.", kind: .beatRank(10)),
+        .init(id: "cap1b", title: "A billion-dollar carrier", reward: 3_000_000,
+              detail: "Reach a $1B market cap.", kind: .marketCap(1_000_000_000)),
+        .init(id: "rank3", title: "The podium", reward: 3_000_000,
+              detail: "Reach the industry's top three.", kind: .beatRank(3)),
+        .init(id: "rank1", title: "Top of the table", reward: 5_000_000,
+              detail: "Become the country's largest carrier.", kind: .beatRank(1)),
     ]
 
     // ── The event deck (GDD §4.7, M3) ────────────────────────────────────

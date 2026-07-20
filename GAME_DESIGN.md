@@ -869,10 +869,10 @@ active play. This section is the roadmap to fix it. The thesis:
 3. **Slot scarcity with periodic review** — reclaim under-used slots at busy
    airports; expansion means choosing. Promotes the `slotAudit` event to a
    real reclaim. **SHIPPED (P3).**
-4. **Fleet as rolling reinvestment** — sharper aging + lease renewals make
-   the fleet a treadmill, not a one-time buy. *Pending.*
+4. **Fleet as rolling reinvestment** — sharper aging (lease renewals TBD)
+   make the fleet a treadmill, not a one-time buy. **SHIPPED (P4).**
 5. **Ambition ladder** — named goals beyond the aunt's arc (climb the rival
-   ladder, tiers, city count, market cap) that pull reinvestment. *Pending.*
+   ladder, tiers, city count, market cap) that pull reinvestment. **SHIPPED (P5).**
 
 ### P1 shipped — Living competition
 - `Route.rivalPressure: Double?` — the DYNAMIC rival count, seeded from the
@@ -933,6 +933,31 @@ active play. This section is the roadmap to fix it. The thesis:
 - Only fires when you're actually hoarding — airports with free slots are
   never touched. Verified: a 30%-full route saturating an airport is picked;
   "give them up" cuts frequency by 4.
+
+### P4 shipped — Fleet as rolling reinvestment
+- `Balance.aircraftPrimeYears = 18`: past prime, `ageMaintenanceMultiplier`
+  adds +6%/yr (×1.72 at 30 yr) to maintenance, and
+  `ageConditionDecayMultiplier` adds +4%/yr to condition decay, which may
+  now fall to `agedConditionFloor = 12` (below the usual 20). Applied in
+  `advanceDay`. Old planes bleed money → must be replaced.
+- `GameEngine.agingAircraft` (age ≥ `aircraftRetireFlagYears = 22`) surfaces
+  on the Dashboard Ops Conditions card as "plan replacement" rows that tap
+  to the Fleet. Grandfathered implicitly (the curve just applies forward).
+- Lease-term renewals are noted as a future refinement; not in P4.
+
+### P5 shipped — Ambition ladder
+- `Balance.ambitions` — 14 ordered rungs (`AmbitionDef` with a `.kind`:
+  fleetSize / cities / marketCap / reputation / beatRank). Evaluated by the
+  engine (`ambitionComplete`, `ambitionProgress`, `currentAmbition`) since
+  several read market cap / industry rank.
+- `checkAmbitions()` in `closeWeek` pays newly-reached rungs once
+  (`state.completedAmbitions`); on first encounter (nil) it grandfathers
+  already-met rungs UNPAID so loading the build into a grown airline gives
+  no windfall. Verified: preview airline grandfathers rank50/rank25 unpaid;
+  with an empty done-set they pay their $700K.
+- Dashboard `ambitionCard` shows the current rung + a progress rail +
+  reward; RootView shows a `CelebrationBanner` when a rung completes,
+  mirroring milestones.
 
 ### Validation standard for future pillars
 Add a passive bot (opens good routes, never touches them) vs an active bot

@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Fleet treadmill + ambition ladder (GDD §26, Pillars 4 & 5)
+
+- **Aircraft now age out.** Past 18 years an airframe's maintenance climbs steadily (about +6%/yr, ~+72% by 30 years) and its condition slides faster and further (down to a decrepit floor of 12), so an old plane eventually costs more to run than it earns and has to be replaced. The Dashboard's Ops Conditions card flags any plane past 22 years with a "plan replacement" row that taps through to the Fleet. Existing fleets aren't retroactively punished — the curve just applies from here.
+- **An ambition ladder gives you something to chase.** Beyond the aunt's four-quarter arc, there's now a 14-rung ladder of named goals — build a fleet of 5/10/20, serve 8/12 cities, reach $10M/$50M/$200M/$1B market cap, and climb the industry ranks to the top 50/25/10/3/1. The Dashboard shows the current rung with a progress bar and its cash reward; completing one banks the reward and advances to the next, with a celebration banner. Loading the update into an existing airline grandfathers already-met rungs (no cash windfall).
+
+*Why:* per direction (Pillars 4 & 5 of GDD §26) — the fleet was a one-time buy, and the game ran out of goals after the trust-fund arc. Aging makes the fleet a rolling reinvestment; the ladder gives a reason to plough profit back in rather than coast.
+
+
 ## Slot scarcity: use it or lose it (GDD §26, Pillar 3)
 
 - Every ~26 weeks the regulator runs a **slot review**. If you're hogging a scarce slot at a busy airport with a half-empty route (under 55% load, not still ramping), a targeted card names that route and offers a choice: **defend the slots** (a net-worth-scaled cash cost) or **give them up** (its weekly frequency is cut, freeing the slots). Ignore it and, like any ambient card, it unfolds to "give them up" after 8 days.

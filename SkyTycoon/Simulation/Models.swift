@@ -767,6 +767,24 @@ struct MilestoneDef: Identifiable {
     }
 }
 
+/// A rung on the ambition ladder (GDD §26 Pillar 5): a big, named goal
+/// beyond the aunt's arc that gives a reason to keep reinvesting. The engine
+/// evaluates these — several read engine-derived metrics (market cap, rank).
+struct AmbitionDef: Identifiable {
+    let id: String
+    let title: String
+    let reward: Double
+    let detail: String
+    let kind: Kind
+    enum Kind {
+        case fleetSize(Int)        // delivered airframes
+        case cities(Int)           // distinct cities served
+        case marketCap(Double)
+        case reputation(Double)
+        case beatRank(Int)         // industry rank ≤ this (1 = biggest)
+    }
+}
+
 /// One week of a route's economics, decomposed term by term — the tick
 /// runs on this AND the UI explains from it, so the "tap any number"
 /// breakdowns (design pillar 4) can never drift from the sim.
@@ -829,6 +847,9 @@ struct GameState: Codable {
     /// The objectives layer (M6).
     var letters: [QuarterlyLetter]            // newest last, capped
     var completedMilestones: Set<String>
+    /// Ambition-ladder rungs achieved (GDD §26 Pillar 5). Optional for
+    /// save-compat: nil triggers a one-time grandfather of existing progress.
+    var completedAmbitions: Set<String>? = nil
     /// Consecutive weeks with negative cash; 8 with no sellable assets = bankrupt.
     var weeksInsolvent: Int
     var isBankrupt: Bool

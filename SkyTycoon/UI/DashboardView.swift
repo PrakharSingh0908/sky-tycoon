@@ -52,11 +52,14 @@ struct DashboardView: View {
             // Living competition (GDD §26): eroding routes surface here so a
             // "set and forget" route can't quietly bleed.
             if !engine.routesNeedingAttention.isEmpty { routeAttentionCard }
-            if !engine.state.activeEffects.isEmpty || !wornAircraft.isEmpty {
+            if !engine.state.activeEffects.isEmpty || !wornAircraft.isEmpty
+                || !engine.agingAircraft.isEmpty {
                 opsConditionsCard
             }
             trendsCard
             industryCard
+            // The ambition ladder (GDD §26 Pillar 5): the next big goal.
+            if let ambition = engine.currentAmbition { ambitionCard(ambition) }
             if let report = engine.latestReport { lastWeekCard(report) }
             milestonesCard
         }
@@ -390,6 +393,55 @@ struct DashboardView: View {
                     }
                 }
                 .buttonStyle(.plain)
+            }
+            // Aging fleet (GDD §26 Pillar 4): old airframes cost ever more
+            // to run — plan their replacement. Tap to jump to the Fleet.
+            ForEach(engine.agingAircraft) { plane in
+                Button {
+                    onOpenFleet()
+                } label: {
+                    HStack {
+                        StatusBadge(text: plane.nickname, color: Theme.textSecondary)
+                        Spacer()
+                        Text("\(Int(plane.ageYears)) yrs · plan replacement")
+                            .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+                        Image(systemName: "chevron.right")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(Theme.textTertiary)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    // ── Ambition ladder: the next big goal (GDD §26 Pillar 5) ────────────
+
+    private func ambitionCard(_ ambition: AmbitionDef) -> some View {
+        let progress = engine.ambitionProgress(ambition)
+        return GameCard {
+            SectionHeader(title: "Ambition", icon: "trophy.fill", accent: accent)
+            Text(ambition.title)
+                .font(.display(.title3)).foregroundStyle(Theme.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(ambition.detail)
+                .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            // A slim progress rail.
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Theme.bgElevated).frame(height: 6)
+                    Capsule().fill(accent)
+                        .frame(width: max(6, geo.size.width * progress), height: 6)
+                }
+            }
+            .frame(height: 6)
+            HStack {
+                Text("\(Int(progress * 100))%")
+                    .font(.data(.caption2)).foregroundStyle(accent)
+                Spacer()
+                Text("Reward \(ambition.reward.money)")
+                    .font(.game(.caption2)).foregroundStyle(Theme.textTertiary)
             }
         }
     }
