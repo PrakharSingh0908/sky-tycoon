@@ -1101,8 +1101,9 @@ final class GameEngine {
         let recall = recallContext(for: card)
         // A lawsuit's claim scales with the airline's public value, so the
         // options and body are rebuilt from the scaled fee at fire time.
+        // Every other card's founder-scale cash figures grow with net worth.
         let options = incident.map { lawsuitOptions(cardID: card.id, fee: $0.fee) }
-            ?? card.options
+            ?? scaledOptions(card.options)
         state.pendingEvent = GameEvent(
             id: UUID(), cardID: card.id, category: card.category,
             isNegative: card.isNegative, title: card.title,
@@ -1159,6 +1160,41 @@ final class GameEngine {
             ? (180_000, Balance.teaSpillMarketCapFraction)
             : (300_000, Balance.hardLandingMarketCapFraction)
         return Balance.scaledIncidentFee(base: base, fraction: fraction, marketCap: marketCap)
+    }
+
+    /// Grows an event's founder-scale cash figures with the airline (GDD
+    /// §25): `.cash` and `.recurringCashFlow` amounts multiply by the net-
+    /// worth scale, and when a button reads "Action · −$50K" its trailing
+    /// amount is re-rendered to match. Percentage/timed effects are
+    /// scale-free and pass through untouched.
+    private func scaledOptions(_ options: [EventOption]) -> [EventOption] {
+        let scale = Balance.eventCashScale(netWorth: netWorth)
+        guard scale > 1.01 else { return options }
+        return options.map { opt in
+            var scaledCash = 0.0
+            var cashCount = 0
+            let effects: [EventEffect] = opt.effects.map { eff in
+                switch eff {
+                case .cash(let x):
+                    let s = (x * scale / 10_000).rounded() * 10_000
+                    scaledCash = s; cashCount += 1
+                    return .cash(s)
+                case .recurringCashFlow(let w, let wk, let label):
+                    let s = (w * scale / 1_000).rounded() * 1_000
+                    return .recurringCashFlow(weekly: s, weeks: wk, label: label)
+                default:
+                    return eff
+                }
+            }
+            // Re-render the "· amount" suffix only when the label carries
+            // exactly one cash figure (the crisp action-plus-one-number form).
+            var label = opt.label
+            if cashCount == 1, let r = label.range(of: " · ") {
+                let sign = scaledCash < 0 ? "−" : "+"
+                label = "\(label[..<r.lowerBound]) · \(sign)\(abs(scaledCash).money)"
+            }
+            return EventOption(label: label, effects: effects)
+        }
     }
 
     /// The two lawsuit options, priced from the scaled fee.

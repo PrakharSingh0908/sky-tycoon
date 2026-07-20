@@ -833,3 +833,16 @@ that the old deck couldn't express:
 Tuning: the ambient decision window is `ambientEventGraceDays = 8` (was 7).
 The sim clock lost its x4 setting — it outran readability of the daily
 loop; speeds are pause / x1 / x2.
+
+### §25 addendum 2 — cash figures scale with the airline (2026-07-20)
+
+A fixed −$50K hedge is a real decision for a founder and a rounding error
+at $13M net worth. So every event's cash figure is now AUTHORED at founder
+scale and scaled up at fire time: `eventCashScale(netWorth:) = clamp(
+netWorth / 1_500_000, 1, 40)`. In `present()`, non-lawsuit options run
+through `scaledOptions(_:)`, which multiplies each `.cash` and
+`.recurringCashFlow` amount by the scale (rounded to $10K / $1K) and
+re-renders the "Action · −$X" label suffix to match. Percentage/timed
+effects (demand, fuel) are scale-free and untouched. Lawsuits keep their
+own market-cap scaling (litigation targets the public valuation, not the
+balance sheet), so they are excluded from this path to avoid double-scaling.

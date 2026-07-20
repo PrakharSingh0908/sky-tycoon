@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Event cash figures scale with net worth
+
+- Every event's cash amount is now authored at founder scale and grows with the airline's net worth when the card fires (scale = net worth ÷ $1.5M, capped 40×). A fuel hedge that costs −$50K on day one costs ~−$550K at $16M net worth; the button label re-renders to match. Recurring cash flows (cargo income, fees, levies) scale the same way. Percentage effects (demand, fuel %) are already size-free and untouched; lawsuit claims keep their own market-cap scaling.
+
+*Why:* per direction — a −$50K decision is meaningless at $13M net worth. Scaling keeps every choice a real one across the whole game instead of only early on.
+
+
 ## 30 new events, 8-day decision window, x4 speed removed
 
 - **The event deck tripled** (15 → 45 cards) across every category: price wars, landing-fee hikes, currency swings, credit downgrades, ash clouds, heatwaves, fog seasons, a rival poaching a named pilot, a training academy, flu season, long-service milestones, bird strikes, airworthiness directives, an avionics refresh, tired cabins, a codeshare alliance, belly-cargo and charter contracts, livery sponsorship, regional subsidies, a carbon levy, slot audits, passenger-rights rules, influencer reviews, overbooking, a data breach, a viral meal, a well-handled emergency, a rival's collapse (cheap used metal), and an award nod.

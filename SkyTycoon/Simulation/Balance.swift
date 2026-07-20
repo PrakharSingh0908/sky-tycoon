@@ -656,6 +656,16 @@ enum Balance {
     }
     static let teaSpillMarketCapFraction = 0.020
     static let hardLandingMarketCapFraction = 0.035
+    /// Event cash figures are AUTHORED at founder scale (a ~$1.5M airline)
+    /// and grow with the airline so a decision stays meaningful at any size
+    /// (GDD §25): a −$50K hedge is a real call on day one and a joke at
+    /// $13M. Scale = netWorth / baseline, clamped to [1, cap]. Percentage
+    /// effects (demand, fuel) are already scale-free and are left alone.
+    static let eventCashScaleBaseline = 1_500_000.0
+    static let eventCashScaleCap = 40.0
+    static func eventCashScale(netWorth: Double) -> Double {
+        min(eventCashScaleCap, max(1, netWorth / eventCashScaleBaseline))
+    }
     /// An ambient event left unattended this many sim days unfolds on its
     /// own, taking its passive (default) option — so the Dashboard never
     /// silently stockpiles undecided cards.
