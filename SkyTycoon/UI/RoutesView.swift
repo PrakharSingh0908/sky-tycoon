@@ -474,6 +474,15 @@ struct RouteDetailView: View {
                             Text("Passengers are choosing your rivals. \(econ.affluence > 0.35 ? "This crowd pays for comfort." : "This crowd shops on price.") Comfort, fair fares, and satisfaction win them back.")
                                 .font(.game(.caption2)).foregroundStyle(Theme.warn)
                         }
+                        // Market maturity & over-supply (GDD §26 Pillar 2).
+                        if econ.maturity < 0.99 {
+                            Text("New route: the market is still building, near \(Int(econ.maturity * 100))% of full demand. It fills in over the first \(Balance.routeRampWeeks) weeks.")
+                                .font(.game(.caption2)).foregroundStyle(accent)
+                        }
+                        if econ.oversupplyYield < 0.995 {
+                            Text("Over-supplied: too many seats for the demand, so fares dilute about \(Int((1 - econ.oversupplyYield) * 100))%. Trim frequency or fly a smaller aircraft.")
+                                .font(.game(.caption2)).foregroundStyle(Theme.warn)
+                        }
                     }
                     Divider().overlay(Theme.hairline)
                     PillStepper(label: "Fare", value: route.fare.money, accent: accent,

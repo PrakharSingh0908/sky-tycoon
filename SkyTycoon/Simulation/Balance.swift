@@ -364,6 +364,40 @@ enum Balance {
         let appetite = 0.5 * loadAppeal + 0.5 * yieldAppeal      // 0…1
         return floor + appetite * (rivalMaxPerRoute - floor)
     }
+
+    // ── Route maturity & over-supply (GDD §26 Pillar 2) ──────────────────
+    // A new route's market isn't there on day one — it builds over a couple
+    // of months. And dumping far more seats than the market wants forces you
+    // to discount to fill them, diluting your yield. Together these make
+    // opening and up-gauging routes deliberate, not free.
+    /// Weeks a fresh route takes to reach its full market.
+    static let routeRampWeeks = 10
+    /// The fraction of full demand a route sees the week it opens.
+    static let routeStartMaturity = 0.35
+    /// Smoothstep ramp from `routeStartMaturity` to 1.0 over `routeRampWeeks`.
+    static func routeMaturity(weeksOpen: Int) -> Double {
+        guard weeksOpen < routeRampWeeks else { return 1.0 }
+        let t = max(0, Double(weeksOpen) / Double(routeRampWeeks))
+        let s = t * t * (3 - 2 * t)              // smoothstep (S-curve)
+        return routeStartMaturity + (1 - routeStartMaturity) * s
+    }
+    /// Seats-to-demand ratio below which there's no over-supply penalty.
+    static let oversupplySlackThreshold = 1.25
+    /// Worst-case realized-fare multiplier at heavy over-supply.
+    static let oversupplyYieldFloor = 0.80
+    /// Ratio at which the penalty reaches its floor.
+    static let oversupplyRatioAtFloor = 2.5
+    /// Realized-yield multiplier: 1.0 until seats exceed demand by the slack
+    /// threshold, then fading linearly to the floor at heavy over-supply.
+    static func oversupplyYieldMultiplier(seatsOffered: Double, demand: Double) -> Double {
+        // No meaningful demand (or no seats) → nothing to dilute.
+        guard demand > 1, seatsOffered > 0 else { return 1.0 }
+        let ratio = seatsOffered / demand
+        guard ratio > oversupplySlackThreshold else { return 1.0 }
+        let span = oversupplyRatioAtFloor - oversupplySlackThreshold
+        let t = min(1, (ratio - oversupplySlackThreshold) / span)
+        return 1.0 - (1.0 - oversupplyYieldFloor) * t
+    }
     /// Competition stimulates a market: total pie grows per rival, so a
     /// STRONG product barely feels the competition while a weak one
     /// collapses to its sliver.

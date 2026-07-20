@@ -408,6 +408,10 @@ struct Route: Codable, Identifiable {
     /// cheap or marginal. Seeds from the structural `competitorCount` floor
     /// on first close. Optional for save-compat (nil → seed from the floor).
     var rivalPressure: Double? = nil
+    /// When this route opened (GDD §26 Pillar 2): a fresh route's market
+    /// ramps up over a few weeks rather than arriving full. Optional for
+    /// save-compat (nil → treated as fully mature, so old routes are unhurt).
+    var openedOn: GameDate? = nil
 }
 
 enum StaffRole: String, Codable, CaseIterable, Identifiable {
@@ -786,6 +790,11 @@ struct RouteEconomics {
     var affluence: Double = 0
     /// Your captured share of the pair's demand (1.0 on a monopoly).
     var captureShare: Double = 1
+    /// Market maturity 0…1 (GDD §26 Pillar 2): a new route ramps up.
+    var maturity: Double = 1
+    /// Realized-yield multiplier ≤ 1 when the route is over-supplied — too
+    /// many seats chasing too few passengers dilutes the fare.
+    var oversupplyYield: Double = 1
 }
 
 /// THE save file. Everything lives here; the engine mutates only this.

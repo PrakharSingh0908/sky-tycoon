@@ -7,6 +7,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Route maturity + oversupply penalty (GDD §26, Pillar 2)
+
+- **New routes now build their market over time.** A freshly opened route starts at ~35% of full demand and ramps to 100% over 10 weeks on a smooth S-curve, instead of arriving full on day one. Opening a route (or a new city pair) is now an investment that takes a couple of months to pay off. Old/existing routes are treated as fully mature, so nothing you already fly is affected.
+- **Dumping capacity dilutes your yield.** Flying far more seats than the market can fill forces you to discount: past 1.25× seats-to-demand the realized fare fades to a floor of 0.80× at heavy oversupply. Right-sizing the aircraft/frequency to a route now matters beyond just wasted fuel.
+- The route screen's Market section shows both: a "market still building, NN% of full demand" note on young routes, and an "over-supplied, fares dilute NN%" warning when you've put too much metal on a thin route. The Dashboard attention card won't cry wolf on a route that's simply still ramping.
+
+*Why:* per direction (Pillar 2 of GDD §26) — instant-full routes let you slap a big plane down and coast. Maturity makes growth deliberate; the oversupply penalty makes capacity a real decision.
+
+
 ## Living competition: routes must be defended (GDD §26, Pillar A)
 
 - Rival carriers are no longer a frozen number per route. A fat, busy, high-yield route now **attracts competitors** that split the market and erode your share and profit over time; a cheap or marginal route sheds them. Rivals only start entering after week 20 (founder grace) and drift gradually, not overnight.

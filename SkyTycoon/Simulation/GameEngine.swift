@@ -809,10 +809,16 @@ final class GameEngine {
         let referenceFare = route.distanceKm * Balance.referenceFarePerKm * profile.fareLevel
         let priceRatio = route.fare / max(referenceFare, 1)
         let priceResponse = pow(priceRatio, -profile.priceElasticity)
+        // Market maturity (GDD §26 Pillar 2): a fresh route ramps up over a
+        // couple of months rather than arriving at full demand.
+        let weeksOpen = route.openedOn.map { state.date.totalWeeks - $0.totalWeeks }
+            ?? Balance.routeRampWeeks
+        let maturity = Balance.routeMaturity(weeksOpen: weeksOpen)
         let demand = gravity * growth * season * brand * min(priceResponse, 2.5)
             * (state.difficulty ?? .standard).demandFactor
             * profile.demandLevel
             * demandEventMult
+            * maturity
 
         var seatsOffered = 0
         var fuel = 0.0
@@ -851,9 +857,14 @@ final class GameEngine {
             : appeal / (appeal + competitors * Balance.rivalAppeal * 0.8)
         let marketPie = demand * (1 + Balance.marketGrowthPerRival * competitors)
 
-        let pax = min(marketPie * captureShare, Double(seatsOffered))
+        // Over-supply (GDD §26 Pillar 2): far more seats than you can fill
+        // forces you to discount, diluting yield on the pax you do carry.
+        let capturable = marketPie * captureShare
+        let oversupplyYield = Balance.oversupplyYieldMultiplier(
+            seatsOffered: Double(seatsOffered), demand: capturable)
+        let pax = min(capturable, Double(seatsOffered))
         let loadFactor = seatsOffered > 0 ? pax / Double(seatsOffered) : 0
-        let revenue = pax * route.fare
+        let revenue = pax * route.fare * oversupplyYield
 
         // The fare↔satisfaction link: pricing below the market reference
         // actively pleases passengers; gouging costs goodwill.
@@ -870,7 +881,8 @@ final class GameEngine {
                               revenue: revenue, fuel: fuel, fairness: fairness,
                               breakevenLoadFactor: breakeven,
                               competitors: Int(competitors.rounded()), affluence: affluence,
-                              captureShare: captureShare)
+                              captureShare: captureShare,
+                              maturity: maturity, oversupplyYield: oversupplyYield)
     }
 
     /// This week's economics for a route, for the UI's unit-economics and
@@ -904,6 +916,11 @@ final class GameEngine {
     var routesNeedingAttention: [RouteAttention] {
         state.routes.compactMap { route in
             guard !route.assignedAircraftIDs.isEmpty, route.weeklyFrequency > 0 else { return nil }
+            // A route still building its market (GDD §26 Pillar 2) is meant
+            // to underperform — don't cry wolf while it ramps.
+            let weeksOpen = route.openedOn.map { state.date.totalWeeks - $0.totalWeeks }
+                ?? Balance.routeRampWeeks
+            if weeksOpen < Balance.routeRampWeeks { return nil }
             let title = "\(route.originID) ✈︎ \(route.destinationID)"
             // Losing money is the loudest alarm.
             if route.lastWeeklyProfit < 0 {
@@ -1786,7 +1803,8 @@ final class GameEngine {
                           assignedAircraftIDs: [], satisfaction: 60,
                           lastLoadFactor: 0, lastWeeklyProfit: 0,
                           lastWeeklyRevenue: 0, lastWeeklyFuel: 0,
-                          loadFactorHistory: [], lastPunctuality: 1.0)
+                          loadFactorHistory: [], lastPunctuality: 1.0,
+                          openedOn: state.date)
         state.routes.append(route)
         save()
         return route

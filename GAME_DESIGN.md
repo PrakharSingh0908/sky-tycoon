@@ -865,7 +865,7 @@ active play. This section is the roadmap to fix it. The thesis:
    and erode share/yield until you defend (re-price, add seats, lift
    service). *The core fix.* **SHIPPED (P1).**
 2. **Route maturity & capacity discipline** — an S-curve ramp on new routes
-   and an over-supply yield penalty, so right-sizing is ongoing. *Pending.*
+   and an over-supply yield penalty, so right-sizing is ongoing. **SHIPPED (P2).**
 3. **Slot scarcity with periodic review** — reclaim under-used slots at busy
    airports; expansion means choosing. Promotes the `slotAudit` event to a
    real reclaim. *Pending.*
@@ -894,6 +894,24 @@ active play. This section is the roadmap to fix it. The thesis:
   them as tappable rows that open the route.
 - Verified in-engine: a fare at 1.25× reference pulls rivals to ~4.6;
   undercutting to 0.90× sheds them back toward the floor.
+
+### P2 shipped — Route maturity & over-supply
+- `Route.openedOn: GameDate?` — stamped at `openRoute`; nil on old saves →
+  treated as fully mature so nothing already flying is disturbed.
+- `Balance.routeMaturity(weeksOpen:)` — smoothstep from
+  `routeStartMaturity = 0.35` to 1.0 over `routeRampWeeks = 10`; multiplies
+  `demand` in `computeEconomics`. A fresh route builds its market over ~2½
+  months. Verified: 0.35 → 0.68 (wk5) → 1.0 (wk10).
+- `Balance.oversupplyYieldMultiplier(seatsOffered:demand:)` — 1.0 until
+  seats exceed the capturable pax by `oversupplySlackThreshold = 1.25`,
+  then fading linearly to `oversupplyYieldFloor = 0.80` at
+  `oversupplyRatioAtFloor = 2.5`. Multiplies `revenue` (distinct from the
+  empty-seat fuel cost). Denominator is `marketPie × captureShare` — your
+  actually-fillable pax, so it reflects competition too.
+- UI: the route's Market section shows a "market still building, NN%" note
+  while young and an "over-supplied, fares dilute NN%" warning when
+  overweight; `routesNeedingAttention` skips routes still inside the ramp so
+  a building route isn't falsely flagged.
 
 ### Validation standard for future pillars
 Add a passive bot (opens good routes, never touches them) vs an active bot
