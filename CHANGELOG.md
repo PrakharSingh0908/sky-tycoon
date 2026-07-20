@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Assignment desk decluttered
+
+- The route's aircraft list is grouped into three shelves: planes on this route (checkmark, tap removes), free planes ready to add (plus, tap adds), and planes flying other routes folded into an "On other routes (N)" disclosure. Poaching still works with one tap; the stamped badge names the route each plane would come off, and the wordy "Assigning here pulls it off X" warning that repeated the badge is gone. Meta reads one line ("Orion 212 · 1,931 km", no wrap), on-order planes show "Delivers · N wk", and planes that can never fly the pair (range or runway) are not listed at all.
+
+*Why:* per direction, the list was a mess at fleet size: every plane in the airline got a row, the same fact was printed twice, and the meta wrapped. The desk now answers the actual question, which is who is here and who could be, in one screen.
+
+
 ## Route-aware buying: the drawer that staffs the route
 
 - The boarding pass key now reads "Configure" once a route has aircraft assigned; "Set up route" stays for fresh routes only.

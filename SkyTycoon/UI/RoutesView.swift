@@ -419,6 +419,8 @@ struct RouteDetailView: View {
     let routeID: UUID
     /// The quick-add drawer: a route-aware showroom; buys land on this route.
     @State private var shoppingForRoute: Route?
+    /// The poaching pool stays folded until someone goes looking.
+    @State private var showOtherRoutes = false
     private let accent = Theme.teal
 
     var body: some View {
@@ -595,63 +597,61 @@ struct RouteDetailView: View {
         }
     }
 
+    /// Which shelf a plane sits on at this route's assignment desk.
+    private enum AssignRowKind { case onRoute, free, busy }
+
     private func assignCard(_ route: Route) -> some View {
-        // Can anything in the fleet actually take this route?
-        let hasCandidate = engine.state.fleet.contains {
-            engine.canOperate(aircraftID: $0.id, routeID: route.id)
+        // Physics fit: range and runways. Status is a badge, not a filter,
+        // and planes that can never fly the pair are not listed at all.
+        func fits(_ plane: Aircraft) -> Bool {
+            let spec = Balance.specs[plane.type]!
+            guard let origin = engine.city(route.originID),
+                  let dest = engine.city(route.destinationID) else { return false }
+            return plane.effectiveRangeKm(spec: spec) >= route.distanceKm
+                && origin.runwayClass >= spec.requiredRunwayClass
+                && dest.runwayClass >= spec.requiredRunwayClass
         }
+        let fleet = engine.state.fleet
+        // On the route now, plus on-order planes posted here for delivery.
+        let onRoute = fleet.filter {
+            route.assignedAircraftIDs.contains($0.id) || $0.assignedRouteID == route.id
+        }
+        let free = fleet.filter { plane in
+            !onRoute.contains(where: { $0.id == plane.id })
+                && plane.assignedRouteID == nil && fits(plane)
+        }
+        let busy = fleet.filter { plane in
+            !onRoute.contains(where: { $0.id == plane.id })
+                && plane.assignedRouteID != nil && fits(plane)
+        }
+        let hasCandidate = !(onRoute.isEmpty && free.isEmpty && busy.isEmpty)
         return GameCard {
-            SectionHeader(title: "Assign aircraft", icon: "airplane.circle.fill", accent: accent)
+            SectionHeader(title: "Aircraft on this route", icon: "airplane.circle.fill", accent: accent)
             if !hasCandidate {
-                Text(engine.state.fleet.isEmpty
+                Text(fleet.isEmpty
                      ? "No aircraft in the fleet yet."
                      : "Nothing in the fleet can fly this route. Check range and runway class.")
                     .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
             }
-            ForEach(engine.state.fleet) { plane in
-                let assigned = route.assignedAircraftIDs.contains(plane.id)
-                let spec = Balance.specs[plane.type]!
-                // Busy elsewhere? Name the route so a reassignment is a
-                // deliberate steal, not a surprise.
-                let busyOn = plane.assignedRouteID.flatMap { otherID -> Route? in
-                    otherID == routeID ? nil
-                        : engine.state.routes.first { $0.id == otherID }
-                }
-                Button {
-                    // Tapping an assigned plane takes it off the route.
-                    if assigned {
-                        engine.unassign(aircraftID: plane.id)
-                    } else {
-                        engine.assign(aircraftID: plane.id, to: routeID)
+            ForEach(onRoute) { assignRow($0, route: route, kind: .onRoute) }
+            if !free.isEmpty {
+                if !onRoute.isEmpty { Divider().overlay(Theme.hairline) }
+                ForEach(free) { assignRow($0, route: route, kind: .free) }
+            }
+            // Poaching pool, folded away: the badge names the route a tap
+            // would pull each plane from.
+            if !busy.isEmpty {
+                DisclosureGroup(isExpanded: $showOtherRoutes) {
+                    VStack(spacing: 10) {
+                        ForEach(busy) { assignRow($0, route: route, kind: .busy) }
                     }
+                    .padding(.top, 8)
                 } label: {
-                    HStack {
-                        Image(systemName: assigned ? "checkmark.circle.fill" : "circle")
-                            .foregroundStyle(assigned ? Theme.profit : Theme.textSecondary)
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(plane.nickname)
-                                .font(.game(.subheadline, weight: .semibold))
-                                .foregroundStyle(Theme.textPrimary)
-                            Text("\(spec.displayName) · range \(Int(plane.effectiveRangeKm(spec: spec))) km")
-                                .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
-                            if let busyOn {
-                                Text("Assigning here pulls it off \(busyOn.originID) ✈︎ \(busyOn.destinationID)")
-                                    .font(.game(.caption2)).foregroundStyle(Theme.warn)
-                            }
-                        }
-                        Spacer()
-                        if plane.effectiveRangeKm(spec: spec) < route.distanceKm {
-                            StatusBadge(text: "Out of range", color: Theme.loss)
-                        } else if plane.status == .onOrder {
-                            StatusBadge(text: "On order", color: Theme.warn)
-                        } else if plane.groundedWeeksRemaining > 0 {
-                            StatusBadge(text: "In shop · \(plane.groundedWeeksRemaining) wk", color: Theme.warn)
-                        } else if let busyOn {
-                            StatusBadge(text: "On \(busyOn.originID) ✈︎ \(busyOn.destinationID)", color: Theme.warn)
-                        }
-                    }
+                    Label("On other routes (\(busy.count))", systemImage: "airplane")
+                        .font(.game(.caption, weight: .semibold))
+                        .foregroundStyle(Theme.textSecondary)
                 }
-                .buttonStyle(.plain)
+                .tint(Theme.textSecondary)
             }
             // Always a path to more metal: the route-aware showroom pops
             // up as a drawer, and anything acquired there joins THIS route
@@ -665,6 +665,45 @@ struct RouteDetailView: View {
             }
             .buttonStyle(GameButtonStyle(color: Theme.orange, prominent: !hasCandidate))
         }
+    }
+
+    /// One plane at the assignment desk: name, type and reach on a single
+    /// line, status as a stamped badge. Tap adds, removes, or poaches.
+    private func assignRow(_ plane: Aircraft, route: Route, kind: AssignRowKind) -> some View {
+        let spec = Balance.specs[plane.type]!
+        return Button {
+            switch kind {
+            case .onRoute: engine.unassign(aircraftID: plane.id)
+            case .free, .busy: engine.assign(aircraftID: plane.id, to: route.id)
+            }
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: kind == .onRoute ? "checkmark.circle.fill" : "plus.circle")
+                    .foregroundStyle(kind == .onRoute ? Theme.profit : Theme.textSecondary)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(plane.nickname)
+                        .font(.game(.subheadline, weight: .semibold))
+                        .foregroundStyle(Theme.textPrimary)
+                        .lineLimit(1)
+                    Text("\(spec.displayName) · \(Int(plane.effectiveRangeKm(spec: spec))) km")
+                        .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 8)
+                if plane.status == .onOrder {
+                    StatusBadge(text: "Delivers · \(plane.deliveryWeeksRemaining) wk",
+                                color: Theme.warn)
+                } else if plane.groundedWeeksRemaining > 0 {
+                    StatusBadge(text: "In shop · \(plane.groundedWeeksRemaining) wk",
+                                color: Theme.warn)
+                } else if kind == .busy,
+                          let other = engine.state.routes.first(where: { $0.id == plane.assignedRouteID }) {
+                    StatusBadge(text: "\(other.originID) ✈︎ \(other.destinationID)",
+                                color: Theme.warn)
+                }
+            }
+        }
+        .buttonStyle(.plain)
     }
 }
 
