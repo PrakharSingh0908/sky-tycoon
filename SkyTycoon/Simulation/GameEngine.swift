@@ -287,7 +287,10 @@ final class GameEngine {
         return (0..<count).map { _ in
             let type = AircraftType.allCases.randomElement(using: &rng)!
             let age = Double.random(in: Balance.usedAgeRange, using: &rng)
-            let condition = Double.random(in: Balance.usedConditionRange, using: &rng)
+            // The age ceiling caps a used hull's condition, so listing and
+            // price stay honest (GDD §26): an old jet can't list as pristine.
+            let condition = min(Double.random(in: Balance.usedConditionRange, using: &rng),
+                                Balance.maxCondition(ageYears: age))
             return UsedListing(id: UUID(), type: type, ageYears: age,
                                condition: condition,
                                price: Balance.usedPrice(type: type, ageYears: age, condition: condition))
@@ -552,10 +555,14 @@ final class GameEngine {
         // hull slides faster and can fall below the usual floor (Pillar 4).
         for i in state.fleet.indices where state.fleet[i].status != .onOrder {
             let age = state.fleet[i].ageYears
-            state.fleet[i].ageYears = age + (1.0 / 52.0) * f
+            let newAge = age + (1.0 / 52.0) * f
+            state.fleet[i].ageYears = newAge
             let decay = 0.06 * Balance.ageConditionDecayMultiplier(ageYears: age) * f
+            // Natural decay, then the irreversible age ceiling: condition can
+            // never sit above what the airframe's years allow (GDD §26).
+            let ceiling = Balance.maxCondition(ageYears: newAge)
             state.fleet[i].condition = max(Balance.agedConditionFloor,
-                                           state.fleet[i].condition - decay)
+                min(ceiling, state.fleet[i].condition - decay))
         }
 
         // 7. SETTLE — cash books only THIS day's profit; reputation drifts daily.
@@ -1587,14 +1594,16 @@ final class GameEngine {
             for _ in 0..<count {
                 let type = pool[Int.random(in: 0..<pool.count, using: &state.seedRNG)]
                 let spec = Balance.specs[type]!
+                let age = Double.random(in: 6...14, using: &state.seedRNG)
+                let cond = min(Double.random(in: 55...80, using: &state.seedRNG),
+                               Balance.maxCondition(ageYears: age))
                 state.fleet.append(Aircraft(
                     id: UUID(), type: type, nickname: nextTailCode(),
                     status: .idle, acquisition: .ownedUsed, weeklyLeaseCost: 0,
                     deliveryWeeksRemaining: 0,
                     cabin: .standard(abreast: spec.seatsAbreast),
                     wear: Double.random(in: 20...45, using: &state.seedRNG),
-                    condition: Double.random(in: 55...80, using: &state.seedRNG),
-                    ageYears: Double.random(in: 6...14, using: &state.seedRNG),
+                    condition: cond, ageYears: age,
                     assignedRouteID: nil, groundedWeeksRemaining: 0))
             }
             logEvent(title: "Acquired \(count) aircraft from a failed rival", isNegative: false)
@@ -2037,7 +2046,12 @@ final class GameEngine {
         state.fleet[i].status = .inMaintenance
         state.fleet[i].groundedWeeksRemaining = heavy ? 2 : 1
         state.fleet[i].wear = heavy ? 0 : max(0, state.fleet[i].wear - 25)
-        if heavy { state.fleet[i].condition = min(100, state.fleet[i].condition + 10) }
+        // A heavy check restores condition, but only up to the age ceiling —
+        // no service brings an old airframe back to factory-fresh (GDD §26).
+        if heavy {
+            let ceiling = Balance.maxCondition(ageYears: state.fleet[i].ageYears)
+            state.fleet[i].condition = min(ceiling, state.fleet[i].condition + 10)
+        }
         save()
     }
 

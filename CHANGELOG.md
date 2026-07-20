@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Aircraft condition ages irreversibly + 11-day event window
+
+- **Condition now has a permanent, age-based ceiling.** Time in service leaves marks you can't buff out: an airframe stays serviceable to 100% for its first two years, then its maximum recoverable condition falls about 4 points/year (6 yrs → 84%, 10 → 68%, 15 → 48%, floored at 40%). A heavy check still restores condition, but only up to that ceiling — no service brings an old jet back to factory-fresh. Used-market listings and acquired fleets respect the ceiling too, so an old hull can't list as pristine.
+- **Every event now gives 11 days to decide** (ambient grace 8 → 11).
+
+*Why:* per request — planes shouldn't be restorable to 100% after 6 years, and a longer decision window gives more breathing room before a card unfolds on its own. The condition ceiling reinforces the fleet-treadmill: aging airframes permanently lose their edge, so replacement (not endless servicing) is the real answer.
+
+
 ## Fuller ambition ladder in the profile + leases up 35%
 
 - The **ambition ladder now lives in the Profile menu** as a full climb: every rung listed with a done/current/locked state, a progress bar, and each rung's reward. The current goal shows its live progress %.

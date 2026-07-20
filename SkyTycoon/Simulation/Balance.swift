@@ -577,6 +577,18 @@ enum Balance {
     /// Old airframes may fall below the MVP condition floor (20) — an aged
     /// hull is allowed to become genuinely decrepit.
     static let agedConditionFloor = 12.0
+    /// Time in service leaves permanent marks (GDD §26 Pillar 4): the BEST
+    /// condition an airframe can ever be restored to falls with age. New for
+    /// the first couple of years, then the ceiling drops ~4 points/yr — so a
+    /// 6-year-old jet can never be serviced back to 100%. Irreversible: the
+    /// aging tick also pulls condition down to this ceiling.
+    static let conditionCeilingGraceYears = 2.0
+    static let conditionCeilingDropPerYear = 4.0
+    static let conditionCeilingFloor = 40.0
+    static func maxCondition(ageYears: Double) -> Double {
+        let over = max(0, ageYears - conditionCeilingGraceYears)
+        return max(conditionCeilingFloor, 100.0 - conditionCeilingDropPerYear * over)
+    }
 
     // ── Crew-hours model (GDD §4.4, M2) ──────────────────────────────────
 
@@ -810,7 +822,7 @@ enum Balance {
     /// An ambient event left unattended this many sim days unfolds on its
     /// own, taking its passive (default) option — so the Dashboard never
     /// silently stockpiles undecided cards.
-    static let ambientEventGraceDays = 8
+    static let ambientEventGraceDays = 11
 
     // ── Catering (GDD §18) ───────────────────────────────────────────────
     /// One-time galley oven fit per airframe (instant — immediacy rule).
