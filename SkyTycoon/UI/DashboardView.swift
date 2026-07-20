@@ -14,7 +14,7 @@ struct DashboardView: View {
     @State private var financeRange: FinanceRange = .weekly
     @State private var settleFlash = false
     @State private var showingIndustry = false
-    @State private var showingGazette = false
+    @State private var gazettePage = 0
     @State private var eventsExpanded = false
     private let accent = Theme.sky
 
@@ -492,62 +492,50 @@ struct DashboardView: View {
             }
             .buttonStyle(.plain)
 
-            // The market's weather (GDD §14) reads as a folded newspaper: a
-            // concise clipping with the lead story; a tap opens the Gazette.
-            if let lead = trends.first {
+            // The market's weather (GDD §14) reads as a newspaper you flip
+            // through right here: one concise story per page, no drill-down.
+            if !trends.isEmpty {
                 Divider().overlay(Theme.hairline)
-                Button { showingGazette = true } label: {
-                    gazetteTeaser(lead: lead, count: trends.count)
-                }
-                .buttonStyle(.plain)
+                gazette(trends)
             }
         }
         .sheet(isPresented: $showingIndustry) { IndustrySheet() }
-        .sheet(isPresented: $showingGazette) {
-            IndustryGazetteView(trends: trends, dateline: engine.state.date.description,
-                                country: engine.state.country)
-        }
     }
 
-    // A folded newspaper clipping: masthead, the lead headline, a one-line
-    // standfirst, and the count — set on a small black-paper panel. The full
-    // Gazette (flip through every story) is one tap away.
-    private func gazetteTeaser(lead: IndustryTrend, count: Int) -> some View {
-        let ink = Color(red: 0.93, green: 0.91, blue: 0.85)
-        let inkSoft = Color(red: 0.68, green: 0.66, blue: 0.61)
+    // Warm newsprint ink on the little black-paper panel.
+    private static let gazetteInk = Color(red: 0.93, green: 0.91, blue: 0.85)
+    private static let gazetteInkSoft = Color(red: 0.68, green: 0.66, blue: 0.61)
+
+    /// The market's weather as a swipeable newspaper, inline on the home
+    /// page: a fixed masthead, then one concise story per page. Flip with a
+    /// horizontal swipe; the dots keep your place. No drill-down.
+    private func gazette(_ trends: [IndustryTrend]) -> some View {
+        let ink = Self.gazetteInk, inkSoft = Self.gazetteInkSoft
         func rule() -> some View { Rectangle().fill(inkSoft.opacity(0.4)).frame(height: 1) }
         return VStack(spacing: 8) {
             HStack(spacing: 8) {
                 rule()
                 Text("THE SKYWARD GAZETTE")
                     .font(.system(size: 9, weight: .heavy, design: .serif))
-                    .tracking(1.2).foregroundStyle(ink)
-                    .fixedSize()
+                    .tracking(1.2).foregroundStyle(ink).fixedSize()
                 rule()
             }
-            Text(lead.name)
-                .font(.system(size: 19, weight: .bold, design: .serif))
-                .foregroundStyle(ink)
-                .multilineTextAlignment(.center)
-                .lineLimit(2).minimumScaleFactor(0.8)
-                .fixedSize(horizontal: false, vertical: true)
-            Text(lead.detail)
-                .font(.system(size: 12, design: .serif)).italic()
-                .foregroundStyle(inkSoft)
-                .multilineTextAlignment(.center)
-                .lineLimit(1)
-            rule().padding(.top, 2)
-            HStack {
-                Text("\(count) \(count == 1 ? "story" : "stories") today")
-                    .font(.system(size: 10, design: .serif)).italic()
-                    .foregroundStyle(inkSoft)
-                Spacer()
-                HStack(spacing: 4) {
-                    Text("Read the Gazette")
-                        .font(.system(size: 10, weight: .semibold, design: .serif))
-                    Image(systemName: "chevron.right").font(.system(size: 8, weight: .bold))
+            TabView(selection: $gazettePage) {
+                ForEach(Array(trends.enumerated()), id: \.element.id) { index, trend in
+                    gazetteStory(trend).tag(index).padding(.horizontal, 4)
                 }
-                .foregroundStyle(ink)
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .frame(height: 118)
+            .animation(.snappy, value: gazettePage)
+            if trends.count > 1 {
+                HStack(spacing: 6) {
+                    ForEach(trends.indices, id: \.self) { i in
+                        Circle()
+                            .fill(ink.opacity(i == gazettePage ? 0.9 : 0.28))
+                            .frame(width: 5, height: 5)
+                    }
+                }
             }
         }
         .padding(14)
@@ -558,6 +546,44 @@ struct DashboardView: View {
                 .overlay(RoundedRectangle(cornerRadius: Theme.corner)
                     .strokeBorder(Color.white.opacity(0.07), lineWidth: 1))
         )
+    }
+
+    /// One story, told in a glance: kicker, serif headline, italic
+    /// standfirst, and a single readout (the lever's move and its duration).
+    private func gazetteStory(_ trend: IndustryTrend) -> some View {
+        let ink = Self.gazetteInk, inkSoft = Self.gazetteInkSoft
+        let pct = Int(((trend.multiplier - 1) * 100).rounded())
+        let tint = trend.favorsPlayer ? Theme.profit : Theme.loss
+        return VStack(spacing: 5) {
+            Text(trend.horizon == .long ? "LONG-RANGE FORECAST" : "MARKET BULLETIN")
+                .font(.system(size: 9, weight: .bold, design: .serif))
+                .tracking(1.6).foregroundStyle(inkSoft)
+            Text(trend.name)
+                .font(.system(size: 21, weight: .bold, design: .serif))
+                .foregroundStyle(ink)
+                .multilineTextAlignment(.center)
+                .lineLimit(2).minimumScaleFactor(0.75)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(trend.detail)
+                .font(.system(size: 12, design: .serif)).italic()
+                .foregroundStyle(inkSoft)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(trend.kind.label.uppercased())
+                    .font(.system(size: 10, weight: .semibold, design: .serif))
+                    .tracking(1).foregroundStyle(inkSoft)
+                Text("\(pct >= 0 ? "+" : "")\(pct)%")
+                    .font(.system(size: 17, weight: .heavy, design: .serif))
+                    .foregroundStyle(tint)
+                Text("· \(trend.weeksRemaining) wk")
+                    .font(.system(size: 11, design: .serif)).italic()
+                    .foregroundStyle(inkSoft)
+            }
+            .padding(.top, 2)
+        }
+        .frame(maxWidth: .infinity, alignment: .center)
     }
 
     // ── Trends ───────────────────────────────────────────────────────────
@@ -971,270 +997,10 @@ private struct IndustrySheet: View {
     }
 }
 
-// ── The Industry Gazette (v3.1.5) ────────────────────────────────────────
-// The market's weather, set as a newspaper: black newsprint, serif type, a
-// masthead, and one article per active trend that the reader flips through.
-
-/// Black paper: an ink-dark sheet with a deterministic grain and a vignette,
-/// so the newsprint feels pressed rather than flat.
-private struct NewspaperBackground: View {
-    var body: some View {
-        ZStack {
-            Color(red: 0.05, green: 0.05, blue: 0.055)
-            Canvas { ctx, size in
-                let cols = 64, rows = 130
-                for r in 0..<rows {
-                    for c in 0..<cols {
-                        // Sin-hash noise: stable across redraws, no RNG.
-                        let h = sin(Double(c) * 12.9898 + Double(r) * 78.233) * 43758.5453
-                        let n = h - h.rounded(.down)
-                        guard n > 0.85 else { continue }
-                        let x = size.width * Double(c) / Double(cols)
-                        let y = size.height * Double(r) / Double(rows)
-                        let op = (n - 0.85) / 0.15 * 0.055
-                        ctx.fill(Path(ellipseIn: CGRect(x: x, y: y, width: 1.3, height: 1.3)),
-                                 with: .color(.white.opacity(op)))
-                    }
-                }
-            }
-            RadialGradient(colors: [.clear, .black.opacity(0.5)],
-                           center: .center, startRadius: 140, endRadius: 540)
-        }
-        .ignoresSafeArea()
-    }
-}
-
-private struct IndustryGazetteView: View {
-    @Environment(\.dismiss) private var dismiss
-    let trends: [IndustryTrend]
-    let dateline: String
-    let country: Country
-    @State private var page = 0
-
-    // Warm newsprint ink on black paper.
-    private static let ink = Color(red: 0.93, green: 0.91, blue: 0.85)
-    private static let inkSoft = Color(red: 0.70, green: 0.68, blue: 0.63)
-
-    var body: some View {
-        ZStack {
-            NewspaperBackground()
-            TabView(selection: $page) {
-                ForEach(Array(trends.enumerated()), id: \.element.id) { index, trend in
-                    ScrollView(showsIndicators: false) {
-                        GazetteArticle(trend: trend, dateline: dateline, country: country,
-                                       ink: Self.ink, inkSoft: Self.inkSoft)
-                            .padding(.horizontal, 26)
-                            .padding(.top, 60)
-                            .padding(.bottom, 96)
-                    }
-                    .tag(index)
-                }
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            .animation(.snappy, value: page)
-
-            // The fold furniture: close, and a page-turn footer.
-            VStack {
-                HStack {
-                    Spacer()
-                    Button { dismiss() } label: {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundStyle(Self.inkSoft)
-                            .frame(width: 30, height: 30)
-                            .background(Color.white.opacity(0.06), in: Circle())
-                            .overlay(Circle().strokeBorder(Self.inkSoft.opacity(0.3), lineWidth: 1))
-                    }
-                }
-                Spacer()
-                if trends.count > 1 { pageTurner }
-            }
-            .padding(.horizontal, 22)
-            .padding(.top, 16)
-            .padding(.bottom, 20)
-        }
-        .presentationDetents([.large])
-        .presentationBackground(Color(red: 0.05, green: 0.05, blue: 0.055))
-        .preferredColorScheme(.dark)
-        .holdsSimClock()
-    }
-
-    /// A hairline-ruled page turner: ‹ PAGE i OF n › — the newspaper's foot.
-    private var pageTurner: some View {
-        HStack(spacing: 14) {
-            turnButton("chevron.left", enabled: page > 0) {
-                page = max(0, page - 1)
-            }
-            VStack(spacing: 3) {
-                Rectangle().fill(Self.inkSoft.opacity(0.4)).frame(height: 1)
-                Text("PAGE \(page + 1) OF \(trends.count)")
-                    .font(.system(size: 10, weight: .semibold, design: .serif))
-                    .tracking(1.5).foregroundStyle(Self.inkSoft)
-                Rectangle().fill(Self.inkSoft.opacity(0.4)).frame(height: 1)
-            }
-            .frame(width: 130)
-            turnButton("chevron.right", enabled: page < trends.count - 1) {
-                page = min(trends.count - 1, page + 1)
-            }
-        }
-    }
-
-    private func turnButton(_ symbol: String, enabled: Bool, _ act: @escaping () -> Void) -> some View {
-        Button { withAnimation(.snappy) { act() } } label: {
-            Image(systemName: symbol)
-                .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(Self.ink)
-                .frame(width: 34, height: 34)
-                .background(Color.white.opacity(0.05), in: Circle())
-                .overlay(Circle().strokeBorder(Self.inkSoft.opacity(0.3), lineWidth: 1))
-        }
-        .buttonStyle(.plain)
-        .opacity(enabled ? 1 : 0.25)
-        .disabled(!enabled)
-    }
-}
-
-/// One trend, set as a front-page story: masthead, kicker, headline, an
-/// italic standfirst, drop-capped body, and a ruled pull-stat.
-private struct GazetteArticle: View {
-    let trend: IndustryTrend
-    let dateline: String
-    let country: Country
-    let ink: Color
-    let inkSoft: Color
-
-    private var pct: Int { Int(((trend.multiplier - 1) * 100).rounded()) }
-    private var kicker: String { trend.horizon == .long ? "LONG-RANGE FORECAST" : "MARKET BULLETIN" }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            masthead
-            Text(kicker)
-                .font(.system(size: 11, weight: .bold, design: .serif))
-                .tracking(2).foregroundStyle(inkSoft)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.top, 18)
-            Text(trend.name)
-                .font(.system(size: 34, weight: .bold, design: .serif))
-                .foregroundStyle(ink)
-                .multilineTextAlignment(.center)
-                .lineSpacing(2)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity)
-                .padding(.top, 8)
-            Text(trend.detail)
-                .font(.system(size: 15, design: .serif)).italic()
-                .foregroundStyle(inkSoft)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity)
-                .padding(.top, 10)
-            rule.padding(.vertical, 16)
-            bodyColumns
-            pullStat.padding(.top, 20)
-            Text("— The Skyward Gazette · \(country.displayName) Desk")
-                .font(.system(size: 12, design: .serif)).italic()
-                .foregroundStyle(inkSoft)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.top, 22)
-        }
-    }
-
-    private var masthead: some View {
-        VStack(spacing: 5) {
-            doubleRule
-            Text("THE SKYWARD GAZETTE")
-                .font(.system(size: 22, weight: .heavy, design: .serif))
-                .tracking(1).foregroundStyle(ink)
-                .minimumScaleFactor(0.7).lineLimit(1)
-            HStack {
-                Text("\(country.displayName.uppercased()) EDITION")
-                Spacer()
-                Text(dateline)
-            }
-            .font(.system(size: 10, weight: .medium, design: .serif))
-            .tracking(1).foregroundStyle(inkSoft)
-            doubleRule
-        }
-    }
-
-    /// Body prose composed from the trend's own facts — deterministic, no sim.
-    private var bodyColumns: some View {
-        let dir = pct >= 0 ? "climbed" : "eased"
-        let lever = trend.kind.label
-        let first = "\(country.adjective) carriers woke to a market that has \(dir) \(abs(pct)) percent on \(lever). "
-            + (trend.favorsPlayer
-               ? "For operators with a steady hand, the winds are fair — and the well-run stand to gain while the timid hesitate."
-               : "It is a squeeze felt across every route map, and the margin between prudence and loss has rarely been thinner.")
-        let second = trend.horizon == .long
-            ? "Analysts describe a regime rather than a ripple, one expected to hold for the better part of \(trend.weeksRemaining) weeks before the cycle turns again."
-            : "The bulletin should pass inside \(trend.weeksRemaining) weeks, though seasoned hands know better than to wager on the timing of a market's moods."
-        return VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top, spacing: 8) {
-                Text(String(first.prefix(1)))
-                    .font(.system(size: 52, weight: .heavy, design: .serif))
-                    .foregroundStyle(ink)
-                    .padding(.top, -8)
-                Text(String(first.dropFirst()))
-                    .font(.system(size: 15, design: .serif))
-                    .foregroundStyle(ink.opacity(0.92))
-                    .lineSpacing(4)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            Text(second)
-                .font(.system(size: 15, design: .serif))
-                .foregroundStyle(ink.opacity(0.92))
-                .lineSpacing(4)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-
-    private var pullStat: some View {
-        let tint = trend.favorsPlayer ? Theme.profit : Theme.loss
-        return VStack(spacing: 6) {
-            rule
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text(trend.kind.label.uppercased())
-                    .font(.system(size: 11, weight: .semibold, design: .serif))
-                    .tracking(1.5).foregroundStyle(inkSoft)
-                Spacer()
-                Text("\(pct >= 0 ? "+" : "")\(pct)%")
-                    .font(.system(size: 30, weight: .heavy, design: .serif))
-                    .foregroundStyle(tint)
-                Text("for \(trend.weeksRemaining) wk")
-                    .font(.system(size: 12, design: .serif)).italic()
-                    .foregroundStyle(inkSoft)
-            }
-            rule
-        }
-    }
-
-    private var rule: some View { Rectangle().fill(inkSoft.opacity(0.45)).frame(height: 1) }
-    private var doubleRule: some View {
-        VStack(spacing: 2) {
-            Rectangle().fill(ink.opacity(0.8)).frame(height: 2)
-            Rectangle().fill(ink.opacity(0.8)).frame(height: 1)
-        }
-    }
-}
-
 #Preview("Foundation start") {
     DashboardView()
         .environment(GameEngine.newGame(airlineName: "Foundation Air",
                                         country: .us, seed: 7))
-        .preferredColorScheme(.dark)
-}
-
-#Preview("Industry gazette") {
-    let engine = GameEngine.previewGame()
-    return IndustryGazetteView(
-        trends: engine.industryTrends.isEmpty
-            ? [IndustryTrend(id: UUID(), key: "slump", name: "Economic Slowdown",
-                             detail: "Belt-tightening: discretionary travel dries up first.",
-                             kind: .demand, horizon: .long, multiplier: 0.92, weeksRemaining: 89)]
-            : engine.industryTrends,
-        dateline: engine.state.date.description, country: .us)
-        .environment(engine)
         .preferredColorScheme(.dark)
 }
 
