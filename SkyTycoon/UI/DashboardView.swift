@@ -1266,7 +1266,7 @@ private struct ProfileSheet: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 identity
-                shareButton
+                // Airline card hidden for now — needs a redesign pass.
                 milestoneSummary
                 ambitionsCard
                 recordsCard

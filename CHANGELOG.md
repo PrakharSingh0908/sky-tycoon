@@ -10,7 +10,7 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 ## Rival trash talk + a shareable airline card (GDD §30)
 
 - **The ladder now talks back.** A "Rival Watch" page in the Industry Gazette carries trash talk: for a few weeks after you overtake a carrier, its (named) CEO reacts in the press ("Congratulations to Cirrus Air. Enjoy the view — it's windy up here."); the rest of the time, the carrier directly above you takes a jab at the upstart. Bylines and lines are deterministic, so they read consistently.
-- **Share your airline card.** From the Profile menu, a beautifully crafted collectible card — Didot foil masthead and airline name, a polished-silver monogram crest ringed in your own livery color, a livery cheatline echoing your paint, instrument stat tiles (fleet, routes, rating, net worth, market cap), your rank line ("Ranked No. 7 of 55 in Indian aviation"), a handwritten signature, and corner registration ticks. Tap to preview, then share the image with a caption. Built entirely from the existing design system; no new art.
+- **Share your airline card** (hidden for now, pending a redesign — the code is in place, no entry point).
 - The aircraft rename feature was pulled from the Fleet UI.
 
 *Why:* two pure-delight additions — one gives the rivalry a voice, the other a thing you'd actually want to show a friend. Both reuse the game's own visual language.
