@@ -421,6 +421,8 @@ struct RouteDetailView: View {
     @State private var shoppingForRoute: Route?
     /// The poaching pool stays folded until someone goes looking.
     @State private var showOtherRoutes = false
+    /// A busy plane tapped for this route waits here for the go-ahead.
+    @State private var poaching: Aircraft?
     private let accent = Theme.teal
 
     var body: some View {
@@ -497,7 +499,33 @@ struct RouteDetailView: View {
             .sheet(item: $shoppingForRoute) { route in
                 NavigationStack { ShowroomView(fittingRoute: route) }
             }
+            .onChange(of: poaching?.id) { _, moving in
+                // Dialogs have no content lifecycle — hold the clock manually.
+                if moving != nil { engine.beginInteraction() } else { engine.endInteraction() }
+            }
+            .confirmationDialog(
+                poachTitle(for: route),
+                isPresented: Binding(get: { poaching != nil },
+                                     set: { if !$0 { poaching = nil } }),
+                titleVisibility: .visible,
+                presenting: poaching
+            ) { plane in
+                Button("Move it here") {
+                    engine.assign(aircraftID: plane.id, to: routeID)
+                }
+                Button("Keep it there", role: .cancel) {}
+            } message: { _ in
+                Text("It stops flying that route the moment it moves.")
+            }
         }
+    }
+
+    /// "Move AI-C off BOS ✈ PHL?" — names the plane and the route it leaves.
+    private func poachTitle(for route: Route) -> String {
+        guard let plane = poaching,
+              let from = engine.state.routes.first(where: { $0.id == plane.assignedRouteID })
+        else { return "Move this aircraft?" }
+        return "Move \(plane.nickname) off \(from.originID) ✈︎ \(from.destinationID)?"
     }
 
     // ── Catering (GDD §18): choose the service, mind the hardware ────────
@@ -674,7 +702,10 @@ struct RouteDetailView: View {
         return Button {
             switch kind {
             case .onRoute: engine.unassign(aircraftID: plane.id)
-            case .free, .busy: engine.assign(aircraftID: plane.id, to: route.id)
+            case .free: engine.assign(aircraftID: plane.id, to: route.id)
+            // Pulling a plane off another route is a deliberate move:
+            // it waits for the confirmation dialog's go-ahead.
+            case .busy: if plane.status != .onOrder { poaching = plane }
             }
         } label: {
             HStack(spacing: 10) {

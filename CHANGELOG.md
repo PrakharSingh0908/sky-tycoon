@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Poaching asks first
+
+- Tapping a plane under "On other routes" now raises a confirmation dialog instead of moving it silently: "Move AI-C off BOS ✈ PHL?" with "Move it here" and "Keep it there", and a one-line reminder that it stops flying its old route the moment it moves. Free planes and removals stay one-tap. The sim clock holds while the dialog is up, same as the cancel-route dialog.
+
+*Why:* per direction. Adding idle metal is routine, but pulling a plane off a working route cuts that route's capacity; a move with a real cost deserves a deliberate yes.
+
+
 ## Assignment desk decluttered
 
 - The route's aircraft list is grouped into three shelves: planes on this route (checkmark, tap removes), free planes ready to add (plus, tap adds), and planes flying other routes folded into an "On other routes (N)" disclosure. Poaching still works with one tap; the stamped badge names the route each plane would come off, and the wordy "Assigning here pulls it off X" warning that repeated the badge is gone. Meta reads one line ("Orion 212 · 1,931 km", no wrap), on-order planes show "Delivers · N wk", and planes that can never fly the pair (range or runway) are not listed at all.
