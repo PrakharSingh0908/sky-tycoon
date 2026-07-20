@@ -69,7 +69,9 @@ struct RootView: View {
         .background(Theme.bg)
         .preferredColorScheme(.dark)
         .sheet(item: Binding(
-            get: { engine.state.pendingEvent },
+            // A grounded airline never shows an event card (edge case: an
+            // event drawn the same week bankruptcy landed).
+            get: { engine.state.isBankrupt ? nil : engine.state.pendingEvent },
             set: { _ in }   // dismissal only via choosing an option
         )) { event in
             EventCardView(event: event).interactiveDismissDisabled()

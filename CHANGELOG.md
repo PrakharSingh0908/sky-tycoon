@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## No event card over the game-over screen
+
+- A grounded (bankrupt) airline no longer shows an event card. The weekly close draws events before it runs the fail-state check, so on the week bankruptcy landed an event could already be pending and float over the "Grounded" screen. Now bankruptcy clears any pending event, and the event sheet is gated on `!isBankrupt` as a second guard. Same fix covers a hull-loss card drawn the same week the airline dies.
+
+*Why:* per direction — a decision card over a game-over screen is a dead-end edge case; a grounded airline makes no more decisions.
+
+
 ## Crashes and lawsuits now dent quarter profit
 
 - Settlements from crashes and lawsuit/recall verdicts now book into a new "Incidents" line on the weekly report, so they reduce quarter profit and show in the statement + expense pie. Previously they were paid straight from cash and never touched the profit line — which let a quarter with two hull losses still read profitable and count toward the trust-fund arc. The cash still leaves the instant the incident happens; the Incidents line makes the P&L and the quarter reflect it, with no double-charge (it's folded in only at week close, which never touches cash). The lost aircraft's capital value stays reflected in net worth only, to avoid double-counting.

@@ -661,6 +661,10 @@ final class GameEngine {
         if state.weeksInsolvent >= 8 && !hasSellableAssets {
             state.isBankrupt = true
             speed = .paused
+            // A grounded airline makes no more decisions: drop any event this
+            // same close drew (drawEvent runs before the fail check) so no
+            // card floats over the game-over screen.
+            state.pendingEvent = nil
         }
 
         if state.date.week % 13 == 0 { closeQuarter() }
