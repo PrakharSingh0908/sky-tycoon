@@ -505,6 +505,15 @@ struct DashboardView: View {
     // Warm newsprint ink on the little black-paper panel.
     private static let gazetteInk = Color(red: 0.93, green: 0.91, blue: 0.85)
     private static let gazetteInkSoft = Color(red: 0.68, green: 0.66, blue: 0.61)
+    /// A foil-stamped sheen for the headline: bright warm white catching the
+    /// light up top, settling to a dimmer warm gray below.
+    private static let gazetteFoil = LinearGradient(
+        colors: [Color(red: 1.0, green: 0.98, blue: 0.93),
+                 Color(red: 0.80, green: 0.75, blue: 0.66)],
+        startPoint: .top, endPoint: .bottom)
+    /// Didot — the high-contrast display serif of mastheads (a system font,
+    /// no bundling); it falls back to the system serif if ever unavailable.
+    private static func didot(_ size: CGFloat) -> Font { .custom("Didot-Bold", size: size) }
 
     /// The market's weather as a swipeable newspaper, inline on the home
     /// page: a fixed masthead, then one concise story per page. Flip with a
@@ -516,8 +525,8 @@ struct DashboardView: View {
             HStack(spacing: 8) {
                 rule()
                 Text("THE SKYWARD GAZETTE")
-                    .font(.system(size: 9, weight: .heavy, design: .serif))
-                    .tracking(1.2).foregroundStyle(ink).fixedSize()
+                    .font(Self.didot(13))
+                    .tracking(1.4).foregroundStyle(ink).fixedSize()
                 rule()
             }
             TabView(selection: $gazettePage) {
@@ -551,7 +560,7 @@ struct DashboardView: View {
     /// One story, told in a glance: kicker, serif headline, italic
     /// standfirst, and a single readout (the lever's move and its duration).
     private func gazetteStory(_ trend: IndustryTrend) -> some View {
-        let ink = Self.gazetteInk, inkSoft = Self.gazetteInkSoft
+        let inkSoft = Self.gazetteInkSoft
         let pct = Int(((trend.multiplier - 1) * 100).rounded())
         let tint = trend.favorsPlayer ? Theme.profit : Theme.loss
         return VStack(spacing: 5) {
@@ -559,10 +568,11 @@ struct DashboardView: View {
                 .font(.system(size: 9, weight: .bold, design: .serif))
                 .tracking(1.6).foregroundStyle(inkSoft)
             Text(trend.name)
-                .font(.system(size: 21, weight: .bold, design: .serif))
-                .foregroundStyle(ink)
+                .font(Self.didot(26))
+                .foregroundStyle(Self.gazetteFoil)
+                .shadow(color: .black.opacity(0.45), radius: 1, y: 1)
                 .multilineTextAlignment(.center)
-                .lineLimit(2).minimumScaleFactor(0.75)
+                .lineLimit(2).minimumScaleFactor(0.7)
                 .fixedSize(horizontal: false, vertical: true)
             Text(trend.detail)
                 .font(.system(size: 12, design: .serif)).italic()

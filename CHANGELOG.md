@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Gazette gets Didot and a foil headline
+
+- The gazette masthead and story headlines now set in Didot, the high-contrast display serif of real mastheads (a system font, so no bundling; it falls back to the system serif if ever missing). The headline is filled with a warm foil gradient (bright white catching the light up top, dimmer warm gray below) and given a faint letterpress shadow, so it reads as stamped rather than printed.
+
+*Why:* per direction — the system serif was serviceable but generic; Didot plus the foil sheen gives the newspaper the crafted, premium masthead character it was reaching for.
+
+
 ## The Industry Gazette (v3.1.5)
 
 - Industry trends are now a newspaper you flip through in place, on the home page — no drill-down. The Industry card's trends block is a small black-paper panel with a fixed "THE SKYWARD GAZETTE" masthead, then one concise story per page swiped horizontally, with page dots keeping your place. Each page reads at a glance: a LONG-RANGE FORECAST / MARKET BULLETIN kicker, a serif headline (the trend name), a two-line italic standfirst (its story), and one readout line (the lever's percent and how many weeks remain, tinted green/coral). The full-screen gazette sheet, its drop-capped articles, and the drawn paper-texture background were removed. The Industry standing (rank/cap/share) still taps through to the ladder.
