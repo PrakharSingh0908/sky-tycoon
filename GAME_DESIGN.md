@@ -991,3 +991,25 @@ Two new effects (`acquireUsedFleet`, `acquireStaff`) build valid Aircraft /
 StaffMember instances through the same helpers as buying and hiring. The
 fixed asset counts against a net-worth-scaled price make this a transformative
 early-game swoop and a merely-fine late-game one — self-limiting.
+
+---
+
+## §28 — Cost inflation, 5%/year (2026-07-21)
+
+Every cost the airline books now climbs 5% a year: a mandatory wage
+escalator generalized into an economy-wide inflation index. Revenue is
+NOT inflated — the reference fare holds — so a set-and-forget fare quietly
+loses ground, and keeping fares (and efficiency) moving becomes part of the
+long game. Reinforces the anti-idle thesis of §26.
+
+- `Balance.inflationFactor(yearsElapsed:) = pow(1.05, years)`, driven by
+  `GameEngine.inflationFactor` from the sim date (1.0 at start; ×1.28 by
+  year 6, ×1.63 by year 11).
+- Multiplied into every cost line in `advanceDay`: base + overtime wages,
+  contractors, maintenance, lease, cabin upkeep/catering, HQ overhead, and
+  fuel (in `computeEconomics`, so the UI projections match).
+- NOT inflated: marketing spend (it's the player's chosen dollar figure)
+  and loan payments (fixed contractual interest). Revenue/fares are left to
+  the player to raise.
+- Verified: a fixed fleet's weekly costs rise ×1.28 from year 1 to year 6,
+  tracking the index exactly.

@@ -552,6 +552,15 @@ enum Balance {
     /// scaled only by difficulty. Small on purpose — the game is the climb.
     static let auntSeedFund = 200_000.0
 
+    /// Economy-wide inflation (GDD §28): every cost the airline books —
+    /// wages, contractors, maintenance, leases, cabin upkeep, overhead, and
+    /// fuel — climbs 5% a year. Revenue is NOT inflated, so a set-and-forget
+    /// fare quietly loses ground; keeping fares moving is part of the game.
+    static let annualInflation = 0.05
+    static func inflationFactor(yearsElapsed: Double) -> Double {
+        pow(1 + annualInflation, max(0, yearsElapsed))
+    }
+
     /// Poor condition raises fuel burn (GDD §4.1): up to +15% at condition 0.
     static func fuelConditionMultiplier(condition: Double) -> Double {
         1.0 + (100.0 - condition) / 100.0 * 0.15

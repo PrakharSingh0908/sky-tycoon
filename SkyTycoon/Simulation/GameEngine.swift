@@ -358,6 +358,12 @@ final class GameEngine {
         }
     }
 
+    /// Economy-wide cost inflation index (GDD §28): 1.0 at the start,
+    /// compounding 5%/year. Multiplied into every cost the sim books.
+    var inflationFactor: Double {
+        Balance.inflationFactor(yearsElapsed: Double(max(0, state.date.totalWeeks - 1)) / 52.0)
+    }
+
     // ── The daily tick — the heart of the sim (GDD §23) ─────────────────
     // Continuous lines (revenue, costs, wear, drift) accrue 1/7 per day so
     // cash and every meter move daily; the discrete block (deliveries,
@@ -386,6 +392,7 @@ final class GameEngine {
         }
 
         let f = 1.0 / 7.0                       // this day's share of the week
+        let inflation = inflationFactor         // 5%/yr on every cost (GDD §28)
         let close = (state.date.day ?? 1) >= 7  // the 7th day finalizes the week
         let profile = Balance.countryProfiles[state.country]!
 
@@ -457,7 +464,7 @@ final class GameEngine {
             avgComfort = min(1, avgComfort)
             let catering = route.catering ?? CateringLevel.none
             if catering != .none {
-                report.cabinCost += econ.pax * catering.costPerPax * f
+                report.cabinCost += econ.pax * catering.costPerPax * f * inflation
             }
             report.revenue += econ.revenue * f
             report.fuelCost += econ.fuel * f
@@ -506,19 +513,19 @@ final class GameEngine {
             let u = utilization[role] ?? 0
             let demand = crewDemandHours[role] ?? 0
             let capacity = Double(pool.headcount) * Balance.weeklyHoursPerStaff
-            report.wageCost += Double(pool.headcount) * pool.weeklyWage * wageTrendMult * f
+            report.wageCost += Double(pool.headcount) * pool.weeklyWage * wageTrendMult * f * inflation
             let marketRate = role.marketWage * profile.laborCost
             let excessHours = max(0, demand - capacity)
             let overtimeHours = min(excessHours, capacity * Balance.overtimeCapFactor)
             let contractorHours = excessHours - overtimeHours
             if overtimeHours > 0 {
                 let hourly = pool.weeklyWage / Balance.weeklyHoursPerStaff
-                report.wageCost += overtimeHours * hourly * Balance.overtimeMultiplier * wageTrendMult * f
+                report.wageCost += overtimeHours * hourly * Balance.overtimeMultiplier * wageTrendMult * f * inflation
             }
             if contractorHours > 0 {
                 let marketHourly = marketRate / Balance.weeklyHoursPerStaff
                 report.contractorCost = (report.contractorCost ?? 0)
-                    + contractorHours * marketHourly * Balance.contractorPremium * wageTrendMult * f
+                    + contractorHours * marketHourly * Balance.contractorPremium * wageTrendMult * f * inflation
             }
             let staffLoad = capacity > 0 ? min(u, 1 + Balance.overtimeCapFactor) : 0
             let target = happinessTarget(role: role, weeklyWage: pool.weeklyWage, staffLoad: staffLoad)
@@ -537,16 +544,17 @@ final class GameEngine {
             report.maintenanceCost += spec.baseMaintPerWeek
                 * (1 + plane.wear / 200) * (1.6 - 0.6 * plane.condition / 100)
                 * Balance.ageMaintenanceMultiplier(ageYears: plane.ageYears)
-                * difficulty.costFactor * f
+                * difficulty.costFactor * f * inflation
         }
         for plane in state.fleet where plane.acquisition == .leased {
-            report.leaseCost += plane.weeklyLeaseCost * difficulty.costFactor * f
+            report.leaseCost += plane.weeklyLeaseCost * difficulty.costFactor * f * inflation
         }
         for plane in state.fleet where plane.status != .onOrder {
-            report.cabinCost += plane.cabin.weeklyUpkeep(spec: Balance.specs[plane.type]!) * f
+            report.cabinCost += plane.cabin.weeklyUpkeep(spec: Balance.specs[plane.type]!) * f * inflation
         }
+        // Marketing is the player's chosen spend — not inflated.
         report.marketingCost += state.weeklyMarketingSpend * f
-        report.overheadCost += Balance.hqOverhead(fleetCount: state.fleet.count) * difficulty.costFactor * f
+        report.overheadCost += Balance.hqOverhead(fleetCount: state.fleet.count) * difficulty.costFactor * f * inflation
 
         // 5b. Event cash flows (GDD §25) — cargo/charter income books as
         // revenue, fees/levies as overhead; a day's 1/7 share, aged weekly.
@@ -877,7 +885,7 @@ final class GameEngine {
                  * spec.fuelBurnPerSeatKm * Double(route.weeklyFrequency) * 2
                  * Balance.fuelPricePerUnit * profile.fuelCost
                  * Balance.fuelConditionMultiplier(condition: plane.condition)
-                 * fuelEventMult
+                 * fuelEventMult * inflationFactor   // 5%/yr fuel inflation (GDD §28)
         }
 
         // Competition (GDD §21): comfort, price-for-market, and the

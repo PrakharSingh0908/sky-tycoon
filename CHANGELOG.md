@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Cost inflation: 5% a year on everything (GDD §28)
+
+- Wages now rise a mandatory 5% per year, generalized into an economy-wide inflation index that lifts **every cost** the airline books: base and overtime wages, contractors, maintenance, leases, cabin upkeep and catering, HQ overhead, and fuel. The index compounds from the sim date (×1.05 by year 2, ×1.28 by year 6, ×1.63 by year 11).
+- Revenue is **not** inflated — the market reference fare holds — so a fare you set and forget slowly loses ground to costs. Keeping fares (and efficiency) moving is now part of the long game. Marketing spend (your chosen figure) and fixed loan payments are exempt.
+
+*Why:* per request — a mandatory annual wage rise treated as a broad inflation factor. It also reinforces the anti-set-and-forget theme: standing still means falling behind.
+
+
 ## Haptics while swiping to buy/lease
 
 - The slide-to-commit key now buzzes as you drag it: a light tick each notch of travel (ten across the groove), a firmer bump the moment it arms past the commit line, and the existing success thud when the deal signs. Applies to both the lease and buy slides (shared SlideKey control), so throwing the pin feels physical.
