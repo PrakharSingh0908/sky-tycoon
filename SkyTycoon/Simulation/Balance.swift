@@ -381,6 +381,23 @@ enum Balance {
         let s = t * t * (3 - 2 * t)              // smoothstep (S-curve)
         return routeStartMaturity + (1 - routeStartMaturity) * s
     }
+    // ── Slot scarcity: use it or lose it (GDD §26 Pillar 3) ──────────────
+    // Every couple of quarters the regulator reviews slots at busy airports.
+    // A half-empty route hogging a scarce slot is called out: defend it
+    // (pay) or give the slots up (frequency reclaimed). Ignore the warning
+    // and, like any ambient card, it unfolds to "give them up."
+    /// How often (weeks) the slot review runs.
+    static let slotReviewIntervalWeeks = 26
+    /// An airport counts as busy when this few or fewer slots remain free.
+    static let slotReviewCongestionFree = 6
+    /// A route below this load factor is "under-using" its scarce slot.
+    static let slotReviewLoadThreshold = 0.55
+    /// Weekly frequency reclaimed when slots are given up.
+    static let slotReviewFrequencyCut = 4
+    /// Base cost to defend the slots (scaled with net worth like other
+    /// event cash figures).
+    static let slotReviewDefendCost = 25_000.0
+
     /// Seats-to-demand ratio below which there's no over-supply penalty.
     static let oversupplySlackThreshold = 1.25
     /// Worst-case realized-fare multiplier at heavy over-supply.
@@ -1211,17 +1228,8 @@ enum Balance {
             ],
             severity: .major,
             isEligible: { $0.fleet.contains { $0.status != .onOrder } }),
-        EventCard(id: "slotAudit", category: .regulatory,
-            title: "Use Your Slots, or Lose Them",
-            body: "Regulators warn that under-flown slots will be reclaimed. Commit to them, or let the weak ones go.",
-            baseWeight: 0.5, isNegative: true, minTotalWeek: 18,
-            options: [
-                EventOption(label: "Commit to the slots · −$25K",
-                            effects: [.cash(-25_000)]),
-                EventOption(label: "Let the weak ones go",
-                            effects: [.demand(multiplier: 0.94, weeks: 6)]),
-            ],
-            isEligible: { !$0.routes.isEmpty }),
+        // Slot pressure is delivered by the targeted slot review (GDD §26
+        // Pillar 3), not a generic deck card.
         EventCard(id: "passengerRights", category: .regulatory,
             title: "New Passenger-Rights Rules",
             body: "New rules raise the compensation you owe for disruptions. Compliance is not optional.",

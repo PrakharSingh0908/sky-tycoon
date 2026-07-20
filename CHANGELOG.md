@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Slot scarcity: use it or lose it (GDD §26, Pillar 3)
+
+- Every ~26 weeks the regulator runs a **slot review**. If you're hogging a scarce slot at a busy airport with a half-empty route (under 55% load, not still ramping), a targeted card names that route and offers a choice: **defend the slots** (a net-worth-scaled cash cost) or **give them up** (its weekly frequency is cut, freeing the slots). Ignore it and, like any ambient card, it unfolds to "give them up" after 8 days.
+- The review only fires when you're actually hoarding — an airport with plenty of free slots is never touched — so it pressures optimization without nagging efficient networks. The old generic "slot audit" flavor card was removed in favor of this real, targeted mechanic.
+
+*Why:* per direction (Pillar 3 of GDD §26) — you could hold every route forever at no cost. Now scarce slots at busy airports have to earn their keep, so expansion means choosing what to fly.
+
+
 ## Route maturity + oversupply penalty (GDD §26, Pillar 2)
 
 - **New routes now build their market over time.** A freshly opened route starts at ~35% of full demand and ramps to 100% over 10 weeks on a smooth S-curve, instead of arriving full on day one. Opening a route (or a new city pair) is now an investment that takes a couple of months to pay off. Old/existing routes are treated as fully mature, so nothing you already fly is affected.

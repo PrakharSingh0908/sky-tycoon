@@ -546,6 +546,9 @@ enum EventEffect: Codable, Equatable {
     /// Flood the used-aircraft market: injects a metal-glut trend that
     /// discounts purchase/lease prices while it runs (a rival's collapse).
     case aircraftMarketShock(multiplier: Double, weeks: Int)
+    /// Slot review (GDD §26 Pillar 3): the regulator reclaims slots from the
+    /// event's subject route, cutting its weekly frequency by this many.
+    case reclaimRouteSlots(frequencyCut: Int)
 }
 
 /// A running timed modifier ("Fuel +30% · 4 wk"), applied each tick.
@@ -650,6 +653,9 @@ struct GameEvent: Codable, Identifiable {
     /// The (size-scaled) claim on a lawsuit card — persisted so a reloaded
     /// pending card rebuilds identical copy and options (GDD §19, §25).
     var incidentFee: Double? = nil
+    /// The route a slot-review card is about (GDD §26 Pillar 3). Optional
+    /// for save-compat.
+    var subjectRouteID: UUID? = nil
 }
 
 struct EventOption: Codable, Identifiable {

@@ -868,7 +868,7 @@ active play. This section is the roadmap to fix it. The thesis:
    and an over-supply yield penalty, so right-sizing is ongoing. **SHIPPED (P2).**
 3. **Slot scarcity with periodic review** — reclaim under-used slots at busy
    airports; expansion means choosing. Promotes the `slotAudit` event to a
-   real reclaim. *Pending.*
+   real reclaim. **SHIPPED (P3).**
 4. **Fleet as rolling reinvestment** — sharper aging + lease renewals make
    the fleet a treadmill, not a one-time buy. *Pending.*
 5. **Ambition ladder** — named goals beyond the aunt's arc (climb the rival
@@ -912,6 +912,27 @@ active play. This section is the roadmap to fix it. The thesis:
   while young and an "over-supplied, fares dilute NN%" warning when
   overweight; `routesNeedingAttention` skips routes still inside the ramp so
   a building route isn't falsely flagged.
+
+### P3 shipped — Slot scarcity (use it or lose it)
+- Every `slotReviewIntervalWeeks = 26`, `closeWeek` calls
+  `underusedRouteForReview()`: the worst route (lowest load) that is flown,
+  past its ramp, under `slotReviewLoadThreshold = 0.55` load, holding
+  `≥ slotReviewFrequencyCut` weekly slots, at an airport with
+  `≤ slotReviewCongestionFree = 6` free slots. If found (and no card is
+  pending), `presentSlotReview(route:)` fires a targeted AMBIENT card naming
+  that route.
+- Options: "Defend the slots" (a net-worth-scaled cash cost from
+  `slotReviewDefendCost = 25_000`) or "Give them up"
+  (`reclaimRouteSlots(frequencyCut:)` cuts the subject route's weekly
+  frequency, freeing the slots). Default (ignored → auto-unfold) is "give
+  them up." Threaded via a new `GameEvent.subjectRouteID` +
+  `eventSubjectRouteID`, mirroring the staff/aircraft subject plumbing.
+- The card is built directly (not from the deck), so `refreshPendingEventCopy`
+  leaves it intact on reload (cardID "slotReview" isn't in the deck). The
+  old generic `slotAudit` deck card was removed.
+- Only fires when you're actually hoarding — airports with free slots are
+  never touched. Verified: a 30%-full route saturating an airport is picked;
+  "give them up" cuts frequency by 4.
 
 ### Validation standard for future pillars
 Add a passive bot (opens good routes, never touches them) vs an active bot

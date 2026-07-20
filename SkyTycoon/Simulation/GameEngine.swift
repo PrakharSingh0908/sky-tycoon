@@ -663,6 +663,15 @@ final class GameEngine {
         }
         state.loans.removeAll { $0.remaining <= 0.01 }
 
+        // Slot review (GDD §26 Pillar 3): on the review cadence, if you're
+        // hoarding a scarce slot with a half-empty route, the regulator
+        // calls it. Runs before drawEvent so it takes the single card slot.
+        if state.pendingEvent == nil,
+           state.date.totalWeeks % Balance.slotReviewIntervalWeeks == 0,
+           let target = underusedRouteForReview() {
+            presentSlotReview(route: target)
+        }
+
         // Events, timed effects, trends, unlocks.
         drawEvent()
         for i in state.activeEffects.indices { state.activeEffects[i].weeksRemaining -= 1 }
@@ -1179,6 +1188,50 @@ final class GameEngine {
         state.eventLog = log
     }
 
+    /// The player's worst under-used route at a busy airport — the target of
+    /// a slot review (GDD §26 Pillar 3). Skips routes still ramping.
+    func underusedRouteForReview() -> Route? {
+        state.routes
+            .filter { route in
+                guard !route.assignedAircraftIDs.isEmpty,
+                      route.weeklyFrequency >= Balance.slotReviewFrequencyCut,
+                      route.lastLoadFactor < Balance.slotReviewLoadThreshold else { return false }
+                let weeksOpen = route.openedOn.map { state.date.totalWeeks - $0.totalWeeks }
+                    ?? Balance.routeRampWeeks
+                guard weeksOpen >= Balance.routeRampWeeks else { return false }
+                let free = min(freeSlots(at: route.originID), freeSlots(at: route.destinationID))
+                return free <= Balance.slotReviewCongestionFree
+            }
+            .min { $0.lastLoadFactor < $1.lastLoadFactor }
+    }
+
+    /// Presents the targeted "use it or lose it" slot review as an ambient
+    /// card (GDD §26 Pillar 3). Ignored, it unfolds to "give them up."
+    func presentSlotReview(route: Route) {
+        let cost = (Balance.slotReviewDefendCost
+            * Balance.eventCashScale(netWorth: netWorth) / 10_000).rounded() * 10_000
+        let busy = freeSlots(at: route.originID) <= freeSlots(at: route.destinationID)
+            ? route.originID : route.destinationID
+        let lf = Int((route.lastLoadFactor * 100).rounded())
+        let title = "Use Your Slots, or Lose Them"
+        let body = "The regulator is reviewing slots at \(busy). Your \(route.originID) ✈︎ \(route.destinationID) is flying \(lf)% full, under the bar at a crowded airport. Defend the slots, or give them up to a busier carrier."
+        let options = [
+            EventOption(label: "Defend the slots · −\(cost.money)", effects: [.cash(-cost)]),
+            EventOption(label: "Give them up",
+                        effects: [.reclaimRouteSlots(frequencyCut: Balance.slotReviewFrequencyCut)]),
+        ]
+        state.pendingEvent = GameEvent(
+            id: UUID(), cardID: "slotReview", category: .regulatory, isNegative: true,
+            title: title, body: body, options: options, firedOn: state.date,
+            severity: .ambient,
+            autoResolveDay: state.date.totalDays + Balance.ambientEventGraceDays,
+            defaultOptionIndex: 1,
+            subjectRouteID: route.id)
+        state.lastEventTotalWeek = state.date.totalWeeks
+        state.lastNegativeEventTotalWeek = state.date.totalWeeks
+        logEvent(title: "Slot review: \(route.originID) ✈︎ \(route.destinationID)", isNegative: true)
+    }
+
     /// Fires a card (internal so tests can force specific cards).
     func present(_ card: EventCard) {
         // Lawsuit incidents (GDD §19) name a real roster member; recalls
@@ -1485,6 +1538,12 @@ final class GameEngine {
                 kind: .aircraftPrices, horizon: .short,
                 multiplier: multiplier, weeksRemaining: weeks))
             state.industryTrends = trends
+        case .reclaimRouteSlots(let cut):
+            guard let rid = eventSubjectRouteID,
+                  let r = state.routes.firstIndex(where: { $0.id == rid }) else { return }
+            state.routes[r].weeklyFrequency = max(0, state.routes[r].weeklyFrequency - cut)
+            logEvent(title: "Slots reclaimed on \(state.routes[r].originID) ✈︎ \(state.routes[r].destinationID)",
+                     isNegative: true)
         }
     }
 
@@ -1550,6 +1609,7 @@ final class GameEngine {
         // which must survive this resolution. The subject rides alongside.
         eventSubjectID = event.subjectID
         eventSubjectAircraftType = event.subjectAircraftType
+        eventSubjectRouteID = event.subjectRouteID
         state.pendingEvent = nil
         // Cash spent settling an incident is booked as an Incidents cost so
         // the quarter reflects it (the cash itself still leaves immediately).
@@ -1562,13 +1622,15 @@ final class GameEngine {
         }
         eventSubjectID = nil
         eventSubjectAircraftType = nil
+        eventSubjectRouteID = nil
         save()
     }
 
-    /// The roster member / aircraft model the event being resolved is
-    /// about (GDD §19, §20).
+    /// The roster member / aircraft model / route the event being resolved
+    /// is about (GDD §19, §20, §26).
     private var eventSubjectID: UUID?
     private var eventSubjectAircraftType: AircraftType?
+    private var eventSubjectRouteID: UUID?
 
     // ── Industry trends (GDD §14) ────────────────────────────────────────
     // One LONG economic regime is always in force; up to two SHORT shocks
