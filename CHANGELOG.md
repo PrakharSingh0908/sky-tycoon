@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Pay the bank back early
+
+- Every loan on the Money tab now shows its weekly payment and a "Pay down" key that opens a repayment drawer: the remaining balance meter, cash on hand, and a slider from zero to everything you can afford (armed at the maximum). The key says exactly what it does: "Pay $X", or "Pay it off · $X" when the slider covers the balance. Paying clamps to cash and balance, a cleared loan closes its file, and the sim clock holds while the drawer is up. New engine repayLoan(loanID:amount:), no prepayment penalty.
+- The bank card also states plainly that loans deposit to cash in full on signing. They always did (cash += principal the moment you borrow), but the net worth board holds still because debt rises by the same amount, which read as the money never arriving.
+
+*Why:* per direction. Debt you cannot voluntarily retire is a trap, not a tool; and the deposit note turns an accounting identity into something the player can see.
+
+
 ## Wage lever feels alive: hold to step, morale reacts the same day
 
 - PillStepper keys (wage, fare, flights per week) now auto-repeat while held, so moving a wage $500 is a press, not ten taps.

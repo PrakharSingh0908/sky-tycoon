@@ -11,6 +11,8 @@ import SwiftUI
 struct MoneyView: View {
     @Environment(GameEngine.self) private var engine
     @State private var explanation: Explanation?
+    /// The loan being paid down early, if the drawer is up.
+    @State private var repaying: Loan?
     private let accent = Theme.mint
 
     var body: some View {
@@ -339,11 +341,26 @@ struct MoneyView: View {
             SectionHeader(title: "The bank", icon: "building.columns.fill", accent: accent)
             Text("Lending limit: total debt ≤ \(Balance.borrowingLimit(netWorth: engine.netWorth).money) (from net worth). Current debt \(engine.totalDebt.money).")
                 .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+            // Borrowed principal lands in cash the moment you sign; net
+            // worth holds still because debt rises with it. Say so.
+            Text("Loans deposit to cash in full on signing.")
+                .font(.game(.caption2)).foregroundStyle(Theme.textTertiary)
             ForEach(engine.state.loans) { loan in
-                MeterRow(label: "Remaining of \(loan.principal.money)",
-                         value: loan.remaining / max(loan.principal, 1),
-                         display: loan.remaining.money,
-                         color: Theme.warn)
+                VStack(alignment: .leading, spacing: 6) {
+                    MeterRow(label: "Remaining of \(loan.principal.money)",
+                             value: loan.remaining / max(loan.principal, 1),
+                             display: loan.remaining.money,
+                             color: Theme.warn)
+                    HStack {
+                        Text("\(loan.weeklyPayment.money)/wk")
+                            .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                        Spacer()
+                        Button("Pay down") { repaying = loan }
+                            .buttonStyle(GameButtonStyle(finish: .obsidian))
+                            .disabled(engine.state.cash <= 0)
+                            .opacity(engine.state.cash <= 0 ? 0.4 : 1)
+                    }
+                }
             }
             // Offers stay folded until you're actually shopping for money.
             DisclosureGroup {
@@ -373,10 +390,110 @@ struct MoneyView: View {
             }
             .tint(Theme.textSecondary)
         }
+        .sheet(item: $repaying) { RepayLoanSheet(loanID: $0.id) }
+    }
+}
+
+// ── Paying the bank back early ───────────────────────────────────────────
+
+/// Full or partial early repayment: a slider from nothing to everything
+/// you can afford, and one key that says exactly what it will do.
+private struct RepayLoanSheet: View {
+    @Environment(GameEngine.self) private var engine
+    @Environment(\.dismiss) private var dismiss
+    let loanID: UUID
+    @State private var amount: Double = 0
+    @State private var contentHeight: CGFloat = 0
+    private let accent = Theme.mint
+
+    /// Live copy from state — the balance moves if a week settles.
+    private var loan: Loan? {
+        engine.state.loans.first { $0.id == loanID }
+    }
+
+    var body: some View {
+        VStack(spacing: 16) {
+            if let loan {
+                let maxPayable = min(engine.state.cash, loan.remaining)
+                Text("Pay down loan")
+                    .font(.display(.title2)).foregroundStyle(Theme.textPrimary)
+                    .padding(.top, 22)
+                VStack(spacing: 10) {
+                    MeterRow(label: "Remaining of \(loan.principal.money)",
+                             value: loan.remaining / max(loan.principal, 1),
+                             display: loan.remaining.money,
+                             color: Theme.warn)
+                    HStack {
+                        Text("Cash on hand").font(.game(.subheadline))
+                            .foregroundStyle(Theme.textSecondary)
+                        Spacer()
+                        TickerText(text: engine.state.cash.money,
+                                   font: .game(.subheadline, weight: .bold))
+                    }
+                    Divider().overlay(Theme.hairline)
+                    HStack {
+                        Text("Payment").font(.game(.subheadline))
+                            .foregroundStyle(Theme.textSecondary)
+                        Spacer()
+                        TickerText(text: amount.money,
+                                   font: .game(.subheadline, weight: .bold),
+                                   color: accent)
+                    }
+                    if maxPayable > 0 {
+                        Slider(value: $amount, in: 0...maxPayable)
+                            .tint(accent)
+                    } else {
+                        Text("No spare cash this week.")
+                            .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+                    }
+                }
+                .padding(14)
+                .background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
+
+                Button {
+                    if engine.repayLoan(loanID: loanID, amount: amount) { dismiss() }
+                } label: {
+                    Text(amount >= loan.remaining - 0.5
+                         ? "Pay it off · \(loan.remaining.money)"
+                         : "Pay \(amount.money)")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(GameButtonStyle(finish: .bronze))
+                .disabled(amount <= 0)
+                .opacity(amount <= 0 ? 0.4 : 1)
+            } else {
+                Text("Paid off. The file is closed.")
+                    .font(.game(.headline)).foregroundStyle(Theme.textSecondary)
+                    .padding(.top, 40)
+                Button("Close") { dismiss() }
+                    .buttonStyle(GameButtonStyle(color: accent))
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 18)
+        .frame(maxWidth: .infinity)
+        .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) {
+            contentHeight = $0
+        }
+        .presentationDetents([.height(min(contentHeight + 24, 720))])
+        .presentationBackground(Theme.bgElevated)
+        .preferredColorScheme(.dark)
+        .holdsSimClock()   // the balance shouldn't tick while you decide
+        .onAppear { amount = min(engine.state.cash, loan?.remaining ?? 0) }
     }
 }
 
 #Preview {
     MoneyView().environment(GameEngine.previewGame())
+        .preferredColorScheme(.dark)
+}
+
+// Early-repayment pin (flat): slider armed at everything affordable.
+#Preview("Pay down loan") {
+    let engine = GameEngine.previewGame()
+    let _ = engine.takeLoan(amount: 2_000_000, weeklyRate: 0.0015, weeks: 260)
+    return RepayLoanSheet(loanID: engine.state.loans[0].id)
+        .background(Theme.bgElevated)
+        .environment(engine)
         .preferredColorScheme(.dark)
 }

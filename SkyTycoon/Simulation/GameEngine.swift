@@ -1834,6 +1834,21 @@ final class GameEngine {
         save()
     }
 
+    /// Pay a loan down early, full or partial — limited by the loan's
+    /// balance and the cash on hand. No penalty; the bank just recomputes
+    /// nothing (the fixed weekly payment retires the smaller balance sooner).
+    @discardableResult
+    func repayLoan(loanID: UUID, amount: Double) -> Bool {
+        guard let i = state.loans.firstIndex(where: { $0.id == loanID }) else { return false }
+        let payment = min(max(0, amount), state.loans[i].remaining, state.cash)
+        guard payment > 0 else { return false }
+        state.cash -= payment
+        state.loans[i].remaining -= payment
+        state.loans.removeAll { $0.remaining <= 0.01 }
+        save()
+        return true
+    }
+
     // ── The bank (M7): three offers, one lending limit ───────────────────
 
     var totalDebt: Double { state.loans.reduce(0) { $0 + $1.remaining } }
