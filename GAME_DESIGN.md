@@ -659,3 +659,61 @@ purchasable on day one) skipped the entire first act. The foundation
 era gives the numbers somewhere to go, makes each unlock a story
 beat the player remembers, and turns rank into a long, legible climb
 instead of a leaderboard you enter at the top of.
+
+---
+
+## 23. Amendment — The Daily Loop (2026-07-20)
+
+The feedback loop moves from **weekly** to **daily**. A lever pulled today
+shows its consequence tomorrow, not a week later. The economy is unchanged
+in totals — seven daily settles equal one old weekly settle — so the whole
+§22 calibration (fares, wages, wear, the trust-fund arc) holds. Only the
+*cadence of feedback* changes.
+
+### The split: continuous daily, discrete weekly
+Two kinds of systems, two cadences:
+
+- **Continuous — settled every day (1/7 of the weekly rate):** route
+  revenue and fuel, wages, contractors, maintenance, lease, cabin, marketing,
+  overhead, loan interest → cash moves daily. Wear accrual, condition decay,
+  route satisfaction drift, and reputation drift also step daily. The net
+  worth board, cash/debt/reputation charts, and every meter refresh each day.
+- **Discrete — resolved on the 7-day boundary (unchanged balance & RNG):**
+  the event deck draw, industry-trend aging, staff attrition and recruitment,
+  delivery and maintenance countdowns (still counted in weeks), aircraft
+  aging, fleet-tier unlocks, the used-market refresh, and the quarter close
+  (every 13 weeks). These stay weekly because their pacing is a design
+  choice and their randomness must stay deterministic — the seeded RNG is
+  drawn once per week, exactly as before, so replays are identical.
+
+This keeps the calibrated economy intact while giving the player same-day
+control over the levers that matter moment to moment.
+
+### Time model
+- `GameDate` gains `day: 1...7` alongside `week: 1...52` and `year`. Old
+  saves decode with `day = 1` (save-compat). `advance()` rolls day → week →
+  year; `totalDays` is the absolute clock.
+- The clock ticks one **day** per `secondsPerWeek / 7` (~2.3s at 1x). The
+  sim-pill's seven-segment strip now fills one segment per settled day, and
+  a full week still takes the same real time as before.
+- `stepOneWeek()` becomes `stepOneDay()` — the deliberate-play unit is a day.
+
+### The report
+- The formal P&L **statement stays weekly**: daily figures accumulate into
+  the running week's `WeeklyReport`, which is finalized and appended on the
+  7-day boundary (the "Last week" card, the 52-week P&L chart, the expense
+  pie, and quarter math are unchanged). The *numbers* the player watches
+  move daily; the *statement* is still a clean weekly close.
+
+### Determinism & save-compat
+- RNG draws remain on the weekly boundary only, in the same fixed order, so
+  a seed replays identically.
+- `day` is optional-with-default in the save; pre-daily saves load and simply
+  begin their next week from day 1.
+
+### Why
+A week-long delay between a decision and its consequence made the game feel
+like steering a ship by mail. Daily feedback makes it controllable — you
+see a fare change, a hire, or a route tweak land the next day — without
+speeding the economy up or cheapening the slow-build fantasy: the money per
+day is small, the climb is just as long, but now it is legible day by day.
