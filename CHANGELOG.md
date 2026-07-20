@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Regional subsidy is now a commitment, not a handout
+
+- The "Regional Route Subsidy" event used to hand you a flat +$50K for nothing. It's now a **commitment**: you fund the launch up front (−$60K) and the government tops up the thin loads with a small weekly subsidy for 16 weeks (+$6K/wk), plus a goodwill reputation bump. Net over the term is modestly positive — the point of a subsidy — but you front the cash and wait for it, so it's a real decision rather than free money. Both figures scale with net worth like every event cash amount.
+
+*Why:* per feedback — a no-strings +$50K lump was exactly the free-money pattern we've been removing. Reframing it as public-service flying (pay now, earn it back slowly, gain brand) makes it an earned, deliberate choice.
+
+
 ## Fleet treadmill + ambition ladder (GDD §26, Pillars 4 & 5)
 
 - **Aircraft now age out.** Past 18 years an airframe's maintenance climbs steadily (about +6%/yr, ~+72% by 30 years) and its condition slides faster and further (down to a decrepit floor of 12), so an old plane eventually costs more to run than it earns and has to be replaced. The Dashboard's Ops Conditions card flags any plane past 22 years with a "plan replacement" row that taps through to the Fleet. Existing fleets aren't retroactively punished — the curve just applies from here.
