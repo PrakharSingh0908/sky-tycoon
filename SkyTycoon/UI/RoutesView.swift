@@ -291,7 +291,10 @@ private struct BoardingPassCard: View {
                     NavigationLink {
                         RouteDetailView(routeID: route.id)
                     } label: {
-                        Text("Set up route").frame(maxWidth: .infinity)
+                        // Fresh routes get set up; operating ones get tuned.
+                        Text(route.assignedAircraftIDs.isEmpty
+                             ? "Set up route" : "Configure")
+                            .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(GameButtonStyle(finish: .bronze))
                     Button("Cancel route", role: .destructive) {
@@ -414,6 +417,8 @@ private struct BoardingPassCard: View {
 struct RouteDetailView: View {
     @Environment(GameEngine.self) private var engine
     let routeID: UUID
+    /// The quick-add drawer: a route-aware showroom; buys land on this route.
+    @State private var shoppingForRoute: Route?
     private let accent = Theme.teal
 
     var body: some View {
@@ -487,6 +492,9 @@ struct RouteDetailView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Theme.bgElevated, for: .navigationBar)
+            .sheet(item: $shoppingForRoute) { route in
+                NavigationStack { ShowroomView(fittingRoute: route) }
+            }
         }
     }
 
@@ -645,12 +653,13 @@ struct RouteDetailView: View {
                 }
                 .buttonStyle(.plain)
             }
-            // Always a path to more metal: route-aware showroom at the
-            // bottom — prominent when nothing in the fleet fits.
-            NavigationLink {
-                ShowroomView(fittingRoute: route)
+            // Always a path to more metal: the route-aware showroom pops
+            // up as a drawer, and anything acquired there joins THIS route
+            // automatically — prominent when nothing in the fleet fits.
+            Button {
+                shoppingForRoute = route
             } label: {
-                Label(hasCandidate ? "Buy more aircraft" : "Get an aircraft for this route",
+                Label(hasCandidate ? "Add planes to this route" : "Get an aircraft for this route",
                       systemImage: "cart.fill")
                     .frame(maxWidth: .infinity)
             }

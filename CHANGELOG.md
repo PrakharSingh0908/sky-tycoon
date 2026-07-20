@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Route-aware buying: the drawer that staffs the route
+
+- The boarding pass key now reads "Configure" once a route has aircraft assigned; "Set up route" stays for fresh routes only.
+- "Buy more aircraft" on the route screen is now "Add planes to this route" and pops the route-aware showroom as a drawer instead of pushing a screen. Anything acquired there lands on that route automatically: leases and used buys assign the moment the deal closes, and new orders remember their posting and join the route the week they deliver (falling back to idle if the route is gone or the fit no longer works).
+
+*Why:* per direction. Buying from a route's desk and then hand-assigning the same plane was two steps that should be one; the drawer keeps you in the route's context, and delivery-time joining keeps on-order planes out of the sim until they actually exist.
+
+
 ## Asking wage dropped from applicant meta
 
 - The applicant row's meta line no longer repeats "asks $X/wk"; it now reads just "waits N wk". The Hire key already carries the wage.

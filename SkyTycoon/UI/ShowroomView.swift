@@ -137,7 +137,8 @@ struct ShowroomView: View {
                     Spacer()
                     Button("Order") {
                         let nickname = nextNickname()
-                        if engine.orderNewAircraft(type: type, nickname: nickname) {
+                        if engine.orderNewAircraft(type: type, nickname: nickname,
+                                                   forRoute: fittingRoute?.id) {
                             receipt = AcquisitionReceipt(kind: .ordered, type: type,
                                 nickname: nickname, amount: price,
                                 deliveryWeeks: Balance.deliveryWeeks[type]!)
@@ -186,7 +187,8 @@ struct ShowroomView: View {
                     Spacer()
                     Button("Buy") {
                         let nickname = nextNickname()
-                        if engine.buyUsedAircraft(listingID: listing.id, nickname: nickname) {
+                        if engine.buyUsedAircraft(listingID: listing.id, nickname: nickname,
+                                                  forRoute: fittingRoute?.id) {
                             receipt = AcquisitionReceipt(kind: .bought, type: listing.type,
                                 nickname: nickname, amount: listing.price, deliveryWeeks: nil)
                         }
@@ -220,7 +222,8 @@ struct ShowroomView: View {
                            font: .game(.title3, weight: .semibold))
                 SlideKey(label: "Slide to lease") {
                     let nickname = nextNickname()
-                    if engine.leaseAircraft(type: type, nickname: nickname) {
+                    if engine.leaseAircraft(type: type, nickname: nickname,
+                                            forRoute: fittingRoute?.id) {
                         receipt = AcquisitionReceipt(kind: .leased, type: type,
                             nickname: nickname, amount: weekly, deliveryWeeks: nil)
                     }

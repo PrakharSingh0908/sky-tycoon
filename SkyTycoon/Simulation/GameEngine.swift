@@ -309,6 +309,17 @@ final class GameEngine {
             if state.fleet[i].deliveryWeeksRemaining <= 0 {
                 state.fleet[i].deliveryWeeksRemaining = 0
                 state.fleet[i].status = .idle
+                // Ordered from a route's desk: the fresh airframe reports
+                // to its posting the week it arrives (if it still fits).
+                if let routeID = state.fleet[i].assignedRouteID {
+                    if let r = state.routes.firstIndex(where: { $0.id == routeID }),
+                       canOperate(aircraftID: state.fleet[i].id, routeID: routeID) {
+                        state.routes[r].assignedAircraftIDs.append(state.fleet[i].id)
+                        state.fleet[i].status = .assigned
+                    } else {
+                        state.fleet[i].assignedRouteID = nil
+                    }
+                }
             }
         }
 
@@ -1352,7 +1363,10 @@ final class GameEngine {
     /// Buying new is an ORDER: cash up front, plane arrives after the
     /// archetype's delivery wait (status .onOrder until then).
     @discardableResult
-    func orderNewAircraft(type: AircraftType, nickname: String) -> Bool {
+    /// Ordered from a route's desk (forRoute), the plane remembers its
+    /// posting and joins that route the week it is delivered.
+    func orderNewAircraft(type: AircraftType, nickname: String,
+                          forRoute routeID: UUID? = nil) -> Bool {
         guard isUnlocked(type) else { return false }
         let spec = Balance.specs[type]!
         let price = discountedPrice(for: type)
@@ -1363,7 +1377,7 @@ final class GameEngine {
             status: .onOrder, acquisition: .ownedNew, weeklyLeaseCost: 0,
             deliveryWeeksRemaining: Balance.deliveryWeeks[type]!,
             cabin: .standard(abreast: spec.seatsAbreast), wear: 0, condition: 100,
-            ageYears: 0, assignedRouteID: nil, groundedWeeksRemaining: 0))
+            ageYears: 0, assignedRouteID: routeID, groundedWeeksRemaining: 0))
         save()
         return true
     }
@@ -1420,29 +1434,35 @@ final class GameEngine {
     /// Used planes deliver instantly at 30–60% of new, with visible
     /// condition/age from the listing.
     @discardableResult
-    func buyUsedAircraft(listingID: UUID, nickname: String) -> Bool {
+    func buyUsedAircraft(listingID: UUID, nickname: String,
+                         forRoute routeID: UUID? = nil) -> Bool {
         guard let idx = state.usedMarket.firstIndex(where: { $0.id == listingID }) else { return false }
         let listing = state.usedMarket[idx]
         guard isUnlocked(listing.type), state.cash >= listing.price else { return false }
         state.cash -= listing.price
         state.usedMarket.remove(at: idx)
-        state.fleet.append(Aircraft(id: UUID(), type: listing.type, nickname: nickname,
+        let planeID = UUID()
+        state.fleet.append(Aircraft(id: planeID, type: listing.type, nickname: nickname,
             status: .idle, acquisition: .ownedUsed, weeklyLeaseCost: 0,
             deliveryWeeksRemaining: 0,
             cabin: .standard(abreast: Balance.specs[listing.type]!.seatsAbreast),
             wear: 0, condition: listing.condition,
             ageYears: listing.ageYears, assignedRouteID: nil, groundedWeeksRemaining: 0))
         save()
+        // Bought from a route's desk: straight onto that route.
+        if let routeID { assign(aircraftID: planeID, to: routeID) }
         return true
     }
 
     /// Leasing: any archetype instantly, no capital outlay, a weekly
     /// payment that never ends. The cautious player's first plane.
     @discardableResult
-    func leaseAircraft(type: AircraftType, nickname: String) -> Bool {
+    func leaseAircraft(type: AircraftType, nickname: String,
+                       forRoute routeID: UUID? = nil) -> Bool {
         guard isUnlocked(type) else { return false }
         let spec = Balance.specs[type]!
-        state.fleet.append(Aircraft(id: UUID(), type: type, nickname: nickname,
+        let planeID = UUID()
+        state.fleet.append(Aircraft(id: planeID, type: type, nickname: nickname,
             status: .idle, acquisition: .leased,
             // The trend prices the signing; the rate then stays locked.
             weeklyLeaseCost: spec.purchasePrice * Balance.leaseRatePerWeek
@@ -1451,6 +1471,8 @@ final class GameEngine {
             cabin: .standard(abreast: spec.seatsAbreast), wear: 0, condition: 100,
             ageYears: 0, assignedRouteID: nil, groundedWeeksRemaining: 0))
         save()
+        // Leased from a route's desk: straight onto that route.
+        if let routeID { assign(aircraftID: planeID, to: routeID) }
         return true
     }
 
