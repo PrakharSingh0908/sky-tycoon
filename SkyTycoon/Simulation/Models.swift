@@ -782,6 +782,14 @@ struct MilestoneDef: Identifiable {
     }
 }
 
+/// A rival's line in the press (GDD §30) — trash talk that gives the
+/// ladder a voice. Persisted so the current jab survives a reload.
+struct RivalQuote: Codable, Equatable {
+    var headline: String     // "MONSOON AIRWAYS REACTS"
+    var quote: String        // the line itself
+    var attribution: String  // "Rohan Mehta, Monsoon Airways"
+}
+
 /// The airline's personal bests (GDD §29) — pure vanity, updated each week
 /// by max-ing the current values in. Optional for save-compat.
 struct Records: Codable {
@@ -883,6 +891,10 @@ struct GameState: Codable {
     var lastOvertakenRival: String? = nil
     /// Personal bests (GDD §29).
     var records: Records? = nil
+    /// The latest rival press reaction (GDD §30) — shown in the Gazette.
+    var rivalQuote: RivalQuote? = nil
+    /// The week that reaction fired, so it fades back to a standing jab.
+    var rivalQuoteWeek: Int? = nil
     /// Consecutive weeks with negative cash; 8 with no sellable assets = bankrupt.
     var weeksInsolvent: Int
     var isBankrupt: Bool

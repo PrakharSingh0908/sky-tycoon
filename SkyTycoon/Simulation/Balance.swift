@@ -793,6 +793,36 @@ enum Balance {
               detail: "Become the country's largest carrier.", kind: .beatRank(1)),
     ]
 
+    // ── Rival trash talk (GDD §30) ───────────────────────────────────────
+    // The ladder gets a voice: a carrier reacts in the press when you pass
+    // it, and the carrier just above you takes the occasional jab at the
+    // upstart. Placeholders: {you} = your airline, {rival} = their name.
+    static let overtakenQuotes = [
+        "\"{you}? A flash in the pan. We've flown these skies for decades.\"",
+        "\"Congratulations to {you}. Enjoy the view — it's windy up here.\"",
+        "\"One good run doesn't make a carrier. We're not losing sleep.\"",
+        "\"So {you} slipped ahead. We'll be right back on their tail.\"",
+        "\"Respect to {you}. They earned it. Now the real fight begins.\"",
+        "\"We wish {you} well. Briefly.\"",
+    ]
+    static let rivalJabs = [
+        "\"{you}? Can't say the name rings a bell.\"",
+        "\"A cute little airline. Call us when they leave the regionals.\"",
+        "\"There's always room for a minnow. Until there isn't.\"",
+        "\"We admire the ambition of {you}. Ambition is cheap.\"",
+        "\"Let {you} have the scraps. We'll take the trunk routes.\"",
+    ]
+    static let overtakenHeadlines = ["RIVAL REACTS", "SOUR GRAPES", "PASSED, AND STINGING", "NO COMMENT (BUT PLENTY OF COMMENT)"]
+    static let jabHeadlines = ["EYES ON THE UPSTART", "THE INCUMBENT SPEAKS", "PUNCHING DOWN"]
+
+    /// Spokesperson name pools — a plausible CEO byline for a rival.
+    static let ceoFirst = ["Arjun", "Priya", "Marcus", "Elena", "Rohan", "Grace",
+                           "Vikram", "Sofia", "David", "Naina", "James", "Mei",
+                           "Tara", "Owen", "Ava", "Dev"]
+    static let ceoLast = ["Mehta", "Sharma", "Cole", "Novak", "Reddy", "Hayes",
+                          "Kapoor", "Sterling", "Nguyen", "Bose", "Walsh", "Rao",
+                          "Fisher", "Iyer", "Doyle", "Khan"]
+
     // ── The event deck (GDD §4.7, M3) ────────────────────────────────────
 
     // ── Airworthiness (GDD §17) ──────────────────────────────────────────

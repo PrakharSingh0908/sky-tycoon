@@ -105,39 +105,18 @@ private struct AircraftCard: View {
     let plane: Aircraft
     let accent: Color
     let onArchitect: (Aircraft) -> Void
-    @State private var renaming = false
-    @State private var draftName = ""
 
     var body: some View {
         let spec = Balance.specs[plane.type]!
-        // When a plane carries a personal name, keep its tail code visible.
-        let subtitlePrefix = plane.customName != nil ? "\(plane.nickname) · " : ""
         GameCard {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 6) {
-                        Text(plane.displayName).font(.game(.headline, weight: .bold))
-                        Button {
-                            draftName = plane.customName ?? ""
-                            renaming = true
-                        } label: {
-                            Image(systemName: "pencil")
-                                .font(.caption2).foregroundStyle(Theme.textTertiary)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    Text("\(subtitlePrefix)\(spec.displayName) · \(plane.seats(spec: spec)) seats · \(Int(plane.effectiveRangeKm(spec: spec))) km range · \(String(format: "%.1f", plane.ageYears))y")
+                    Text(plane.nickname).font(.game(.headline, weight: .bold))
+                    Text("\(spec.displayName) · \(plane.seats(spec: spec)) seats · \(Int(plane.effectiveRangeKm(spec: spec))) km range · \(String(format: "%.1f", plane.ageYears))y")
                         .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
                 }
                 Spacer()
                 acquisitionBadge
-            }
-            .alert("Name this aircraft", isPresented: $renaming) {
-                TextField("Name", text: $draftName)
-                Button("Save") { engine.renameAircraft(id: plane.id, name: draftName) }
-                Button("Cancel", role: .cancel) { }
-            } message: {
-                Text("Give it a name, or leave blank to keep the tail code \(plane.nickname).")
             }
 
             // The airplane itself — undelivered planes stay in natural

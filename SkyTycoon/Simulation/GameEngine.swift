@@ -2458,11 +2458,49 @@ final class GameEngine {
         guard !newly.isEmpty else { return }
         newly.forEach { passed.insert($0.name) }
         state.passedRivals = passed
-        // Announce the biggest carrier newly overtaken this week.
+        // Announce the biggest carrier newly overtaken this week, and let
+        // them react in the press (GDD §30).
         if let notable = newly.max(by: { $0.marketCap < $1.marketCap }) {
             state.lastOvertakenRival = notable.name
             logEvent(title: "Overtook \(notable.name) on the ladder", isNegative: false)
+            let quote = stablePick(Balance.overtakenQuotes,
+                                   seed: notable.name + "\(state.date.totalWeeks)")
+                .replacingOccurrences(of: "{you}", with: state.airlineName)
+                .replacingOccurrences(of: "{rival}", with: notable.name)
+            state.rivalQuote = RivalQuote(
+                headline: stablePick(Balance.overtakenHeadlines, seed: notable.name),
+                quote: quote,
+                attribution: "\(spokesperson(for: notable.name)), \(notable.name)")
+            state.rivalQuoteWeek = state.date.totalWeeks
         }
+    }
+
+    // ── Rival trash talk (GDD §30) ───────────────────────────────────────
+
+    private func stableHash(_ s: String) -> Int {
+        s.unicodeScalars.reduce(5381) { ($0 &* 33 &+ Int($1.value)) & 0x7FFFFFFF }
+    }
+    private func stablePick<T>(_ arr: [T], seed: String) -> T {
+        arr[stableHash(seed) % arr.count]
+    }
+    /// A plausible, stable CEO byline for a rival carrier.
+    private func spokesperson(for rival: String) -> String {
+        "\(stablePick(Balance.ceoFirst, seed: rival + "·first")) \(stablePick(Balance.ceoLast, seed: rival + "·last"))"
+    }
+
+    /// The rival press line for the Gazette: a fresh overtake reaction if one
+    /// landed in the last six weeks, else a standing jab from the carrier
+    /// directly above you (nil only when you already top the table).
+    var currentRivalPress: RivalQuote? {
+        if let q = state.rivalQuote, let w = state.rivalQuoteWeek,
+           state.date.totalWeeks - w <= 6 { return q }
+        guard let r = nextRival else { return nil }
+        let quote = stablePick(Balance.rivalJabs, seed: r.name)
+            .replacingOccurrences(of: "{you}", with: state.airlineName)
+            .replacingOccurrences(of: "{rival}", with: r.name)
+        return RivalQuote(headline: stablePick(Balance.jabHeadlines, seed: r.name),
+                          quote: quote,
+                          attribution: "\(spokesperson(for: r.name)), \(r.name)")
     }
 
     /// Rolls the airline's personal bests forward (GDD §29).

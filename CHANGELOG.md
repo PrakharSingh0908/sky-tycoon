@@ -7,6 +7,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Rival trash talk + a shareable airline card (GDD §30)
+
+- **The ladder now talks back.** A "Rival Watch" page in the Industry Gazette carries trash talk: for a few weeks after you overtake a carrier, its (named) CEO reacts in the press ("Congratulations to Cirrus Air. Enjoy the view — it's windy up here."); the rest of the time, the carrier directly above you takes a jab at the upstart. Bylines and lines are deterministic, so they read consistently.
+- **Share your airline card.** From the Profile menu, a beautifully crafted collectible card — Didot foil masthead and airline name, a polished-silver monogram crest ringed in your own livery color, a livery cheatline echoing your paint, instrument stat tiles (fleet, routes, rating, net worth, market cap), your rank line ("Ranked No. 7 of 55 in Indian aviation"), a handwritten signature, and corner registration ticks. Tap to preview, then share the image with a caption. Built entirely from the existing design system; no new art.
+- The aircraft rename feature was pulled from the Fleet UI.
+
+*Why:* two pure-delight additions — one gives the rivalry a voice, the other a thing you'd actually want to show a friend. Both reuse the game's own visual language.
+
+
 ## Payoff pack: rival overtakes, records, named planes (GDD §29)
 
 - **Overtaking a rival is now a moment.** When your market cap passes a named carrier on the ladder, a celebration banner announces it ("You overtook Satpura Express") and it's logged. The core feeling from the design charter — a rival you used to look up at now sitting below you — finally lands. (Existing standing is grandfathered, so no flood on first launch.)

@@ -1040,3 +1040,29 @@ in the Profile sheet.
 card (a pencil opens a text alert; blank reverts to the tail code, which
 stays visible as a subtitle). The hull-loss card now uses `displayName`, so
 losing "Spirit of Delhi" hits harder than losing "AA-A".
+
+---
+
+## §30 — Rival trash talk + the shareable airline card (2026-07-21)
+
+### Rival trash talk
+The ladder gets a voice, in the Gazette. `GameEngine.currentRivalPress`
+returns a `RivalQuote`: for six weeks after you overtake a named carrier it
+shows that carrier's salty reaction (set in `checkRivalOvertakes`), then
+fades to a standing jab from `nextRival` (the carrier directly above you).
+Quotes/bylines are picked by a STABLE hash (no RNG-stream impact) from
+`Balance.overtakenQuotes` / `rivalJabs` with a deterministic CEO byline
+(`spokesperson(for:)`). Rendered as a "RIVAL WATCH" page in the swipeable
+Gazette (`GazetteItem.rival`), sharing the newsprint/Didot/foil look.
+
+### The airline card (share)
+`AirlineCardView` (in ShareCard.swift) — the one artifact meant to leave the
+app, built entirely from the Blueprint system: Gazette foil + Didot
+masthead and name, a polished-silver monogram crest ringed in the player's
+livery tail color, a three-band livery cheatline echoing their paint,
+instrument-well stat tiles (fleet / routes / rating / net worth / market
+cap), a Caveat handwritten signature, and tail-color registration ticks.
+Driven by a precomputed `AirlineCardData` value so the live preview and the
+exported image are identical. Shared from the Profile via `ShareCardSheet`
+→ `ImageRenderer` (scale 3) → the system share sheet (`ActivityView`) with
+a caption. No new assets; pure design-system composition.

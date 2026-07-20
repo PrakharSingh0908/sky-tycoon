@@ -656,10 +656,14 @@ struct DashboardView: View {
             .buttonStyle(.plain)
 
             // The market's weather (GDD §14) reads as a newspaper you flip
-            // through right here: one concise story per page, no drill-down.
-            if !trends.isEmpty {
+            // through right here: a rival watch page (GDD §30) then one
+            // concise story per trend, no drill-down.
+            let press = engine.currentRivalPress
+            let items: [GazetteItem] = (press.map { [.rival($0)] } ?? [])
+                + trends.map { .trend($0) }
+            if !items.isEmpty {
                 Divider().overlay(Theme.hairline)
-                gazette(trends)
+                gazette(items)
             }
         }
         .sheet(isPresented: $showingIndustry) { IndustrySheet() }
@@ -678,10 +682,22 @@ struct DashboardView: View {
     /// no bundling); it falls back to the system serif if ever unavailable.
     private static func didot(_ size: CGFloat) -> Font { .custom("Didot-Bold", size: size) }
 
+    /// One flippable page of the Gazette: a market trend, or a rival's jab.
+    enum GazetteItem: Identifiable {
+        case rival(RivalQuote)
+        case trend(IndustryTrend)
+        var id: String {
+            switch self {
+            case .rival(let q): "rival-\(q.headline)-\(q.attribution)"
+            case .trend(let t): "trend-\(t.id)"
+            }
+        }
+    }
+
     /// The market's weather as a swipeable newspaper, inline on the home
     /// page: a fixed masthead, then one concise story per page. Flip with a
     /// horizontal swipe; the dots keep your place. No drill-down.
-    private func gazette(_ trends: [IndustryTrend]) -> some View {
+    private func gazette(_ items: [GazetteItem]) -> some View {
         let ink = Self.gazetteInk, inkSoft = Self.gazetteInkSoft
         func rule() -> some View { Rectangle().fill(inkSoft.opacity(0.4)).frame(height: 1) }
         return VStack(spacing: 8) {
@@ -693,16 +709,22 @@ struct DashboardView: View {
                 rule()
             }
             TabView(selection: $gazettePage) {
-                ForEach(Array(trends.enumerated()), id: \.element.id) { index, trend in
-                    gazetteStory(trend).tag(index).padding(.horizontal, 4)
+                ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                    Group {
+                        switch item {
+                        case .trend(let t): gazetteStory(t)
+                        case .rival(let q): rivalStory(q)
+                        }
+                    }
+                    .tag(index).padding(.horizontal, 4)
                 }
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
-            .frame(height: 118)
+            .frame(height: 126)
             .animation(.snappy, value: gazettePage)
-            if trends.count > 1 {
+            if items.count > 1 {
                 HStack(spacing: 6) {
-                    ForEach(trends.indices, id: \.self) { i in
+                    ForEach(items.indices, id: \.self) { i in
                         Circle()
                             .fill(ink.opacity(i == gazettePage ? 0.9 : 0.28))
                             .frame(width: 5, height: 5)
@@ -712,6 +734,35 @@ struct DashboardView: View {
         }
         .padding(.top, 6)
         .frame(maxWidth: .infinity)
+    }
+
+    /// A rival's line in the press: kicker, foil headline, the pull-quote
+    /// itself (the star), and the byline.
+    private func rivalStory(_ q: RivalQuote) -> some View {
+        let inkSoft = Self.gazetteInkSoft
+        return VStack(spacing: 5) {
+            Text("RIVAL WATCH")
+                .font(.system(size: 9, weight: .bold, design: .serif))
+                .tracking(1.6).foregroundStyle(inkSoft)
+            Text(q.headline)
+                .font(Self.didot(21))
+                .foregroundStyle(Self.gazetteFoil)
+                .shadow(color: .black.opacity(0.45), radius: 1, y: 1)
+                .multilineTextAlignment(.center)
+                .lineLimit(1).minimumScaleFactor(0.7)
+            Text(q.quote)
+                .font(.system(size: 14, design: .serif)).italic()
+                .foregroundStyle(Self.gazetteInk)
+                .multilineTextAlignment(.center)
+                .lineLimit(3).minimumScaleFactor(0.8)
+                .fixedSize(horizontal: false, vertical: true)
+            Text("— \(q.attribution)")
+                .font(.system(size: 10, design: .serif))
+                .foregroundStyle(inkSoft)
+                .lineLimit(1).minimumScaleFactor(0.7)
+                .padding(.top, 1)
+        }
+        .frame(maxWidth: .infinity, alignment: .center)
     }
 
     /// One story, told in a glance: kicker, serif headline, italic
@@ -1174,8 +1225,39 @@ private struct ProfileSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var deletingSlot: Int?
     @State private var refresh = 0
+    @State private var showingCard = false
 
     private var done: Set<String> { engine.state.completedMilestones }
+
+    /// Snapshot of the airline for the shareable card (GDD §30).
+    private var cardData: AirlineCardData {
+        let (rank, total) = engine.industryRank
+        return AirlineCardData(
+            airlineName: engine.state.airlineName,
+            monogram: engine.fleetPrefix,
+            adjective: engine.state.country.adjective,
+            year: engine.state.date.year,
+            rank: rank, total: total,
+            rating: engine.state.reputation,
+            fleetCount: engine.state.fleet.filter { $0.status != .onOrder }.count,
+            routeCount: engine.state.routes.count,
+            netWorth: engine.netWorth.money,
+            marketCap: engine.marketCap.money,
+            bestWeek: (engine.state.records?.bestWeekProfit ?? 0).money,
+            fuselage: Color(engine.state.livery.fuselage),
+            stripe: Color(engine.state.livery.stripe),
+            tail: Color(engine.state.livery.tail))
+    }
+
+    private var shareButton: some View {
+        Button {
+            showingCard = true
+        } label: {
+            Label("Share your airline card", systemImage: "square.and.arrow.up")
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(GameButtonStyle(color: accent, prominent: true))
+    }
     private var nextMilestone: MilestoneDef? {
         Balance.milestones.first { !done.contains($0.id) }
     }
@@ -1184,6 +1266,7 @@ private struct ProfileSheet: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 identity
+                shareButton
                 milestoneSummary
                 ambitionsCard
                 recordsCard
@@ -1218,6 +1301,7 @@ private struct ProfileSheet: View {
             }
             Button("Keep it", role: .cancel) { deletingSlot = nil }
         }
+        .sheet(isPresented: $showingCard) { ShareCardSheet(data: cardData) }
     }
 
     private let accent = Theme.sky
