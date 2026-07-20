@@ -768,6 +768,9 @@ final class GameEngine {
         }
         // Ambition ladder (GDD §26 Pillar 5): pay newly-reached rungs.
         checkAmbitions()
+        // Rival overtakes + personal bests (GDD §29).
+        checkRivalOvertakes()
+        updateRecords()
 
         // Fail state (GDD §3.2): 8 insolvent weeks with nothing to sell.
         state.weeksInsolvent = state.cash < 0 ? state.weeksInsolvent + 1 : 0
@@ -1215,13 +1218,13 @@ final class GameEngine {
             : " Among them, your own: \(lostNames.joined(separator: ", "))."
         state.pendingEvent = GameEvent(
             id: UUID(), cardID: "hullLoss", category: .technical, isNegative: true,
-            title: "\(plane.nickname) is lost",
-            body: "\(plane.nickname) (\(spec.displayName)) went down on \(route.originID) ✈︎ \(route.destinationID). \(souls) lives were lost.\(crewLine) The courts award \(settlement.money) to the families. The investigation is unsparing: at \(Int(plane.wear))% wear, this airframe should never have flown.",
+            title: "\(plane.displayName) is lost",
+            body: "\(plane.displayName) (\(spec.displayName)) went down on \(route.originID) ✈︎ \(route.destinationID). \(souls) lives were lost.\(crewLine) The courts award \(settlement.money) to the families. The investigation is unsparing: at \(Int(plane.wear))% wear, this airframe should never have flown.",
             options: [EventOption(label: "Own it. Never again.", effects: [])],
             firedOn: state.date)
         state.lastEventTotalWeek = state.date.totalWeeks
         state.lastNegativeEventTotalWeek = state.date.totalWeeks
-        logEvent(title: "\(plane.nickname) is lost", isNegative: true)
+        logEvent(title: "\(plane.displayName) is lost", isNegative: true)
     }
 
     /// Appends to the capped event history (charts + Major events list).
@@ -2437,6 +2440,49 @@ final class GameEngine {
             logEvent(title: "Ambition: \(a.title)", isNegative: false)
         }
         state.completedAmbitions = done
+    }
+
+    // ── Rival overtakes + records (GDD §29) ──────────────────────────────
+
+    /// Celebrates each named rival the first time your market cap passes it.
+    /// First encounter grandfathers the current standing unannounced.
+    private func checkRivalOvertakes() {
+        let cap = marketCap
+        let rivals = Balance.rivals(for: state.country)
+        guard state.passedRivals != nil else {
+            state.passedRivals = Set(rivals.filter { $0.marketCap < cap }.map(\.name))
+            return
+        }
+        var passed = state.passedRivals!
+        let newly = rivals.filter { $0.marketCap < cap && !passed.contains($0.name) }
+        guard !newly.isEmpty else { return }
+        newly.forEach { passed.insert($0.name) }
+        state.passedRivals = passed
+        // Announce the biggest carrier newly overtaken this week.
+        if let notable = newly.max(by: { $0.marketCap < $1.marketCap }) {
+            state.lastOvertakenRival = notable.name
+            logEvent(title: "Overtook \(notable.name) on the ladder", isNegative: false)
+        }
+    }
+
+    /// Rolls the airline's personal bests forward (GDD §29).
+    private func updateRecords() {
+        var r = state.records ?? Records()
+        r.bestWeekProfit = max(r.bestWeekProfit, state.reports.last?.profit ?? 0)
+        r.bestRouteProfit = max(r.bestRouteProfit, state.routes.map(\.lastWeeklyProfit).max() ?? 0)
+        r.largestFleet = max(r.largestFleet, state.fleet.filter { $0.status != .onOrder }.count)
+        r.highestReputation = max(r.highestReputation, state.reputation)
+        r.highestMarketCap = max(r.highestMarketCap, marketCap)
+        r.mostWeeklyPax = max(r.mostWeeklyPax, weeklyPax)
+        state.records = r
+    }
+
+    /// Give a plane a personal name (GDD §29); empty clears it back to tail.
+    func renameAircraft(id: UUID, name: String) {
+        guard let i = state.fleet.firstIndex(where: { $0.id == id }) else { return }
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        state.fleet[i].customName = trimmed.isEmpty ? nil : String(trimmed.prefix(28))
+        save()
     }
 
     /// Delivered airframes old enough to plan replacement (GDD §26 Pillar 4),

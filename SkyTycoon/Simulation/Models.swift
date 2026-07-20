@@ -299,6 +299,15 @@ struct Aircraft: Codable, Identifiable {
     /// Optional for save-compat: nil = not fitted.
     var hasGalleyOven: Bool? = nil
 
+    /// A player-given name ("Spirit of Delhi"), GDD §29. Optional; the tail
+    /// code stays the fallback. Makes losing a plane sting.
+    var customName: String? = nil
+    /// What the UI leads with: the given name if there is one, else the tail.
+    var displayName: String {
+        if let n = customName, !n.trimmingCharacters(in: .whitespaces).isEmpty { return n }
+        return nickname
+    }
+
     func seats(spec: AircraftSpec) -> Int {
         cabin.seats(spec: spec)
     }
@@ -773,6 +782,17 @@ struct MilestoneDef: Identifiable {
     }
 }
 
+/// The airline's personal bests (GDD §29) — pure vanity, updated each week
+/// by max-ing the current values in. Optional for save-compat.
+struct Records: Codable {
+    var bestWeekProfit: Double = 0
+    var bestRouteProfit: Double = 0
+    var largestFleet: Int = 0
+    var highestReputation: Double = 0
+    var highestMarketCap: Double = 0
+    var mostWeeklyPax: Double = 0
+}
+
 /// A rung on the ambition ladder (GDD §26 Pillar 5): a big, named goal
 /// beyond the aunt's arc that gives a reason to keep reinvesting. The engine
 /// evaluates these — several read engine-derived metrics (market cap, rank).
@@ -856,6 +876,13 @@ struct GameState: Codable {
     /// Ambition-ladder rungs achieved (GDD §26 Pillar 5). Optional for
     /// save-compat: nil triggers a one-time grandfather of existing progress.
     var completedAmbitions: Set<String>? = nil
+    /// Named rivals already overtaken (GDD §29) — so each is celebrated once.
+    /// nil grandfathers current standing unannounced.
+    var passedRivals: Set<String>? = nil
+    /// The most recent notable carrier overtaken, for the celebration banner.
+    var lastOvertakenRival: String? = nil
+    /// Personal bests (GDD §29).
+    var records: Records? = nil
     /// Consecutive weeks with negative cash; 8 with no sellable assets = bankrupt.
     var weeksInsolvent: Int
     var isBankrupt: Bool

@@ -7,6 +7,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Payoff pack: rival overtakes, records, named planes (GDD §29)
+
+- **Overtaking a rival is now a moment.** When your market cap passes a named carrier on the ladder, a celebration banner announces it ("You overtook Satpura Express") and it's logged. The core feeling from the design charter — a rival you used to look up at now sitting below you — finally lands. (Existing standing is grandfathered, so no flood on first launch.)
+- **Records board** in the Profile menu: best week, best single-route week, largest fleet, highest rating, peak market cap, and most passengers in a week — your personal bests, tracked automatically.
+- **Name your aircraft.** Tap the pencil on any plane in the Fleet to give it a name ("Spirit of Delhi"); the tail code stays visible as a subtitle, and blanking the name reverts to it. Named planes carry through to the hull-loss card, so a crash actually stings.
+
+*Why:* three low-complexity additions that reuse data you already track, purely for emotional payoff and personality — no new numbers to manage.
+
+
 ## Routes list sorted by earnings
 
 - The Routes "Boarding passes" list now leads with your most-earning route (sorted by last week's profit, descending), so your money-makers are at the top instead of creation order.

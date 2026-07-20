@@ -1186,6 +1186,7 @@ private struct ProfileSheet: View {
                 identity
                 milestoneSummary
                 ambitionsCard
+                recordsCard
                 Divider().overlay(Theme.hairline)
                 SectionHeader(title: "Saved games", icon: "tray.full.fill", accent: accent)
                 Text("Three slots. The active game autosaves every week.")
@@ -1320,6 +1321,32 @@ private struct ProfileSheet: View {
                     }
                 }
             }
+        }
+    }
+
+    // ── Personal bests (GDD §29) ─────────────────────────────────────────
+    private var recordsCard: some View {
+        let r = engine.state.records ?? Records()
+        return GameCard {
+            SectionHeader(title: "Records", icon: "rosette", accent: accent)
+            VStack(spacing: 8) {
+                recordRow("Best week", r.bestWeekProfit.money)
+                recordRow("Best route, one week", r.bestRouteProfit.money)
+                recordRow("Largest fleet", "\(r.largestFleet)")
+                recordRow("Highest rating", String(format: "%.1f★", r.highestReputation))
+                recordRow("Peak market cap", r.highestMarketCap.money)
+                recordRow("Most passengers, one week", "\(Int(r.mostWeeklyPax))")
+            }
+        }
+    }
+
+    private func recordRow(_ label: String, _ value: String) -> some View {
+        HStack {
+            Text(label)
+                .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
+            Spacer(minLength: 8)
+            Text(value)
+                .font(.data(.subheadline, weight: .semibold)).foregroundStyle(Theme.textPrimary)
         }
     }
 

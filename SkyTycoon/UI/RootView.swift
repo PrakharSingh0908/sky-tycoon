@@ -29,6 +29,8 @@ struct RootView: View {
     // Ambition-ladder win moments (GDD §26 Pillar 5).
     @State private var ambitionWin: AmbitionDef?
     @State private var seenAmbitions: Set<String>?
+    // Rival-overtake moment (GDD §29).
+    @State private var overtook: String?
 
     enum GameTab: Hashable {
         case dashboard, fleet, routes, people, money
@@ -134,6 +136,25 @@ struct RootView: View {
             guard ambitionWin != nil else { return }
             try? await Task.sleep(for: .seconds(3.5))
             withAnimation(.easeOut(duration: 0.5)) { ambitionWin = nil }
+        }
+        // ── Rival overtake: the ladder-climb moment (GDD §29) ─────────────
+        .overlay(alignment: .top) {
+            if let overtook {
+                CelebrationBanner(title: "You overtook \(overtook)",
+                                  subtitle: "Another rival now sits below you on the ladder",
+                                  accent: Theme.cornflower, icon: "arrow.up.forward.circle.fill")
+                    .padding(.top, 4)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .onChange(of: engine.state.lastOvertakenRival) { _, new in
+            guard let name = new else { return }
+            withAnimation(.snappy) { overtook = name }
+        }
+        .task(id: overtook) {
+            guard overtook != nil else { return }
+            try? await Task.sleep(for: .seconds(3.5))
+            withAnimation(.easeOut(duration: 0.5)) { overtook = nil }
         }
         // ── Quarter close: the report card moment ─────────────────────────
         .onChange(of: engine.state.letters.count) { old, new in

@@ -1013,3 +1013,30 @@ long game. Reinforces the anti-idle thesis of §26.
   the player to raise.
 - Verified: a fixed fleet's weekly costs rise ×1.28 from year 1 to year 6,
   tracking the index exactly.
+
+---
+
+## §29 — Payoff pack: overtakes, records, named planes (2026-07-21)
+
+Fun-not-complex additions that reuse existing data for emotional payoff —
+no new economy to manage.
+
+### Rival overtakes
+The charter's core feeling ("a rival you used to look up at, now below you")
+is now celebrated. `checkRivalOvertakes()` in `closeWeek` tracks
+`state.passedRivals` (grandfathered unannounced on first run); when market
+cap passes a named carrier, it logs a headline and sets
+`state.lastOvertakenRival`, which RootView shows as a CelebrationBanner
+("You overtook Satpura Express").
+
+### Records board
+`state.records` (a `Records` struct) max-es in the airline's personal bests
+each week — best week profit, best single-route week, largest fleet,
+highest rating, peak market cap, most weekly pax — shown as a Records card
+in the Profile sheet.
+
+### Name your aircraft
+`Aircraft.customName` + `displayName` (name ?? tail). Renamed from the Fleet
+card (a pencil opens a text alert; blank reverts to the tail code, which
+stays visible as a subtitle). The hull-loss card now uses `displayName`, so
+losing "Spirit of Delhi" hits harder than losing "AA-A".
