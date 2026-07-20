@@ -658,6 +658,7 @@ final class GameEngine {
         appendHistory(\.netWorthHistory, netWorth)
         appendHistory(\.cashHistory, state.cash)
         appendHistory(\.reputationHistory, state.reputation)
+        state.debtHistory = Array(((state.debtHistory ?? []) + [totalDebt]).suffix(260))
 
         // Milestones (Layer 1): contextual nudges, paid once, never blocking.
         for milestone in Balance.milestones

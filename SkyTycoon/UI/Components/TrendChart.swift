@@ -29,12 +29,21 @@ struct TrendChart: View {
     var unit: String = "w"
     /// Major events, drawn as dashed vertical rules (GDD §4.7).
     var events: [ChartEventMark] = []
+    /// Optional second series (e.g. debt under cash), drawn as a dashed
+    /// line with no area — context, not the hero.
+    var secondary: [Double] = []
+    var secondaryColor: Color = Theme.loss
     /// Formats a y-axis value ("$1.2M", "4.1★", "82%").
     var format: (Double) -> String = { $0.money }
 
     private var padded: [Double] {
         guard let first = values.first, values.count < window else { return values }
         return Array(repeating: first, count: window - values.count) + values
+    }
+
+    private var paddedSecondary: [Double] {
+        guard let first = secondary.first, secondary.count < window else { return secondary }
+        return Array(repeating: first, count: window - secondary.count) + secondary
     }
 
     var body: some View {
@@ -48,7 +57,8 @@ struct TrendChart: View {
                 ForEach(Array(values.enumerated()), id: \.offset) { index, value in
                     LineMark(
                         x: .value("Week", index - values.count + 1),
-                        y: .value("Value", value)
+                        y: .value("Value", value),
+                        series: .value("Series", "primary")
                     )
                     .foregroundStyle(color)
                     .lineStyle(StrokeStyle(lineWidth: 1.5))
@@ -61,6 +71,17 @@ struct TrendChart: View {
                         LinearGradient(colors: [color.opacity(0.22), color.opacity(0.01)],
                                        startPoint: .top, endPoint: .bottom)
                     )
+                    .interpolationMethod(.monotone)
+                }
+                // The companion line rides the same axis, quietly dashed.
+                ForEach(Array(paddedSecondary.enumerated()), id: \.offset) { index, value in
+                    LineMark(
+                        x: .value("Week", index - paddedSecondary.count + 1),
+                        y: .value("Value", value),
+                        series: .value("Series", "secondary")
+                    )
+                    .foregroundStyle(secondaryColor.opacity(0.85))
+                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
                     .interpolationMethod(.monotone)
                 }
                 // Major events: dashed rules where history turned.

@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Debt rides the cash chart; Cash tab leads
+
+- The Finances card's Cash view now carries a dashed coral debt line alongside the solid cash line, with a small line-sample legend: liquidity against what the bank is owed, on one instrument. Debt history is a new capped 260-week buffer appended each settle (optional in GameState, so old saves decode and the line grows from their next week). TrendChart gained a general secondary-series option.
+- The trend tabs reorder to Cash, Net worth, Reputation, and Cash is the default view.
+
+*Why:* per direction. Cash is the number you spend from day to day, so it leads; and cash climbing while the debt line stays flat is the honest picture of a business borrowing its way up.
+
+
 ## Wages read to the $50
 
 - New wageMoney formatter shows wages at 0.05K precision ("$1.20K" instead of "$1.2K"; exact dollars under $1,000). Applied everywhere a wage prints: the wage stepper, roster rows, hire keys, the negotiation table, the signed contract, and the P&L wage breakdown.

@@ -796,4 +796,6 @@ struct GameState: Codable {
     var netWorthHistory: [Double]
     var cashHistory: [Double]
     var reputationHistory: [Double]
+    /// Total debt per week (2026-07-20) — optional so old saves decode.
+    var debtHistory: [Double]? = nil
 }

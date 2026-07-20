@@ -10,7 +10,7 @@ import SwiftUI
 
 struct DashboardView: View {
     @Environment(GameEngine.self) private var engine
-    @State private var trendMetric: TrendMetric = .netWorth
+    @State private var trendMetric: TrendMetric = .cash
     @State private var financeRange: FinanceRange = .weekly
     @State private var settleFlash = false
     @State private var showingIndustry = false
@@ -18,7 +18,8 @@ struct DashboardView: View {
     private let accent = Theme.sky
 
     enum TrendMetric: String, CaseIterable, Identifiable {
-        case netWorth = "Net worth", cash = "Cash", reputation = "Reputation"
+        // Cash leads: it is the number you spend from day to day.
+        case cash = "Cash", netWorth = "Net worth", reputation = "Reputation"
         var id: String { rawValue }
     }
 
@@ -578,11 +579,23 @@ struct DashboardView: View {
                 }
             }
             let (window, unit) = rangeShape
+            // The cash view carries a dashed debt line: liquidity against
+            // what the bank is owed, on one instrument.
+            let debtSeries = trendMetric == .cash
+                ? rangeSeries(engine.state.debtHistory ?? []) : []
             TrendChart(values: series,
                        color: Theme.cornflower, window: window, unit: unit,
                        events: chartEventMarks,
+                       secondary: debtSeries,
                        format: trendMetric == .reputation
                            ? { String(format: "%.1f★", $0) } : { $0.money })
+            if trendMetric == .cash, !(engine.state.debtHistory ?? []).isEmpty {
+                HStack(spacing: 12) {
+                    legendChip(color: Theme.cornflower, text: "Cash", dashed: false)
+                    legendChip(color: Theme.loss, text: "Debt", dashed: true)
+                    Spacer()
+                }
+            }
 
             // The rules on the chart, expandable into the history book:
             // latest 8, one strict line each — date column, title, sign dot.
@@ -613,6 +626,17 @@ struct DashboardView: View {
                 }
                 .tint(Theme.textSecondary)
             }
+        }
+    }
+
+    /// A tiny line-sample legend: solid or dashed stroke plus its name.
+    private func legendChip(color: Color, text: String, dashed: Bool) -> some View {
+        HStack(spacing: 5) {
+            Rectangle().fill(.clear)
+                .frame(width: 16, height: 1)
+                .overlay(Rectangle().stroke(color,
+                    style: StrokeStyle(lineWidth: 1.5, dash: dashed ? [3, 2] : [])))
+            Text(text).font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
         }
     }
 
