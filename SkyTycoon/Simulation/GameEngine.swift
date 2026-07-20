@@ -139,6 +139,16 @@ final class GameEngine {
         return letters.uppercased()
     }
 
+    /// The next registration-style tail code (XX-A, XX-B, …) for a newly
+    /// added airframe — matches the Showroom's naming so granted aircraft
+    /// (GDD §27) look native.
+    func nextTailCode() -> String {
+        let letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        let n = state.fleet.count
+        let letter = letters[letters.index(letters.startIndex, offsetBy: n % 26)]
+        return "\(fleetPrefix)-\(letter)\(n / 26 == 0 ? "" : String(n / 26))"
+    }
+
     /// Re-registers auto-issued tail codes (XX-A pattern) under the current
     /// prefix — pre-feature saves carried the fixed "VT" prefix.
     private func retagFleet() {
@@ -1248,6 +1258,7 @@ final class GameEngine {
         let incident = incidentContext(for: card)
         let poach = poachContext(for: card)
         let recall = recallContext(for: card)
+        let collapse = card.id == "rivalCollapse" ? rivalCollapseBody() : nil
         // A lawsuit's claim scales with the airline's public value, so the
         // options and body are rebuilt from the scaled fee at fire time.
         // Every other card's founder-scale cash figures grow with net worth.
@@ -1256,7 +1267,7 @@ final class GameEngine {
         state.pendingEvent = GameEvent(
             id: UUID(), cardID: card.id, category: card.category,
             isNegative: card.isNegative, title: card.title,
-            body: incident?.body ?? poach?.body ?? recall?.body ?? card.body,
+            body: incident?.body ?? poach?.body ?? recall?.body ?? collapse ?? card.body,
             options: options, firedOn: state.date,
             subjectID: incident?.subjectID ?? poach?.subjectID,
             subjectAircraftType: recall?.type,
@@ -1359,6 +1370,17 @@ final class GameEngine {
               let pool = state.staff[.pilots], !pool.members.isEmpty else { return nil }
         let member = pool.members[Int.random(in: 0..<pool.members.count, using: &state.seedRNG)]
         return (poachBody(member: member), member.id)
+    }
+
+    /// Names a plausible collapsing rival for the acquisition card (GDD §27)
+    /// — one ranked below you, so it reads as a smaller carrier folding.
+    private func rivalCollapseBody() -> String {
+        let cap = marketCap
+        let below = Balance.rivals(for: state.country).filter { $0.marketCap < cap }
+        let candidates = below.isEmpty ? Balance.rivals(for: state.country) : below
+        let name = candidates.isEmpty ? "A regional carrier"
+            : candidates[Int.random(in: 0..<candidates.count, using: &state.seedRNG)].name
+        return "\(name) has filed for bankruptcy. Its jets and crews are on the block at fire-sale prices. Snap up the lot, take just the crews, or let the market pick the bones."
     }
 
     /// The poach body from stored facts only (no RNG) — refresh-safe.
@@ -1552,6 +1574,52 @@ final class GameEngine {
             state.routes[r].weeklyFrequency = max(0, state.routes[r].weeklyFrequency - cut)
             logEvent(title: "Slots reclaimed on \(state.routes[r].originID) ✈︎ \(state.routes[r].destinationID)",
                      isNegative: true)
+        case .acquireUsedFleet(let count):
+            // A failed lower-tier rival flies small metal; grab what you can
+            // actually operate (tier ≤ 2, unlocked), else feeders.
+            let usable = AircraftType.allCases.filter {
+                Balance.fleetTier(of: $0) <= 2 && isUnlocked($0)
+            }
+            let pool = usable.isEmpty
+                ? AircraftType.allCases.filter { Balance.fleetTier(of: $0) == 0 }
+                : usable
+            guard !pool.isEmpty, count > 0 else { return }
+            for _ in 0..<count {
+                let type = pool[Int.random(in: 0..<pool.count, using: &state.seedRNG)]
+                let spec = Balance.specs[type]!
+                state.fleet.append(Aircraft(
+                    id: UUID(), type: type, nickname: nextTailCode(),
+                    status: .idle, acquisition: .ownedUsed, weeklyLeaseCost: 0,
+                    deliveryWeeksRemaining: 0,
+                    cabin: .standard(abreast: spec.seatsAbreast),
+                    wear: Double.random(in: 20...45, using: &state.seedRNG),
+                    condition: Double.random(in: 55...80, using: &state.seedRNG),
+                    ageYears: Double.random(in: 6...14, using: &state.seedRNG),
+                    assignedRouteID: nil, groundedWeeksRemaining: 0))
+            }
+            logEvent(title: "Acquired \(count) aircraft from a failed rival", isNegative: false)
+        case .acquireStaff(let pilots, let cabinCrew, let ground):
+            let profile = Balance.countryProfiles[state.country]!
+            func grant(_ role: StaffRole, _ n: Int) {
+                guard n > 0, var p = state.staff[role] else { return }
+                for _ in 0..<n {
+                    let person = Self.generatePerson(role: role, country: state.country,
+                                                     rng: &state.seedRNG)
+                    let skill = Double.random(in: 2.5...4.0, using: &state.seedRNG)
+                    // Displaced crews sign on a touch under market — talent
+                    // that still costs a wage from here on.
+                    let wage = role.marketWage * profile.laborCost * 0.9
+                    p.members.append(StaffMember(id: UUID(), name: person.name,
+                        skill: skill, weeklyWage: wage, hiredOn: state.date,
+                        avatar: person.avatar))
+                }
+                p.headcount = p.members.count
+                recomputeAggregates(&p)
+                state.staff[role] = p
+            }
+            grant(.pilots, pilots); grant(.cabinCrew, cabinCrew); grant(.ground, ground)
+            logEvent(title: "Hired \(pilots + cabinCrew + ground) crew from a failed rival",
+                     isNegative: false)
         }
     }
 

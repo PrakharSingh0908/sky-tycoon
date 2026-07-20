@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Rival collapse: buy their jets and crews (GDD §27)
+
+- "A Rival Has Collapsed" is now a full acquisition scenario, not just a used-market price dip. It's a major (paused) card that names a real carrier ranked below you going bankrupt, with three choices: **Buy jets & crews** (a net-worth-scaled fire-sale price that drops three used regional aircraft straight into your fleet plus ~11 ready-made crew across pilots/cabin/ground), **Hire their crews only** (cheap talent, no jets, but you take on their wages), or **Let the market have it** (the old used-metal glut that discounts purchases for a while).
+- Acquired jets arrive at fire-sale condition/age with proper tail registrations; acquired crews sign on a touch under market and carry an ongoing wage bill — talent, not a freebie. The fixed asset counts against a scaling price make this a transformative early swoop and a merely-fine late one, so it can't be farmed.
+
+*Why:* per request — a smaller competitor folding should be a real, dramatic opportunity to scale up fast, with a genuine trade (big capital now, or just the people, or patience for cheap metal).
+
+
 ## Flying into a cyclone now batters your fleet
 
 - The Cyclone Warning is now a **major** decision (it pauses and takes the screen). Grounding and refunding costs −$40K as before, but "Push through the system" now does real damage: **+20 wear across the whole fleet**, one aircraft hit an extra **+30 and grounded two weeks**, plus the demand dip and a reputation/satisfaction knock. On an already-worn fleet this can push airframes past the 90% crash-danger line — so flying into a storm is a genuine gamble, not a free schedule-saver.

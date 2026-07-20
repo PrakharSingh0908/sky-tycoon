@@ -549,6 +549,12 @@ enum EventEffect: Codable, Equatable {
     /// Slot review (GDD §26 Pillar 3): the regulator reclaims slots from the
     /// event's subject route, cutting its weekly frequency by this many.
     case reclaimRouteSlots(frequencyCut: Int)
+    /// Acquire a failed rival's fleet (GDD §27): `count` used, lower-tier
+    /// airframes drop straight into your fleet at fire-sale condition/age.
+    case acquireUsedFleet(count: Int)
+    /// Take on a failed rival's crews (GDD §27): ready-made staff join your
+    /// pools (they carry ongoing wages — talent, not a freebie).
+    case acquireStaff(pilots: Int, cabinCrew: Int, ground: Int)
 }
 
 /// A running timed modifier ("Fuel +30% · 4 wk"), applied each tick.

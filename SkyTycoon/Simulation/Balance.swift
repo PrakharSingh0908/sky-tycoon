@@ -1359,15 +1359,21 @@ enum Balance {
             isEligible: { $0.fleet.contains { $0.status != .onOrder } }),
 
         // ── Signature ────────────────────────────────────────────────────
+        // A lower-ranked carrier folds (GDD §27): buy its jets and crews at
+        // a fire-sale, cherry-pick just the talent, or let the market flood.
+        // The body names a real rival ranked below you at fire time.
         EventCard(id: "rivalCollapse", category: .opportunity,
             title: "A Rival Has Collapsed",
-            body: "A rival carrier just folded. Its fleet is hitting the used market at fire-sale prices. Position to buy, or watch and wait.",
+            body: "A smaller carrier has filed for bankruptcy. Its jets and crews are on the block at fire-sale prices.",
             baseWeight: 0.5, isNegative: false, minTotalWeek: 30,
             options: [
-                EventOption(label: "Position to buy",
-                            effects: [.aircraftMarketShock(multiplier: 0.80, weeks: 8)]),
-                EventOption(label: "Watch and wait",
-                            effects: [.aircraftMarketShock(multiplier: 0.90, weeks: 6)]),
+                EventOption(label: "Buy jets & crews · −$400K",
+                            effects: [.cash(-400_000), .acquireUsedFleet(count: 3),
+                                      .acquireStaff(pilots: 4, cabinCrew: 4, ground: 3)]),
+                EventOption(label: "Hire their crews only",
+                            effects: [.acquireStaff(pilots: 3, cabinCrew: 3, ground: 2)]),
+                EventOption(label: "Let the market have it",
+                            effects: [.aircraftMarketShock(multiplier: 0.85, weeks: 8)]),
             ],
             severity: .major,
             isEligible: { _ in true }),

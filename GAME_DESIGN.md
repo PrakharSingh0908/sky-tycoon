@@ -965,3 +965,29 @@ Add a passive bot (opens good routes, never touches them) vs an active bot
 bot's net worth must clearly beat the passive bot's, and passive routes must
 visibly erode. If passive still wins, the pressure is too weak — tune and
 re-run.
+
+---
+
+## §27 — Rival collapse: acquire the wreckage (2026-07-20)
+
+The "A Rival Has Collapsed" card (previously just a used-metal price shock)
+is now a full acquisition scenario — a major, paused decision. The body
+names a real rival ranked BELOW the player at fire time (`rivalCollapseBody`),
+so it reads as a smaller carrier folding.
+
+Options:
+- **Buy jets & crews · −$X** (net-worth-scaled): `acquireUsedFleet(count: 3)`
+  drops three used, lower-tier (≤ tier 2, unlocked) airframes straight into
+  the fleet at fire-sale condition (55–80) and age (6–14 yr), auto-named via
+  `nextTailCode()`; `acquireStaff(pilots: 4, cabinCrew: 4, ground: 3)` adds
+  ready-made crews (skill 2.5–4.0) at ~0.9× market wage — talent that now
+  carries an ongoing wage bill.
+- **Hire their crews only**: `acquireStaff(3/3/2)`, no jets, no upfront cash
+  — cheap talent, but you shoulder the wages.
+- **Let the market have it**: `aircraftMarketShock(0.85, 8)` — the old
+  behaviour (a used-metal glut discounts purchases for a while).
+
+Two new effects (`acquireUsedFleet`, `acquireStaff`) build valid Aircraft /
+StaffMember instances through the same helpers as buying and hiring. The
+fixed asset counts against a net-worth-scaled price make this a transformative
+early-game swoop and a merely-fine late-game one — self-limiting.
