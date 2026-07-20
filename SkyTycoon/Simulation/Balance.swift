@@ -851,14 +851,19 @@ enum Balance {
         // ── Weather ──────────────────────────────────────────────────────
         EventCard(id: "cyclone", category: .weather,
             title: "Cyclone Warning",
-            body: "A cyclone is tracking toward the coast. Airports in its path will be disrupted for two weeks.",
+            body: "A cyclone is tracking toward the coast. Ground the fleet and refund, or push through the system — but flying into a cyclone batters airframes, and one may come out badly enough to need the hangar.",
             baseWeight: 0.8, isNegative: true, minTotalWeek: 8,
             options: [
-                EventOption(label: "Cancel & refund · −$40K",
+                EventOption(label: "Ground & refund · −$40K",
                             effects: [.cash(-40_000), .satisfaction(3)]),
-                EventOption(label: "Fly partial ops",
-                            effects: [.demand(multiplier: 0.80, weeks: 2), .satisfaction(-4)]),
+                EventOption(label: "Push through the system",
+                            effects: [.adjustFleetWear(20),
+                                      .wearRandomAircraft(30),
+                                      .groundRandomAircraft(weeks: 2),
+                                      .demand(multiplier: 0.80, weeks: 2),
+                                      .satisfaction(-6), .reputation(-0.1)]),
             ],
+            severity: .major,
             isEligible: { !$0.routes.isEmpty }),
 
         // ── Labor ────────────────────────────────────────────────────────

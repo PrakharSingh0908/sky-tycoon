@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Flying into a cyclone now batters your fleet
+
+- The Cyclone Warning is now a **major** decision (it pauses and takes the screen). Grounding and refunding costs −$40K as before, but "Push through the system" now does real damage: **+20 wear across the whole fleet**, one aircraft hit an extra **+30 and grounded two weeks**, plus the demand dip and a reputation/satisfaction knock. On an already-worn fleet this can push airframes past the 90% crash-danger line — so flying into a storm is a genuine gamble, not a free schedule-saver.
+
+*Why:* per request — pushing through a cyclone should be dangerous. Making it a paused, full-screen choice (so it can't auto-unfold into fleet damage) with heavy, potentially cascading wear gives the decision real weight.
+
+
 ## Regional subsidy is now a commitment, not a handout
 
 - The "Regional Route Subsidy" event used to hand you a flat +$50K for nothing. It's now a **commitment**: you fund the launch up front (−$60K) and the government tops up the thin loads with a small weekly subsidy for 16 weeks (+$6K/wk), plus a goodwill reputation bump. Net over the term is modestly positive — the point of a subsidy — but you front the cash and wait for it, so it's a real decision rather than free money. Both figures scale with net worth like every event cash amount.
