@@ -677,7 +677,10 @@ Two kinds of systems, two cadences:
   revenue and fuel, wages, contractors, maintenance, lease, cabin, marketing,
   overhead, loan interest → cash moves daily. Wear accrual, condition decay,
   route satisfaction drift, and reputation drift also step daily. The net
-  worth board, cash/debt/reputation charts, and every meter refresh each day.
+  worth board, the cash number, and every meter refresh each day. (The
+  trend *charts* keep one sampled point per week — a chart is history, and
+  a weekly sample keeps its window and axes stable; the live numbers above
+  them are what move day to day.)
 - **Discrete — resolved on the 7-day boundary (unchanged balance & RNG):**
   the event deck draw, industry-trend aging, staff attrition and recruitment,
   delivery and maintenance countdowns (still counted in weeks), aircraft

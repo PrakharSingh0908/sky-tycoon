@@ -22,17 +22,25 @@ final class GameEngine {
         case paused = 0, x1 = 1, x2 = 2, x4 = 4
     }
 
-    /// Real seconds of accumulated time per weekly tick at 1x.
+    /// Real seconds per WEEK at 1x; a day is 1/7 of it (GDD §23). A full
+    /// week still takes the same wall-clock time — it just settles daily.
     private let secondsPerWeek: Double = 16
+    private var secondsPerDay: Double { secondsPerWeek / 7 }
     private var accumulator: Double = 0
     private var timer: Timer?
 
-    /// Presentation only: how far through the current week the clock has
-    /// accrued (the sim itself advances in whole weeks).
-    var weekProgress: Double { min(accumulator / secondsPerWeek, 0.999) }
-    /// The day name shown on the sim clock, derived from week progress.
+    /// The running week's report, accumulating each day's 1/7 share until the
+    /// 7-day close finalizes it. Transient: saves happen only at week close.
+    @ObservationIgnored private var weekReport: WeeklyReport?
+
+    /// Presentation only: how far through the CURRENT day the clock has
+    /// accrued (the sim advances in whole days).
+    var dayProgress: Double { min(accumulator / secondsPerDay, 0.999) }
+    /// Which day of the week is in progress, 0...6 (Mon…Sun).
+    var dayIndex: Int { min(6, (state.date.day ?? 1) - 1) }
+    /// The weekday shown on the sim clock.
     var simDayName: String {
-        ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][min(6, Int(weekProgress * 7))]
+        ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][dayIndex]
     }
 
     /// Transient UI hold: while decision UI is open (negotiation, purchase
@@ -276,24 +284,24 @@ final class GameEngine {
     }
     func stopClock() { timer?.invalidate(); timer = nil }
 
-    /// Step exactly one week and hold: the deliberate-play loop (adjust
-    /// while paused → step → read the settle). Deterministic — it's the
-    /// same advanceWeek the clock drives.
-    func stepOneWeek() {
+    /// Step exactly one day and hold: the deliberate-play loop (adjust
+    /// while paused → step → read the day). Deterministic — the same
+    /// advanceDay the clock drives.
+    func stepOneDay() {
         guard state.pendingEvent == nil, interactionHolds == 0,
               !state.isBankrupt else { return }
         speed = .paused
         accumulator = 0
-        advanceWeek()
+        advanceDay()
     }
 
     private func clockFired(delta: Double) {
         guard speed != .paused, state.pendingEvent == nil, interactionHolds == 0,
               !state.isBankrupt else { return }
         accumulator += delta * speed.rawValue
-        while accumulator >= secondsPerWeek {
-            accumulator -= secondsPerWeek
-            advanceWeek()
+        while accumulator >= secondsPerDay {
+            accumulator -= secondsPerDay
+            advanceDay()
             // An event holds the clock (clockIsHeld) without disturbing the
             // player's speed: the loop stops here, and time resumes at that
             // same speed once the card is dealt with. No pause is stamped
@@ -302,71 +310,51 @@ final class GameEngine {
         }
     }
 
-    // ── The weekly tick — the heart of the sim ──────────────────────────
-    // Order matters and is fixed: operate → settle → drift → events → bookkeeping.
-
+    // ── The daily tick — the heart of the sim (GDD §23) ─────────────────
+    // Continuous lines (revenue, costs, wear, drift) accrue 1/7 per day so
+    // cash and every meter move daily; the discrete block (deliveries,
+    // crash, events, trends, attrition, recruitment, market, quarter) runs
+    // only on the 7-day CLOSE, drawing the seeded RNG once per week exactly
+    // as before. Seven daily accruals sum to one old weekly settle, so the
+    // §22 economy is unchanged — only the feedback cadence is daily.
+    //
+    // Compat: advance a full week by running seven days (used by previews).
     func advanceWeek() {
+        for _ in 0..<7 where !state.isBankrupt { advanceDay() }
+    }
+
+    func advanceDay() {
         guard !state.isBankrupt else { return }
+        let f = 1.0 / 7.0                       // this day's share of the week
+        let close = (state.date.day ?? 1) >= 7  // the 7th day finalizes the week
         let profile = Balance.countryProfiles[state.country]!
-        var report = WeeklyReport(date: state.date, revenue: 0, fuelCost: 0,
-                                  wageCost: 0, maintenanceCost: 0, loanCost: 0,
-                                  leaseCost: 0, cabinCost: 0, marketingCost: 0,
-                                  overheadCost: Balance.hqOverhead(fleetCount: state.fleet.count)
-                                      * difficulty.costFactor)
 
-        // 0. DELIVERIES — new-plane orders count down and enter service.
-        for i in state.fleet.indices where state.fleet[i].status == .onOrder {
-            state.fleet[i].deliveryWeeksRemaining -= 1
-            if state.fleet[i].deliveryWeeksRemaining <= 0 {
-                state.fleet[i].deliveryWeeksRemaining = 0
-                state.fleet[i].status = .idle
-                // Ordered from a route's desk: the fresh airframe reports
-                // to its posting the week it arrives (if it still fits).
-                if let routeID = state.fleet[i].assignedRouteID {
-                    if let r = state.routes.firstIndex(where: { $0.id == routeID }),
-                       canOperate(aircraftID: state.fleet[i].id, routeID: routeID) {
-                        state.routes[r].assignedAircraftIDs.append(state.fleet[i].id)
-                        state.fleet[i].status = .assigned
-                    } else {
-                        state.fleet[i].assignedRouteID = nil
-                    }
-                }
-            }
+        // The running week's report accumulates each day's 1/7 share.
+        if weekReport == nil {
+            weekReport = WeeklyReport(date: state.date, revenue: 0, fuelCost: 0,
+                                      wageCost: 0, maintenanceCost: 0, loanCost: 0,
+                                      leaseCost: 0, cabinCost: 0, marketingCost: 0,
+                                      overheadCost: 0)
         }
+        var report = weekReport!
+        let profitBefore = report.profit   // cash books only THIS day's delta
 
-        // 1. MAINTENANCE COUNTDOWN — planes return to service.
-        for i in state.fleet.indices where state.fleet[i].groundedWeeksRemaining > 0 {
-            state.fleet[i].groundedWeeksRemaining -= 1
-            if state.fleet[i].groundedWeeksRemaining == 0 {
-                state.fleet[i].status = state.fleet[i].assignedRouteID == nil ? .idle : .assigned
-            }
-        }
-
-        // 2. CREW-HOURS (GDD §4.4) — what this week's schedule demands of
-        // each pool, compared against roster capacity. Computed BEFORE
-        // operating because punctuality (from strain) feeds satisfaction.
+        // 2. CREW-HOURS (GDD §4.4) — demand vs roster capacity, for strain
+        // and punctuality (which feed satisfaction). Non-mutating.
         var activePlanesByRoute: [[Aircraft]] = Array(repeating: [], count: state.routes.count)
         for r in state.routes.indices where state.routes[r].weeklyFrequency > 0 {
             activePlanesByRoute[r] = state.fleet.filter {
                 state.routes[r].assignedAircraftIDs.contains($0.id) && $0.groundedWeeksRemaining == 0
             }
         }
-
-        // ONE formula for the tick and the UI projection (pillar 4).
         let crewDemandHours = liveCrewDemandHours()
-
         var utilization: [StaffRole: Double] = [:]
         for role in StaffRole.allCases {
             let demand = crewDemandHours[role] ?? 0
             let capacity = Double(state.staff[role]?.headcount ?? 0) * Balance.weeklyHoursPerStaff
-            // An empty pool with work to do is maximally strained.
             utilization[role] = capacity > 0 ? demand / capacity
                               : (demand > 0 ? Balance.maxStrainPerPool + 1 : 0)
         }
-
-        // Airline-wide punctuality: over-roster strain causes delays, ops
-        // skill (pilots + ground) prevents them. (Iterate allCases, not the
-        // dictionary — float addition order must be deterministic.)
         var strain = 0.0
         for role in StaffRole.allCases {
             strain += Balance.strainWeight(role)
@@ -378,9 +366,6 @@ final class GameEngine {
             - Balance.strainDelayFactor * strain
             - Balance.skillDelayFactor * (1 - opsSkill / 5)))
 
-        // Timed event modifiers in force this week (fuel spikes, demand
-        // surges) — products of all active effects of each kind — times
-        // the industry trends on the same levers (GDD §14).
         let fuelEventMult = state.activeEffects
             .filter { $0.kind == .fuelPrice }.reduce(1.0) { $0 * $1.multiplier }
             * trendMultiplier(.fuel)
@@ -388,7 +373,8 @@ final class GameEngine {
             .filter { $0.kind == .demand }.reduce(1.0) { $0 * $1.multiplier }
             * trendMultiplier(.demand)
 
-        // 3. OPERATE ROUTES — demand, revenue, fuel, wear, satisfaction.
+        // 3. OPERATE ROUTES — a day's 1/7 share of the week's economics; the
+        // route display values stay full-week projections (pillar 4).
         for r in state.routes.indices {
             let route = state.routes[r]
             guard route.weeklyFrequency > 0 else { continue }
@@ -398,12 +384,8 @@ final class GameEngine {
                 state.routes[r].lastWeeklyProfit = 0
                 state.routes[r].lastWeeklyRevenue = 0
                 state.routes[r].lastWeeklyFuel = 0
-                appendLoadFactor(0, routeIndex: r)
                 continue
             }
-
-            // One shared formula for the tick AND the UI breakdowns
-            // (pillar 4: the explanation can never drift from the sim).
             let econ = computeEconomics(route: route, planes: activePlanes,
                                         profile: profile,
                                         fuelEventMult: fuelEventMult,
@@ -411,54 +393,33 @@ final class GameEngine {
             var avgComfort = activePlanes.map(\.comfortScore).reduce(0, +)
                 / Double(activePlanes.count)
             avgComfort = min(1, avgComfort)
-
-            // Catering (GDD §18): per-passenger cost lands on the cabin &
-            // catering line; the satisfaction consequence lands below.
             let catering = route.catering ?? CateringLevel.none
             if catering != .none {
-                report.cabinCost += econ.pax * catering.costPerPax
+                report.cabinCost += econ.pax * catering.costPerPax * f
             }
-
-            report.revenue += econ.revenue
-            report.fuelCost += econ.fuel
+            report.revenue += econ.revenue * f
+            report.fuelCost += econ.fuel * f
             state.routes[r].lastLoadFactor = econ.loadFactor
-            state.routes[r].lastWeeklyProfit = econ.revenue - econ.fuel   // route-level, pre-overhead
+            state.routes[r].lastWeeklyProfit = econ.revenue - econ.fuel
             state.routes[r].lastWeeklyRevenue = econ.revenue
             state.routes[r].lastWeeklyFuel = econ.fuel
-            appendLoadFactor(econ.loadFactor, routeIndex: r)
-
-            // Wear accumulates with flight hours; worse condition wears
-            // faster. Calibrated so a hard-flown airframe (≈65 block
-            // hours/week) reaches heavy-check territory in ~6 months —
-            // the old ×0.25 rate demanded a check every 3 weeks, which
-            // made maintenance costs unsurvivable.
+            // Wear: this day's share of the week's block hours.
             for plane in activePlanes {
                 if let idx = state.fleet.firstIndex(where: { $0.id == plane.id }) {
                     let spec = Balance.specs[plane.type]!
                     let hours = route.distanceKm / spec.cruiseKmh * Double(route.weeklyFrequency) * 2
-                    // Metal fatigue compounds: a worn airframe wears FASTER
-                    // (0.7× fresh → ~1.6× near the line), so the last 20%
-                    // arrives quicker than the first — service early.
                     let fatigue = 0.7 + pow(state.fleet[idx].wear / 100, 1.5)
                     state.fleet[idx].wear = min(100, state.fleet[idx].wear
                         + hours * 0.05 * fatigue
-                        * (1.5 - state.fleet[idx].condition / 200))
+                        * (1.5 - state.fleet[idx].condition / 200) * f)
                 }
             }
-
-            // Route satisfaction drifts toward the GDD §4.5 weighted target:
-            // punctuality 35%, comfort 25%, service 20%, price fairness 15%,
-            // incidents 5% (placeholder 1.0 until M3's event deck).
-            // Fairness is the fare↔satisfaction link: cheap fares (vs the
-            // market reference) actively please passengers.
+            // Satisfaction drifts toward its target — a day's share of the step.
             let cabinSkill = state.staff[.cabinCrew]?.skill ?? 1
             let cabinU = utilization[.cabinCrew] ?? 0
-            let cabinAdequacy = cabinU <= 1 ? 1.0 : 1.0 / cabinU   // understaffed cabin = worse service
+            let cabinAdequacy = cabinU <= 1 ? 1.0 : 1.0 / cabinU
             let service = (cabinSkill / 5.0) * cabinAdequacy
             let incidents = 1.0
-            // Catering moves the target (GDD §18): the sandwich box needs
-            // ovens aboard or it boards cold and frustrates customers; the
-            // fruit platter is oven-agnostic; the bento lifts the most.
             let ovensReady = activePlanes.allSatisfy { $0.hasGalleyOven ?? false }
             let cateringDelta: Double = switch catering {
             case .none: 0
@@ -471,13 +432,117 @@ final class GameEngine {
             let target = min(100, max(0,
                 (punctuality * 0.35 + avgComfort * 0.25 + service * 0.20
                  + econ.fairness * 0.15 + incidents * 0.05) * 100 + cateringDelta))
-            state.routes[r].satisfaction += (target - route.satisfaction) * 0.15
+            state.routes[r].satisfaction += (target - route.satisfaction) * 0.15 * f
             state.routes[r].lastPunctuality = punctuality
         }
 
-        // 3b. AIRWORTHINESS (GDD §17): an airframe flown past the danger
-        // line can be lost — quadratic risk from the threshold, seeded
-        // roll, at most one hull loss per week. The Fleet card warned.
+        // 4. WAGES + costs — a day's share; happiness/skill drift daily.
+        let wageTrendMult = trendMultiplier(.wages)
+        for role in StaffRole.allCases {
+            guard var pool = state.staff[role] else { continue }
+            let u = utilization[role] ?? 0
+            let demand = crewDemandHours[role] ?? 0
+            let capacity = Double(pool.headcount) * Balance.weeklyHoursPerStaff
+            report.wageCost += Double(pool.headcount) * pool.weeklyWage * wageTrendMult * f
+            let marketRate = role.marketWage * profile.laborCost
+            let excessHours = max(0, demand - capacity)
+            let overtimeHours = min(excessHours, capacity * Balance.overtimeCapFactor)
+            let contractorHours = excessHours - overtimeHours
+            if overtimeHours > 0 {
+                let hourly = pool.weeklyWage / Balance.weeklyHoursPerStaff
+                report.wageCost += overtimeHours * hourly * Balance.overtimeMultiplier * wageTrendMult * f
+            }
+            if contractorHours > 0 {
+                let marketHourly = marketRate / Balance.weeklyHoursPerStaff
+                report.contractorCost = (report.contractorCost ?? 0)
+                    + contractorHours * marketHourly * Balance.contractorPremium * wageTrendMult * f
+            }
+            let staffLoad = capacity > 0 ? min(u, 1 + Balance.overtimeCapFactor) : 0
+            let target = happinessTarget(role: role, weeklyWage: pool.weeklyWage, staffLoad: staffLoad)
+            pool.happiness += (target - pool.happiness) * 0.08 * f
+            for i in pool.members.indices { pool.members[i].skill = min(5, pool.members[i].skill + 0.005 * f) }
+            pool.skill = min(5, pool.skill + 0.005 * f)
+            pool.lastUtilization = staffLoad
+            pool.lastContractorShare = demand > 0 ? contractorHours / demand : 0
+            state.staff[role] = pool
+        }
+
+        // 5. Maintenance / lease / cabin upkeep / marketing / overhead — day's share.
+        for plane in state.fleet where plane.status != .onOrder {
+            let spec = Balance.specs[plane.type]!
+            report.maintenanceCost += spec.baseMaintPerWeek
+                * (1 + plane.wear / 200) * (1.6 - 0.6 * plane.condition / 100)
+                * difficulty.costFactor * f
+        }
+        for plane in state.fleet where plane.acquisition == .leased {
+            report.leaseCost += plane.weeklyLeaseCost * difficulty.costFactor * f
+        }
+        for plane in state.fleet where plane.status != .onOrder {
+            report.cabinCost += plane.cabin.weeklyUpkeep(spec: Balance.specs[plane.type]!) * f
+        }
+        report.marketingCost += state.weeklyMarketingSpend * f
+        report.overheadCost += Balance.hqOverhead(fleetCount: state.fleet.count) * difficulty.costFactor * f
+
+        // 6. Loans — book a day's share of the weekly payment (principal
+        // amortizes on the weekly close).
+        for i in state.loans.indices {
+            let interest = state.loans[i].remaining * state.loans[i].weeklyInterestRate
+            let payment = min(state.loans[i].weeklyPayment, state.loans[i].remaining + interest)
+            report.loanCost += payment * f
+        }
+
+        // Aircraft aging + condition decay — a day's share.
+        for i in state.fleet.indices where state.fleet[i].status != .onOrder {
+            state.fleet[i].ageYears += (1.0 / 52.0) * f
+            state.fleet[i].condition = max(20, state.fleet[i].condition - 0.06 * f)
+        }
+
+        // 7. SETTLE — cash books only THIS day's profit; reputation drifts daily.
+        weekReport = report
+        state.cash += report.profit - profitBefore
+        let paxWeightedSat = state.routes.isEmpty ? 60.0
+            : state.routes.map(\.satisfaction).reduce(0, +) / Double(state.routes.count)
+        let repTarget = 1 + (paxWeightedSat / 100) * 4
+        state.reputation += (repTarget - state.reputation) * 0.06 * f
+
+        if close { closeWeek(report) }
+        state.date.advanceDay()
+    }
+
+    /// The 7-day close: the discrete, seeded-random systems and bookkeeping
+    /// — run once per week, drawing the RNG in a fixed order (deterministic).
+    private func closeWeek(_ report: WeeklyReport) {
+        // Deliveries + maintenance countdowns.
+        for i in state.fleet.indices where state.fleet[i].status == .onOrder {
+            state.fleet[i].deliveryWeeksRemaining -= 1
+            if state.fleet[i].deliveryWeeksRemaining <= 0 {
+                state.fleet[i].deliveryWeeksRemaining = 0
+                state.fleet[i].status = .idle
+                if let routeID = state.fleet[i].assignedRouteID {
+                    if let r = state.routes.firstIndex(where: { $0.id == routeID }),
+                       canOperate(aircraftID: state.fleet[i].id, routeID: routeID) {
+                        state.routes[r].assignedAircraftIDs.append(state.fleet[i].id)
+                        state.fleet[i].status = .assigned
+                    } else {
+                        state.fleet[i].assignedRouteID = nil
+                    }
+                }
+            }
+        }
+        for i in state.fleet.indices where state.fleet[i].groundedWeeksRemaining > 0 {
+            state.fleet[i].groundedWeeksRemaining -= 1
+            if state.fleet[i].groundedWeeksRemaining == 0 {
+                state.fleet[i].status = state.fleet[i].assignedRouteID == nil ? .idle : .assigned
+            }
+        }
+
+        // Load-factor sparkline: one point per week.
+        for r in state.routes.indices {
+            appendLoadFactor(state.routes[r].weeklyFrequency > 0 ? state.routes[r].lastLoadFactor : 0,
+                             routeIndex: r)
+        }
+
+        // Airworthiness crash sweep (RNG, at most one hull loss/week).
         for i in state.fleet.indices {
             let plane = state.fleet[i]
             guard plane.status != .onOrder, plane.groundedWeeksRemaining == 0,
@@ -485,8 +550,7 @@ final class GameEngine {
                   let route = state.routes.first(where: { $0.id == routeID }),
                   route.weeklyFrequency > 0,
                   plane.wear > Balance.wearDangerThreshold else { continue }
-            let over = (plane.wear - Balance.wearDangerThreshold)
-                / (100 - Balance.wearDangerThreshold)
+            let over = (plane.wear - Balance.wearDangerThreshold) / (100 - Balance.wearDangerThreshold)
             let risk = over * over * Balance.crashRiskAt100Wear
             if Double.random(in: 0...1, using: &state.seedRNG) < risk {
                 crash(planeIndex: i, route: route)
@@ -494,192 +558,83 @@ final class GameEngine {
             }
         }
 
-        // 4. WAGES, overtime, happiness (pay AND workload), attrition.
-        // Wage trends (labor squeeze, pilot shortage) are a market premium
-        // on the whole bill while they run.
-        let wageTrendMult = trendMultiplier(.wages)
+        // Attrition (RNG): unhappy pools shed people.
         for role in StaffRole.allCases {
-            guard var pool = state.staff[role] else { continue }
-            let u = utilization[role] ?? 0
-            let demand = crewDemandHours[role] ?? 0
-            let capacity = Double(pool.headcount) * Balance.weeklyHoursPerStaff
-            report.wageCost += Double(pool.headcount) * pool.weeklyWage * wageTrendMult
-
-            // Hours beyond capacity: staff absorb up to +20% as overtime at
-            // 1.5×; everything past that practical ceiling is flown by
-            // CONTRACTORS at premium market rates — nobody works a 979%
-            // week, the airline just bleeds money instead (2026-07-19).
-            let marketRate = role.marketWage * profile.laborCost
-            let excessHours = max(0, demand - capacity)
-            let overtimeHours = min(excessHours, capacity * Balance.overtimeCapFactor)
-            let contractorHours = excessHours - overtimeHours
-            if overtimeHours > 0 {
-                let hourly = pool.weeklyWage / Balance.weeklyHoursPerStaff
-                report.wageCost += overtimeHours * hourly * Balance.overtimeMultiplier
-                    * wageTrendMult
+            guard var pool = state.staff[role],
+                  pool.happiness < Balance.attritionHappinessThreshold, pool.headcount > 0 else { continue }
+            let severity = (Balance.attritionHappinessThreshold - pool.happiness) / Balance.attritionHappinessThreshold
+            let expected = Double(pool.headcount) * Balance.attritionMaxRatePerWeek * severity
+            var leavers = Int(expected)
+            if Double.random(in: 0...1, using: &state.seedRNG) < expected - Double(leavers) { leavers += 1 }
+            for _ in 0..<min(leavers, pool.members.count) {
+                pool.members.remove(at: Int.random(in: 0..<pool.members.count, using: &state.seedRNG))
             }
-            if contractorHours > 0 {
-                let marketHourly = marketRate / Balance.weeklyHoursPerStaff
-                report.contractorCost = (report.contractorCost ?? 0)
-                    + contractorHours * marketHourly
-                    * Balance.contractorPremium * wageTrendMult
-            }
-            // What the EMPLOYEES actually bear: never past the ceiling.
-            let staffLoad = capacity > 0
-                ? min(u, 1 + Balance.overtimeCapFactor) : 0
-
-            // Happiness target: ONE formula for the weekly drift and the
-            // same-day reaction to a wage change (GDD §4.4).
-            let target = happinessTarget(role: role, weeklyWage: pool.weeklyWage,
-                                         staffLoad: staffLoad)
-            pool.happiness += (target - pool.happiness) * 0.08
-
-            // Below the attrition threshold, people quit each week. The
-            // fractional expectation is rounded probabilistically via the
-            // seeded RNG (deterministic for a given state).
-            if pool.happiness < Balance.attritionHappinessThreshold && pool.headcount > 0 {
-                let severity = (Balance.attritionHappinessThreshold - pool.happiness)
-                    / Balance.attritionHappinessThreshold
-                let expected = Double(pool.headcount) * Balance.attritionMaxRatePerWeek * severity
-                var leavers = Int(expected)
-                if Double.random(in: 0...1, using: &state.seedRNG) < expected - Double(leavers) {
-                    leavers += 1
-                }
-                // Seeded-random members hand in their notice.
-                for _ in 0..<min(leavers, pool.members.count) {
-                    pool.members.remove(at: Int.random(in: 0..<pool.members.count,
-                                                       using: &state.seedRNG))
-                }
-                pool.headcount = max(0, pool.headcount - leavers)
-                recomputeAggregates(&pool)
-            }
-
-            // Skill creeps up slowly with tenure.
-            for i in pool.members.indices { pool.members[i].skill = min(5, pool.members[i].skill + 0.005) }
-            pool.skill = min(5, pool.skill + 0.005)
-            pool.lastUtilization = staffLoad
-            pool.lastContractorShare = demand > 0 ? contractorHours / demand : 0
+            pool.headcount = max(0, pool.headcount - leavers)
+            recomputeAggregates(&pool)
             state.staff[role] = pool
         }
 
-        // 5. MAINTENANCE base costs (grounded or not, planes cost money).
-        // Condition multiplier 1.0 (mint) … 1.6 (wreck): the old ×2 curve
-        // made every used airframe a money pit and the trust-fund arc
-        // unreachable.
-        for plane in state.fleet where plane.status != .onOrder {
-            let spec = Balance.specs[plane.type]!
-            report.maintenanceCost += spec.baseMaintPerWeek
-                * (1 + plane.wear / 200) * (1.6 - 0.6 * plane.condition / 100)
-                * difficulty.costFactor
-        }
-
-        // 5b. LEASE PAYMENTS — their own P&L line, forever (GDD §4.1).
-        for plane in state.fleet where plane.acquisition == .leased {
-            report.leaseCost += plane.weeklyLeaseCost * difficulty.costFactor
-        }
-
-        // 5c. CABIN upkeep — interiors cost money to run (GDD §4.2 amended):
-        // seat cleaning by material, catering ops per galley, wifi service.
-        for plane in state.fleet where plane.status != .onOrder {
-            report.cabinCost += plane.cabin.weeklyUpkeep(spec: Balance.specs[plane.type]!)
-        }
-
-        // 5d. MARKETING (GDD §4.8, M5): the budget is spent, awareness
-        // grows with diminishing returns and decays without it.
-        report.marketingCost = state.weeklyMarketingSpend
+        // Marketing awareness (weekly recurrence).
         state.brandAwareness = min(100, state.brandAwareness * (1 - Balance.awarenessDecay)
             + Balance.awarenessGain(spend: state.weeklyMarketingSpend))
 
-        // 6. LOANS.
+        // Loan principal amortization (weekly).
         for i in state.loans.indices {
             let interest = state.loans[i].remaining * state.loans[i].weeklyInterestRate
             let payment = min(state.loans[i].weeklyPayment, state.loans[i].remaining + interest)
-            report.loanCost += payment
             state.loans[i].remaining = max(0, state.loans[i].remaining + interest - payment)
         }
         state.loans.removeAll { $0.remaining <= 0.01 }
 
-        // 7. SETTLE cash and reputation.
-        state.cash += report.profit
-        let paxWeightedSat = state.routes.isEmpty ? 60.0
-            : state.routes.map(\.satisfaction).reduce(0, +) / Double(state.routes.count)
-        let repTarget = 1 + (paxWeightedSat / 100) * 4
-        state.reputation += (repTarget - state.reputation) * 0.06   // 8-week-ish smoothing
-
-        // 8. EVENTS — weighted deck, weights shifted by game state.
+        // Events, timed effects, trends, unlocks.
         drawEvent()
-
-        // Timed effects age out.
         for i in state.activeEffects.indices { state.activeEffects[i].weeksRemaining -= 1 }
         state.activeEffects.removeAll { $0.weeksRemaining <= 0 }
-
-        // Industry trends age, expire, and respawn (GDD §14).
         tickIndustryTrends()
-
-        // Fleet tier unlocks (GDD §22): the drawer opens on new metal.
         checkFleetUnlocks()
 
-        // 9. BOOKKEEPING — aging, market refresh, reports, quarters, date, autosave.
-
-        // M0 fix: aircraft aging. Depreciation and netWorth depend on ageYears,
-        // which was never incremented. Age every delivered airframe by one week.
-        // Condition also decays with age (~3/yr, floor 20): old airframes burn
-        // more fuel, cost more to maintain, wear faster, and fetch less at
-        // resale — eventually replacement beats another heavy check.
-        for i in state.fleet.indices where state.fleet[i].status != .onOrder {
-            state.fleet[i].ageYears += 1.0 / 52.0
-            state.fleet[i].condition = max(20, state.fleet[i].condition - 0.06)
-        }
-
-        // Recruitment (GDD §4.4 as amended): active job ads attract 1–2
-        // applicants per week; waiting applicants eventually take other
-        // jobs. All draws from the seeded RNG in fixed role order.
+        // Recruitment (RNG).
         for role in StaffRole.allCases {
             guard let weeksLeft = state.jobPostings[role] else { continue }
             let waiting = state.applicants.filter { $0.role == role }.count
             let count = min(1 + (Double.random(in: 0...1, using: &state.seedRNG) < 0.5 ? 1 : 0),
                             Balance.maxApplicantsPerRole - waiting)
-            for _ in 0..<max(0, count) {
-                state.applicants.append(generateApplicant(role: role))
-            }
+            for _ in 0..<max(0, count) { state.applicants.append(generateApplicant(role: role)) }
             state.jobPostings[role] = weeksLeft <= 1 ? nil : weeksLeft - 1
         }
         for i in state.applicants.indices { state.applicants[i].weeksRemaining -= 1 }
         state.applicants.removeAll { $0.weeksRemaining <= 0 }
 
-        // Used market rotates every few weeks (seeded RNG — deterministic).
+        // Used market refresh (RNG).
         state.weeksUntilMarketRefresh -= 1
         if state.weeksUntilMarketRefresh <= 0 {
             state.usedMarket = Self.generateUsedListings(rng: &state.seedRNG)
-            // Aircraft-price trends bake into the listings at generation, so
-            // the shown price IS the charged price for the listing's life.
             let metalMult = aircraftPriceMultiplier
             if metalMult != 1.0 {
-                for i in state.usedMarket.indices {
-                    state.usedMarket[i].price *= metalMult
-                }
+                for i in state.usedMarket.indices { state.usedMarket[i].price *= metalMult }
             }
             state.weeksUntilMarketRefresh = Int.random(
                 in: Balance.usedMarketRefreshWeeksMin...Balance.usedMarketRefreshWeeksMax,
                 using: &state.seedRNG)
         }
 
+        // Finalize the week's report + weekly-sampled history.
         state.reports.append(report)
         if state.reports.count > 52 { state.reports.removeFirst() }
+        weekReport = nil
         appendHistory(\.netWorthHistory, netWorth)
         appendHistory(\.cashHistory, state.cash)
         appendHistory(\.reputationHistory, state.reputation)
         state.debtHistory = Array(((state.debtHistory ?? []) + [totalDebt]).suffix(260))
 
-        // Milestones (Layer 1): contextual nudges, paid once, never blocking.
+        // Milestones (paid once, never blocking).
         for milestone in Balance.milestones
         where !state.completedMilestones.contains(milestone.id) && milestone.isComplete(state) {
             state.completedMilestones.insert(milestone.id)
             state.cash += milestone.reward
         }
 
-        // Fail states (GDD §3.2): 8 straight insolvent weeks with nothing
-        // left to sell is the end of the line.
+        // Fail state (GDD §3.2): 8 insolvent weeks with nothing to sell.
         state.weeksInsolvent = state.cash < 0 ? state.weeksInsolvent + 1 : 0
         let hasSellableAssets = state.fleet.contains {
             $0.acquisition != .leased && $0.status != .onOrder
@@ -690,10 +645,6 @@ final class GameEngine {
         }
 
         if state.date.week % 13 == 0 { closeQuarter() }
-        state.date.advance()
-
-        // M0 fix: autosave. The GDD promises autosave every tick; the tick
-        // never called save(). Persist at the end of every week.
         save()
     }
 

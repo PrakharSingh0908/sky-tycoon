@@ -113,11 +113,11 @@ struct SimClockPill: View {
             HStack(spacing: 8) {
                 SpeedControl()
                 Button {
-                    engine.stepOneWeek()
+                    engine.stepOneDay()
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "forward.frame.fill").font(.system(size: 9))
-                        Text("Step wk").font(.game(.caption, weight: .medium))
+                        Text("Step day").font(.game(.caption, weight: .medium))
                     }
                 }
                 .buttonStyle(GameButtonStyle(color: Theme.sky, prominent: true))
@@ -135,7 +135,7 @@ struct SimClockPill: View {
     /// The week filling toward the settle is the sim's heartbeat — shown,
     /// not implied.
     private func weekStrip(height: CGFloat, labeled: Bool) -> some View {
-        let dayIndex = min(6, Int(engine.weekProgress * 7))
+        let dayIndex = engine.dayIndex
         let days = ["M", "T", "W", "T", "F", "S", "S"]
         return HStack(spacing: 3) {
             ForEach(0..<7, id: \.self) { i in

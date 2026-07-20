@@ -12,15 +12,26 @@ import Foundation
 struct GameDate: Codable, Equatable, Comparable, CustomStringConvertible {
     var week: Int   // 1...52
     var year: Int   // starts at 1
+    /// Day within the week, 1...7 (GDD §23, daily loop). Optional so
+    /// pre-daily saves decode at the start of their week.
+    var day: Int? = 1
 
+    /// Advance one full week (the settle boundary): resets to day 1.
     mutating func advance() {
         week += 1
+        day = 1
         if week > 52 { week = 1; year += 1 }
     }
+    /// Advance one day; rolls into the next week (via advance) on day 7.
+    mutating func advanceDay() {
+        let d = (day ?? 1)
+        if d >= 7 { advance() } else { day = d + 1 }
+    }
     var totalWeeks: Int { (year - 1) * 52 + week }
+    var totalDays: Int { (totalWeeks - 1) * 7 + (day ?? 1) }
     var quarter: Int { (week - 1) / 13 + 1 }
     var description: String { "Y\(year) W\(week)" }
-    static func < (l: GameDate, r: GameDate) -> Bool { l.totalWeeks < r.totalWeeks }
+    static func < (l: GameDate, r: GameDate) -> Bool { l.totalDays < r.totalDays }
 }
 
 enum Country: String, Codable, CaseIterable, Identifiable {

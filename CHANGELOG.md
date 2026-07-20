@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## The daily loop (GDD §23)
+
+- The sim now settles daily instead of weekly. `advanceWeek` is split into `advanceDay` (continuous accrual) + `closeWeek` (discrete systems). Each day books 1/7 of the week's economics — revenue, fuel, wages, contractors, maintenance, lease, cabin, marketing, overhead, loan interest — so cash moves every day; wear, condition, satisfaction, and reputation also drift daily. The discrete, seeded-random block (deliveries, maintenance countdowns, crash sweep, events, trends, attrition, recruitment, used-market refresh, milestones, fail-state, quarter close) runs once on the 7-day boundary, drawing the RNG in a fixed order exactly as before. `GameDate` gains an optional `day` (old saves load at day 1); the clock ticks a day per (secondsPerWeek/7); "Step wk" is now "Step day"; the pill's seven-segment strip fills one segment per settled day. The P&L statement and trend charts stay weekly-sampled; the live cash number, net-worth board, and meters refresh daily.
+- Verified: seven daily cash deltas sum exactly to the week's report profit (−$1,064 × 7 = −$7,449 = the appended weekly report), one report per 7 days, RNG still weekly. Economy totals unchanged from §22 — only the feedback cadence is daily.
+
+*Why:* per direction. A week-long gap between a decision and its consequence made the game feel like steering by mail; daily feedback makes it controllable without speeding the economy up or cheapening the slow build (money per day is small, the climb is just as long, now legible day by day).
+
+
 ## Profile hub on the Dashboard title
 
 - A machined silver monogram button (the airline's initials) sits at the top right of the Dashboard and opens a crafted Profile sheet that houses the airline's identity (name, country, difficulty, YEAR / WEEK), a milestone summary (progress bar, completed count, and the next milestone with its reward), and the save slots (load, start new, delete across three slots). The old bottom "Saved games" card is removed, its function absorbed into the profile.
