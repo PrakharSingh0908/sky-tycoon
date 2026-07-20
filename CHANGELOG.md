@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Showroom shortcut on the Fleet title
+
+- The Fleet screen's title row now carries a polished-silver cart icon at the top right that opens the Showroom directly, for quick access without scrolling to the card at the bottom (which stays). GameScreen gained an optional trailing accessory slot for the title row; all other screens are unchanged.
+
+*Why:* per direction. The showroom was only reachable at the foot of a long fleet list; a persistent title-row shortcut is the expected place to reach for "buy more."
+
+
 ## Gazette gets Didot and a foil headline
 
 - The gazette masthead and story headlines now set in Didot, the high-contrast display serif of real mastheads (a system font, so no bundling; it falls back to the system serif if ever missing). The headline is filled with a warm foil gradient (bright white catching the light up top, dimmer warm gray below) and given a faint letterpress shadow, so it reads as stamped rather than printed.

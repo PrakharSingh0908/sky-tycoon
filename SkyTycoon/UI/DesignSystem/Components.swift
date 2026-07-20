@@ -851,16 +851,25 @@ struct FormulaSheet: View {
 struct GameScreen<Content: View>: View {
     let title: String
     var accent: Color = Theme.sky
+    /// Optional accessory pinned to the right of the title row (e.g. a
+    /// quick-access icon). Defaults to nil, so existing screens are untouched.
+    var trailing: AnyView? = nil
     @ViewBuilder var content: Content
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.cardSpacing) {
-                Text(title)
-                    .font(.display(.largeTitle))   // sans semibold
-                    .tracking(-1.2)                // engineered compression
-                    .foregroundStyle(Theme.textPrimary)
-                    .padding(.top, 6)
+                HStack(alignment: .center) {
+                    Text(title)
+                        .font(.display(.largeTitle))   // sans semibold
+                        .tracking(-1.2)                // engineered compression
+                        .foregroundStyle(Theme.textPrimary)
+                    if let trailing {
+                        Spacer(minLength: 8)
+                        trailing
+                    }
+                }
+                .padding(.top, 6)
                 content
             }
             .padding(.horizontal, Theme.gutter)

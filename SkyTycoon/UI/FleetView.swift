@@ -15,7 +15,8 @@ struct FleetView: View {
 
     var body: some View {
         NavigationStack {
-            GameScreen(title: "Fleet", accent: accent) {
+            GameScreen(title: "Fleet", accent: accent,
+                       trailing: AnyView(showroomButton)) {
                 if engine.state.fleet.isEmpty { emptyCard }
                 // Worst wear first: the plane that needs you leads the list.
                 ForEach(engine.state.fleet.sorted { $0.wear > $1.wear }) { plane in
@@ -32,6 +33,22 @@ struct FleetView: View {
         .sheet(item: $architectingPlane) { plane in
             CabinArchitectView(aircraftID: plane.id, current: plane.cabin)
         }
+    }
+
+    /// Quick access to the showroom from the title row: a polished-silver
+    /// cart in a small machined disc, the same destination as the card below.
+    private var showroomButton: some View {
+        NavigationLink {
+            ShowroomView()
+        } label: {
+            Image(systemName: "cart.fill")
+                .font(.system(size: 15, weight: .semibold))
+                .polishedSilver()
+                .frame(width: 40, height: 40)
+                .background(Theme.card, in: Circle())
+                .overlay(Circle().strokeBorder(Theme.hairline, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
     }
 
     private var emptyCard: some View {
