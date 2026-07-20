@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Wages read to the $50
+
+- New wageMoney formatter shows wages at 0.05K precision ("$1.20K" instead of "$1.2K"; exact dollars under $1,000). Applied everywhere a wage prints: the wage stepper, roster rows, hire keys, the negotiation table, the signed contract, and the P&L wage breakdown.
+
+*Why:* per direction. The compact money style rounded to $100, so a $50 wage step often left the display unchanged and the stepper looked dead even though the sim had moved.
+
+
 ## Pay the bank back early
 
 - Every loan on the Money tab now shows its weekly payment and a "Pay down" key that opens a repayment drawer: the remaining balance meter, cash on hand, and a slider from zero to everything you can afford (armed at the maximum). The key says exactly what it does: "Pay $X", or "Pay it off · $X" when the slider covers the balance. Paying clamps to cash and balance, a cleared loan closes its file, and the sim clock holds while the drawer is up. New engine repayLoan(loanID:amount:), no prepayment penalty.

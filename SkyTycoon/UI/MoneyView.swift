@@ -254,7 +254,7 @@ struct MoneyView: View {
     private func wagesExplanation(_ r: WeeklyReport) -> Explanation {
         var rows: [(String, String)] = StaffRole.allCases.compactMap { role in
             guard let pool = engine.state.staff[role], pool.headcount > 0 else { return nil }
-            return ("\(role.displayName) · \(pool.headcount) × \(pool.weeklyWage.money)",
+            return ("\(role.displayName) · \(pool.headcount) × \(pool.weeklyWage.wageMoney)",
                     (Double(pool.headcount) * pool.weeklyWage).money)
         }
         rows.append(("Total incl. overtime", r.wageCost.money))

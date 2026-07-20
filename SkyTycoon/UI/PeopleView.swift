@@ -132,7 +132,7 @@ private struct StaffPoolCard: View {
             warningView
 
             Divider().overlay(Theme.hairline)
-            PillStepper(label: "Weekly wage", value: pool.weeklyWage.money, accent: accent,
+            PillStepper(label: "Weekly wage", value: pool.weeklyWage.wageMoney, accent: accent,
                 onDecrement: { engine.setWage(role: role, wage: pool.weeklyWage - 50) },
                 onIncrement: { engine.setWage(role: role, wage: pool.weeklyWage + 50) })
 
@@ -196,8 +196,8 @@ private struct StaffPoolCard: View {
                 HStack(spacing: 5) {
                     StarRating(rating: member.skill, size: 8)
                     Text(justJoined
-                         ? "\(member.weeklyWage.money)/wk · just joined"
-                         : "\(member.weeklyWage.money)/wk · since \(member.hiredOn.description)")
+                         ? "\(member.weeklyWage.wageMoney)/wk · just joined"
+                         : "\(member.weeklyWage.wageMoney)/wk · since \(member.hiredOn.description)")
                         .font(.game(.caption2))
                         .foregroundStyle(justJoined ? Theme.cornflower : Theme.textSecondary)
                         .lineLimit(1)
@@ -359,7 +359,7 @@ private struct HiringSheet: View {
                         signed = contract
                     }
                 } label: {
-                    Text("Hire · \(applicant.askingWage.money)/wk").frame(maxWidth: .infinity)
+                    Text("Hire · \(applicant.askingWage.wageMoney)/wk").frame(maxWidth: .infinity)
                 }
                 .buttonStyle(GameButtonStyle(finish: .bronze))
             }
@@ -403,7 +403,7 @@ private struct NegotiationSheet: View {
                     HStack {
                         Text("Asking").font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
                         Spacer()
-                        TickerText(text: person.askingWage.money + "/wk",
+                        TickerText(text: person.askingWage.wageMoney + "/wk",
                                    font: .game(.subheadline, weight: .bold))
                     }
                     MeterRow(label: "Patience", value: 1 - person.irritation / 100,
@@ -532,7 +532,7 @@ private struct ContractSignedCard: View {
 
             VStack(spacing: 8) {
                 termRow("Position", contract.role.displayName)
-                termRow("Weekly wage", "\(contract.wage.money)/wk")
+                termRow("Weekly wage", "\(contract.wage.wageMoney)/wk")
                 termRow("Starts", "Immediately")
             }
             .padding(14)
