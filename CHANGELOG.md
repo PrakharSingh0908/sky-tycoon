@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Event pauses stop hijacking the speed control
+
+- An event card now holds the clock the same way every other modal does (via the interaction-hold path), instead of force-setting the sim speed to Paused. The speed control keeps showing the player's chosen speed while the card is up, the pill shows its neutral "held" indicator, and time resumes at that same speed the moment the event is resolved. No pause stamped into the speed box, and no timeline lurch on dismissal.
+
+*Why:* per direction. Forcing speed to Paused for a temporary event was inconsistent with receipts, confirmations, and the hiring desk (all of which preserve speed), so an event read as if the player had paused and then made the timeline jump when they resumed. A hold is the honest model: the clock stops, the speed is remembered.
+
+
 ## Lawsuits wait for the airline to grow; hiring desk auto-closes
 
 - The tea-spill (−$180K) and hard-landing (−$300K) incident cards no longer fire in the opening months. Their intro weeks move out to week 30 and week 36, and each now also requires a real cash cushion (≥$360K and ≥$600K respectively), so a founder's first season can never be ended by a single lawsuit. A comfortable operator still meets them.

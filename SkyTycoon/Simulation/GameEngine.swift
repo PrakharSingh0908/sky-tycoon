@@ -40,7 +40,11 @@ final class GameEngine {
     /// chosen speed resumes when the last one closes. Counted so nested
     /// sheets stack safely. Not part of the save.
     private var interactionHolds = 0
-    var clockIsHeld: Bool { interactionHolds > 0 }
+    /// The clock is held while decision UI is open OR an event card is up.
+    /// A held clock does NOT touch the player's chosen speed: it simply
+    /// stops advancing, then resumes at that speed when the hold lifts — so
+    /// the speed control never flips to "paused" for a temporary interruption.
+    var clockIsHeld: Bool { interactionHolds > 0 || state.pendingEvent != nil }
     func beginInteraction() { interactionHolds += 1 }
     func endInteraction() { interactionHolds = max(0, interactionHolds - 1) }
 
@@ -287,7 +291,11 @@ final class GameEngine {
         while accumulator >= secondsPerWeek {
             accumulator -= secondsPerWeek
             advanceWeek()
-            if state.pendingEvent != nil { speed = .paused; accumulator = 0; break }
+            // An event holds the clock (clockIsHeld) without disturbing the
+            // player's speed: the loop stops here, and time resumes at that
+            // same speed once the card is dealt with. No pause is stamped
+            // into the speed control, and the timeline doesn't lurch.
+            if state.pendingEvent != nil { accumulator = 0; break }
         }
     }
 
