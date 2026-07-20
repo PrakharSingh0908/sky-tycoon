@@ -7,7 +7,12 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
-## Debt rides the cash chart; Cash tab leads
+## Lawsuits wait for the airline to grow; hiring desk auto-closes
+
+- The tea-spill (−$180K) and hard-landing (−$300K) incident cards no longer fire in the opening months. Their intro weeks move out to week 30 and week 36, and each now also requires a real cash cushion (≥$360K and ≥$600K respectively), so a founder's first season can never be ended by a single lawsuit. A comfortable operator still meets them.
+- The Hiring desk closes itself the moment the last applicant is hired or turned away, instead of leaving you on an empty "Nobody at the desk" screen to tap Done. It waits for any contract card or negotiation to finish first, and a short beat lets the final row's removal animation land.
+
+*Why:* per direction. A $300K settlement against a $200K airline was a coin-flip game-over that punished nothing the player did; tying these to both time and cushion makes them a mid-game risk, not an opening trap. And an empty applicant desk had one obvious next action, so the game should take it.
 
 - The Finances card's Cash view now carries a dashed coral debt line alongside the solid cash line, with a small line-sample legend: liquidity against what the bank is owed, on one instrument. Debt history is a new capped 260-week buffer appended each settle (optional in GameState, so old saves decode and the line grows from their next week). TrendChart gained a general secondary-series option.
 - The trend tabs reorder to Cash, Net worth, Reputation, and Cash is the default view.

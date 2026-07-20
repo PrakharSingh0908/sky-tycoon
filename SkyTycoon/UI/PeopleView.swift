@@ -296,15 +296,36 @@ private struct HiringSheet: View {
         .presentationBackground(Theme.bgElevated)
         .preferredColorScheme(.dark)
         .holdsSimClock()   // patience doesn't drain while you're deciding
+        // The desk closes itself once the last applicant is dealt with.
+        .onChange(of: applicants.count) { _, _ in closeIfDeskEmpty() }
         .sheet(item: $negotiating, onDismiss: {
             if let contract = pendingContract {
                 pendingContract = nil
                 signed = contract
+            } else {
+                closeIfDeskEmpty()
             }
         }) { applicant in
             NegotiationSheet(applicant: applicant) { pendingContract = $0 }
         }
-        .sheet(item: $signed) { ContractSignedCard(contract: $0) }
+        .sheet(item: $signed, onDismiss: closeIfDeskEmpty) {
+            ContractSignedCard(contract: $0)
+        }
+    }
+
+    /// Dismiss the hiring sheet the moment the desk is empty — but only
+    /// when no contract card or negotiation is still on top of it, so the
+    /// last hire's flow finishes before the desk folds away.
+    private func closeIfDeskEmpty() {
+        guard applicants.isEmpty,
+              negotiating == nil, signed == nil, pendingContract == nil else { return }
+        // A short beat lets the final row's removal animation land.
+        Task {
+            try? await Task.sleep(for: .seconds(0.35))
+            guard applicants.isEmpty,
+                  negotiating == nil, signed == nil, pendingContract == nil else { return }
+            dismiss()
+        }
     }
 
     // Info line first, keys on their own full-width row below — five
