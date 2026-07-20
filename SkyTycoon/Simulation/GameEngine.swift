@@ -40,11 +40,14 @@ final class GameEngine {
     /// chosen speed resumes when the last one closes. Counted so nested
     /// sheets stack safely. Not part of the save.
     private var interactionHolds = 0
-    /// The clock is held while decision UI is open OR an event card is up.
-    /// A held clock does NOT touch the player's chosen speed: it simply
-    /// stops advancing, then resumes at that speed when the hold lifts — so
-    /// the speed control never flips to "paused" for a temporary interruption.
-    var clockIsHeld: Bool { interactionHolds > 0 || state.pendingEvent != nil }
+    /// True only for decision UI holds (negotiation, receipts, confirmations)
+    /// that show the neutral "held" indicator. An event card also stops the
+    /// clock — but through the pendingEvent guard in clockFired, NOT here — so
+    /// it neither flips the speed control to paused NOR lights the held
+    /// indicator: the player's chosen speed simply resumes when the card is
+    /// answered. (The event sheet self-sizes, so the pill stays visible
+    /// behind it; showing a pause there for an event read as a false pause.)
+    var clockIsHeld: Bool { interactionHolds > 0 }
     func beginInteraction() { interactionHolds += 1 }
     func endInteraction() { interactionHolds = max(0, interactionHolds - 1) }
 

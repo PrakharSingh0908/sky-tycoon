@@ -9,9 +9,9 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## Event pauses stop hijacking the speed control
 
-- An event card now holds the clock the same way every other modal does (via the interaction-hold path), instead of force-setting the sim speed to Paused. The speed control keeps showing the player's chosen speed while the card is up, the pill shows its neutral "held" indicator, and time resumes at that same speed the moment the event is resolved. No pause stamped into the speed box, and no timeline lurch on dismissal.
+- An event card no longer force-sets the sim speed to Paused, and no longer lights any pause indicator. The clock still stops while a card is up (via the pendingEvent guard in the tick), but the speed control keeps showing the player's chosen speed, the sim pill shows its running state (not the yellow held icon), and time resumes at that same speed the instant the event is answered. Because the event sheet self-sizes and leaves the pill visible behind it, an event was showing a false pause on the shorter cards; that is gone.
 
-*Why:* per direction. Forcing speed to Paused for a temporary event was inconsistent with receipts, confirmations, and the hiring desk (all of which preserve speed), so an event read as if the player had paused and then made the timeline jump when they resumed. A hold is the honest model: the clock stops, the speed is remembered.
+*Why:* per direction. Forcing speed to Paused, or lighting the held indicator, for a temporary event read as if the player had paused and made the timeline appear to jump on resume. The tick already holds itself during an event, so the UI should say what the player will get back: their speed, running.
 
 
 ## Lawsuits wait for the airline to grow; hiring desk auto-closes
