@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Routes list sorted by earnings
+
+- The Routes "Boarding passes" list now leads with your most-earning route (sorted by last week's profit, descending), so your money-makers are at the top instead of creation order.
+
+*Why:* per request — the highest earners should be the first thing you see.
+
+
 ## Pilot-poach match raise is now 15–21%
 
 - Keeping a poached pilot used to cost a flat +8% raise. It's now rolled 15–21% per event, so retaining a veteran is a real, painful commitment (their pay jumps, permanently). The button shows the exact rolled figure, and it survives a reload.

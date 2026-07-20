@@ -57,7 +57,8 @@ struct RoutesView: View {
                     SectionHeader(title: "Boarding passes", icon: "ticket.fill",
                                   accent: accent)
                         .padding(.top, 6)
-                    ForEach(engine.state.routes) { route in
+                    // Most-earning route first, so the money leaders lead.
+                    ForEach(engine.state.routes.sorted { $0.lastWeeklyProfit > $1.lastWeeklyProfit }) { route in
                         BoardingPassCard(route: route,
                             originName: engine.city(route.originID)?.name ?? route.originID,
                             destName: engine.city(route.destinationID)?.name ?? route.destinationID,
