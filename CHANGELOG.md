@@ -7,6 +7,16 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## HQ tab reshuffle: Your Desk, marketing home, leaner Dashboard
+
+- The **Dashboard tab is now "HQ"** (building icon). The old "Head Quarter" card inside it is renamed **"Your Desk."**
+- **Milestones and Ambitions cards removed from the HQ page** — they still live in the Profile menu (with progress and rewards).
+- **Marketing moved to the HQ tab** (out of Money) — an ongoing brand decision that belongs at your desk. Its cost line still shows on the Money statement.
+- **The bank (loans) moved to the top of the Money tab.**
+
+*Why:* per request — consolidate the command surface at HQ, declutter it of the profile-y progress cards, and lead Money with financing.
+
+
 ## Metallic toast + routes-attention folded into Head Quarter
 
 - The celebration toast (milestones, ambitions, rival overtakes) lost its blue stroke and now wears the machined MetalPanel look of the notable cards — dark metal face, white rim, polished-silver icon.

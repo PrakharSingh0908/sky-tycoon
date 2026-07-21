@@ -39,7 +39,7 @@ struct DashboardView: View {
     }
 
     var body: some View {
-        GameScreen(title: "Dashboard", accent: accent,
+        GameScreen(title: "HQ", accent: accent,
                    trailing: AnyView(profileButton)) {
             heroCard
             // An ambient event (GDD §25) sits here as a quiet decision —
@@ -49,15 +49,14 @@ struct DashboardView: View {
             // same machined housing, until the airline flies.
             if !firstFlightDone { firstFlightCard }
             if engine.state.reputation < 2.0 { reputationCollapseBanner }
-            // Head Quarter (§33): news, eroding routes (§26), timed effects,
+            // Your Desk (§34): news, eroding routes (§26), timed effects,
             // and the fleet that needs a look — the whole ops board in one.
             if hqHasContent { headquartersCard }
+            // Marketing lives at HQ now (§34) — an ongoing brand decision.
+            marketingCard
             trendsCard
             industryCard
-            // The ambition ladder (GDD §26 Pillar 5): the next big goal.
-            if let ambition = engine.currentAmbition { ambitionCard(ambition) }
             if let report = engine.latestReport { lastWeekCard(report) }
-            milestonesCard
         }
         // One-shot settle flash: the hero border blinks profit-green when a
         // week's numbers land, then eases back. Nothing moves while reading.
@@ -363,6 +362,29 @@ struct DashboardView: View {
         return items
     }
 
+    // ── Marketing (§34): buy awareness, awareness buys demand — an HQ call.
+    private var marketingCard: some View {
+        GameCard {
+            SectionHeader(title: "Marketing", icon: "megaphone.fill", accent: accent)
+            MeterRow(label: "Brand awareness", value: engine.state.brandAwareness / 100,
+                     display: "\(Int(engine.state.brandAwareness))/100",
+                     color: Theme.health(0.3 + engine.state.brandAwareness / 150))
+            HStack(spacing: 10) {
+                Text("Weekly budget").font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
+                Slider(value: Binding(
+                    get: { engine.state.weeklyMarketingSpend },
+                    set: { engine.setMarketingSpend($0) }
+                ), in: 0...Balance.marketingSpendMax, step: 2_000)
+                .tint(accent)
+                TickerText(text: engine.state.weeklyMarketingSpend.money + "/wk",
+                           font: .game(.caption, weight: .bold))
+                    .frame(width: 76, alignment: .trailing)
+            }
+            Text("Demand \(String(format: "%+.1f", (Balance.awarenessMultiplier(engine.state.brandAwareness) - 1) * 100))% from awareness · decays \(Int(Balance.awarenessDecay * 100))%/wk without spend")
+                .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+        }
+    }
+
     /// Head Quarter shows when there's news to read or a condition to act on.
     private var hqHasContent: Bool {
         !gazetteItems.isEmpty || !engine.routesNeedingAttention.isEmpty
@@ -379,7 +401,7 @@ struct DashboardView: View {
             || !engine.state.activeEffects.isEmpty || !wornAircraft.isEmpty
             || !engine.agingAircraft.isEmpty
         return GameCard {
-            SectionHeader(title: "Head Quarter", icon: "building.2.fill", accent: accent)
+            SectionHeader(title: "Your Desk", icon: "briefcase.fill", accent: accent)
             if !items.isEmpty { gazette(items) }
             if !items.isEmpty && hasOps { Divider().overlay(Theme.hairline) }
             routeAttentionRows

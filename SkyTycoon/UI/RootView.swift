@@ -48,7 +48,7 @@ struct RootView: View {
     var body: some View {
         TabView(selection: $tab) {
             DashboardView(onOpenFleet: { tab = .fleet })
-                .tabItem { Label("Dashboard", systemImage: "gauge") }
+                .tabItem { Label("HQ", systemImage: "building.2.fill") }
                 .tag(GameTab.dashboard)
             RoutesView()
                 .tabItem { Label("Routes", systemImage: "map") }

@@ -17,10 +17,12 @@ struct MoneyView: View {
 
     var body: some View {
         GameScreen(title: "Money", accent: accent) {
+            // The bank leads (§34): financing is the first lever a founder
+            // reaches for. Marketing moved to HQ.
+            loansCard
             trustFundCard
             if !engine.state.letters.isEmpty { lettersCard }
             balanceSheetCard
-            marketingCard
             GameCard {
                 SectionHeader(title: "Daily P&L · 13 weeks", icon: "chart.bar.fill", accent: accent)
                 ProfitChart(dailyProfit: engine.state.dailyProfit ?? [],
@@ -28,7 +30,6 @@ struct MoneyView: View {
                 pnlLegend
             }
             if let r = engine.latestReport { statementCard(r) }
-            loansCard
         }
         .sheet(item: $explanation) { FormulaSheet(explanation: $0) }
     }
@@ -84,29 +85,7 @@ struct MoneyView: View {
         return out.reversed()
     }
 
-    // ── Marketing (M5): buy awareness, awareness buys demand ─────────────
-
-    private var marketingCard: some View {
-        GameCard {
-            SectionHeader(title: "Marketing", icon: "megaphone.fill", accent: accent)
-            MeterRow(label: "Brand awareness", value: engine.state.brandAwareness / 100,
-                     display: "\(Int(engine.state.brandAwareness))/100",
-                     color: Theme.health(0.3 + engine.state.brandAwareness / 150))
-            HStack(spacing: 10) {
-                Text("Weekly budget").font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
-                Slider(value: Binding(
-                    get: { engine.state.weeklyMarketingSpend },
-                    set: { engine.setMarketingSpend($0) }
-                ), in: 0...Balance.marketingSpendMax, step: 2_000)
-                .tint(accent)
-                TickerText(text: engine.state.weeklyMarketingSpend.money + "/wk",
-                           font: .game(.caption, weight: .bold))
-                    .frame(width: 76, alignment: .trailing)
-            }
-            Text("Demand \(String(format: "%+.1f", (Balance.awarenessMultiplier(engine.state.brandAwareness) - 1) * 100))% from awareness · decays \(Int(Balance.awarenessDecay * 100))%/wk without spend")
-                .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
-        }
-    }
+    // Marketing moved to the HQ tab (§34).
 
     // ── Trust fund: the tutorial arc as a progress instrument ────────────
 
