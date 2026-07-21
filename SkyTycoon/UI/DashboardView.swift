@@ -52,10 +52,7 @@ struct DashboardView: View {
             // Living competition (GDD §26): eroding routes surface here so a
             // "set and forget" route can't quietly bleed.
             if !engine.routesNeedingAttention.isEmpty { routeAttentionCard }
-            if !engine.state.activeEffects.isEmpty || !wornAircraft.isEmpty
-                || !engine.agingAircraft.isEmpty {
-                opsConditionsCard
-            }
+            if hqHasContent { headquartersCard }
             trendsCard
             industryCard
             // The ambition ladder (GDD §26 Pillar 5): the next big goal.
@@ -357,10 +354,36 @@ struct DashboardView: View {
             .sorted { $0.wear > $1.wear }
     }
 
-    private var opsConditionsCard: some View {
-        GameCard {
-            SectionHeader(title: "Ops conditions", icon: "exclamationmark.bubble.fill",
-                          accent: Theme.warn)
+    /// The Gazette pages (GDD §33): breaking news first, then the rival
+    /// watch, then the market trends (long regimes before short shocks).
+    private var gazetteItems: [GazetteItem] {
+        var items: [GazetteItem] = []
+        if let news = engine.currentPressHeadline { items.append(.news(news)) }
+        if let press = engine.currentRivalPress { items.append(.rival(press)) }
+        let trends = engine.industryTrends.sorted {
+            ($0.horizon == .long ? 0 : 1) < ($1.horizon == .long ? 0 : 1)
+        }
+        items += trends.map { .trend($0) }
+        return items
+    }
+
+    /// Head Quarter shows when there's news to read or a condition to act on.
+    private var hqHasContent: Bool {
+        !gazetteItems.isEmpty || !engine.state.activeEffects.isEmpty
+            || !wornAircraft.isEmpty || !engine.agingAircraft.isEmpty
+    }
+
+    // The Head Quarter (§33): the newsroom AND the ops board in one — the
+    // Gazette (news + its effects, as trends) on top, then the timed
+    // modifiers in force and the aircraft that need a look.
+    private var headquartersCard: some View {
+        let items = gazetteItems
+        let hasOps = !engine.state.activeEffects.isEmpty || !wornAircraft.isEmpty
+            || !engine.agingAircraft.isEmpty
+        return GameCard {
+            SectionHeader(title: "Head Quarter", icon: "building.2.fill", accent: accent)
+            if !items.isEmpty { gazette(items) }
+            if !items.isEmpty && hasOps { Divider().overlay(Theme.hairline) }
             ForEach(engine.state.activeEffects) { effect in
                 HStack {
                     StatusBadge(text: effect.label,
@@ -600,9 +623,6 @@ struct DashboardView: View {
 
     private var industryCard: some View {
         let (rank, _) = engine.industryRank
-        let trends = engine.industryTrends.sorted {
-            ($0.horizon == .long ? 0 : 1) < ($1.horizon == .long ? 0 : 1)
-        }
         return GameCard {
             // The standing: taps through to the full ladder.
             Button { showingIndustry = true } label: {
@@ -654,17 +674,7 @@ struct DashboardView: View {
                 }
             }
             .buttonStyle(.plain)
-
-            // The market's weather (GDD §14) reads as a newspaper you flip
-            // through right here: a rival watch page (GDD §30) then one
-            // concise story per trend, no drill-down.
-            let press = engine.currentRivalPress
-            let items: [GazetteItem] = (press.map { [.rival($0)] } ?? [])
-                + trends.map { .trend($0) }
-            if !items.isEmpty {
-                Divider().overlay(Theme.hairline)
-                gazette(items)
-            }
+            // The Gazette (news portal) moved to the Head Quarter card (§33).
         }
         .sheet(isPresented: $showingIndustry) { IndustrySheet() }
     }
@@ -682,12 +692,15 @@ struct DashboardView: View {
     /// no bundling); it falls back to the system serif if ever unavailable.
     private static func didot(_ size: CGFloat) -> Font { .custom("Didot-Bold", size: size) }
 
-    /// One flippable page of the Gazette: a market trend, or a rival's jab.
+    /// One flippable page of the Gazette: breaking news, a rival's jab, or a
+    /// market trend.
     enum GazetteItem: Identifiable {
+        case news(RivalQuote)
         case rival(RivalQuote)
         case trend(IndustryTrend)
         var id: String {
             switch self {
+            case .news(let q): "news-\(q.headline)"
             case .rival(let q): "rival-\(q.headline)-\(q.attribution)"
             case .trend(let t): "trend-\(t.id)"
             }
@@ -712,6 +725,7 @@ struct DashboardView: View {
                 ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                     Group {
                         switch item {
+                        case .news(let q): newsStory(q)
                         case .trend(let t): gazetteStory(t)
                         case .rival(let q): rivalStory(q)
                         }
@@ -734,6 +748,31 @@ struct DashboardView: View {
         }
         .padding(.top, 6)
         .frame(maxWidth: .infinity)
+    }
+
+    /// Breaking news (an acquisition, §33): a bold foil headline over the
+    /// story line, bylined to the Gazette.
+    private func newsStory(_ q: RivalQuote) -> some View {
+        let inkSoft = Self.gazetteInkSoft
+        return VStack(spacing: 5) {
+            Text("BREAKING")
+                .font(.system(size: 9, weight: .bold, design: .serif))
+                .tracking(1.8).foregroundStyle(Theme.cornflower)
+            Text(q.headline)
+                .font(Self.didot(23))
+                .foregroundStyle(Self.gazetteFoil)
+                .shadow(color: .black.opacity(0.45), radius: 1, y: 1)
+                .multilineTextAlignment(.center)
+                .lineLimit(2).minimumScaleFactor(0.6)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(q.quote)
+                .font(.system(size: 12.5, design: .serif)).italic()
+                .foregroundStyle(inkSoft)
+                .multilineTextAlignment(.center)
+                .lineLimit(3).minimumScaleFactor(0.8)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .center)
     }
 
     /// A rival's line in the press: kicker, foil headline, the pull-quote

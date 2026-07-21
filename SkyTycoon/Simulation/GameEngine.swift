@@ -1908,6 +1908,10 @@ final class GameEngine {
         if Self.incidentCards.contains(event.cardID) {
             pendingIncident += max(0, cashBefore - state.cash)
         }
+        // A collapse resolution is news, whoever ends up with the carrier.
+        if event.cardID == "rivalCollapse", let offer = event.collapseOffer {
+            postCollapseNews(offer: offer, option: option)
+        }
         eventSubjectID = nil
         eventSubjectAircraftType = nil
         eventSubjectRouteID = nil
@@ -2670,6 +2674,48 @@ final class GameEngine {
         return RivalQuote(headline: stablePick(Balance.jabHeadlines, seed: r.name),
                           quote: quote,
                           attribution: "\(spokesperson(for: r.name)), \(r.name)")
+    }
+
+    /// Breaking Gazette news (GDD §33) — an acquisition headline, fresh for
+    /// six weeks after it happens.
+    var currentPressHeadline: RivalQuote? {
+        guard let h = state.pressHeadline, let w = state.pressHeadlineWeek,
+              state.date.totalWeeks - w <= 6 else { return nil }
+        return h
+    }
+
+    /// Files the acquisition to the news portal (GDD §33): headlined to you
+    /// when you take the carrier, to a bigger rival when the market does.
+    private func postCollapseNews(offer: RivalCollapseOffer, option: EventOption) {
+        let tookFull = option.effects.contains { if case .acquireOperation(false) = $0 { true } else { false } }
+        let tookCrew = option.effects.contains { if case .acquireOperation(true) = $0 { true } else { false } }
+        let you = state.airlineName
+        let headline: String, story: String
+        if tookFull {
+            headline = "\(you.uppercased()) ACQUIRES \(offer.rivalName.uppercased())"
+            story = "\(you) has absorbed the collapsed \(offer.rivalName), taking on its fleet, routes, and crews."
+        } else if tookCrew {
+            headline = "\(offer.rivalName.uppercased()) CREWS JOIN \(you.uppercased())"
+            story = "\(you) has hired the displaced crews of \(offer.rivalName) after the carrier folded."
+        } else {
+            let acquirer = collapseAcquirer(for: offer.rivalName)
+            headline = "\(acquirer.uppercased()) ABSORBS \(offer.rivalName.uppercased())"
+            story = "\(acquirer) has snapped up the assets of the collapsed \(offer.rivalName)."
+        }
+        state.pressHeadline = RivalQuote(headline: headline, quote: story,
+                                         attribution: "The Skyward Gazette")
+        state.pressHeadlineWeek = state.date.totalWeeks
+    }
+
+    /// The carrier that swallows a collapsed rival the market clears: the
+    /// next rung up by market cap (deterministic).
+    private func collapseAcquirer(for collapsedName: String) -> String {
+        let rivals = Balance.rivals(for: state.country)
+        let cap = rivals.first { $0.name == collapsedName }?.marketCap ?? 0
+        let above = rivals.filter { $0.marketCap > cap }
+        return above.min { $0.marketCap < $1.marketCap }?.name
+            ?? rivals.max { $0.marketCap < $1.marketCap }?.name
+            ?? "A larger carrier"
     }
 
     /// Rolls the airline's personal bests forward (GDD §29).

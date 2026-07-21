@@ -1128,3 +1128,26 @@ tail codes, the crew joins, and **the planes are assigned onto the inherited
 routes** — you buy a flying airline, not a pile of parts. "Hire their crews
 only" takes just the people. The offer is persisted on the `GameEvent` and
 rebuilt by `refreshPendingEventCopy` on reload.
+
+---
+
+## §33 — The Head Quarter: news portal + ops board, unified (2026-07-21)
+
+The Dashboard's "Ops conditions" card is now **Head Quarter** — the airline's
+newsroom and ops board in one. It holds the Gazette (moved out of the
+Industry card) on top, then the timed modifiers in force and the aircraft
+that need a look. So the news AND the effects of the news live together,
+which is what the player expected.
+
+- **Gazette relocated** from `industryCard` to `headquartersCard`. Industry
+  now shows only the standing/ladder.
+- **Gazette pages** (`gazetteItems`): breaking news → rival watch → market
+  trends. Effects of the news are visible here: trend stories carry their
+  `±%·weeks`, and event-driven timed modifiers (fuel/demand spikes) list
+  below as active-effect chips.
+- **Acquisition news** (`postCollapseNews`): resolving a rival collapse
+  files a headline to the news portal, whoever wins the carrier — you
+  ("AUNT AIR ACQUIRES SATPURA EXPRESS"), crews-only, or a bigger rival when
+  you pass ("RANN CONNECT ABSORBS SATPURA EXPRESS", acquirer = next rung up
+  by market cap via `collapseAcquirer`). Stored on `state.pressHeadline`,
+  shown as a BREAKING page for six weeks (`currentPressHeadline`).

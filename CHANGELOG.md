@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Head Quarter: news + effects in one place; acquisitions make headlines (GDD §33)
+
+- The Dashboard's "Ops conditions" card is now **Head Quarter** — the newsroom and ops board together. The Industry Gazette moved here (out of the Industry card), sitting above the active timed modifiers and the aircraft that need attention. So the news and the *effects* of the news (trend %·weeks, plus fuel/demand event modifiers) are finally in the same place.
+- **Acquisitions now hit the news portal**, whoever wins the carrier: you ("Aunt Air acquires Satpura Express"), a crews-only note, or a bigger rival when you pass ("Rann Connect absorbs Satpura Express"). It runs as a BREAKING page in the Gazette for a few weeks.
+
+*Why:* per request — surface the news portal in the HQ tab (renamed from Ops conditions) alongside the effects it produces, and report every acquisition as news.
+
+
 ## Rival collapse is now a whole-airline acquisition (GDD §32)
 
 - "A Rival Has Collapsed" now offers a failing carrier's entire operation, shown as a dossier on the card: its **reputation** (stars — derived directly from the quality of its crew and planes), its **fleet** (with photos, model, and condition), the **routes** it flies, and its **crew**. The price is a fire sale (60% of the fleet's resale value).

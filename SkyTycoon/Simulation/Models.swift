@@ -927,6 +927,10 @@ struct GameState: Codable {
     var rivalQuote: RivalQuote? = nil
     /// The week that reaction fired, so it fades back to a standing jab.
     var rivalQuoteWeek: Int? = nil
+    /// Breaking news for the Gazette (GDD §33): an acquisition, by you or a
+    /// rival. Fades after a few weeks.
+    var pressHeadline: RivalQuote? = nil
+    var pressHeadlineWeek: Int? = nil
     /// Consecutive weeks with negative cash; 8 with no sellable assets = bankrupt.
     var weeksInsolvent: Int
     var isBankrupt: Bool
