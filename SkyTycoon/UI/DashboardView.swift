@@ -16,6 +16,9 @@ struct DashboardView: View {
     @State private var showingIndustry = false
     @State private var gazettePage = 0
     @State private var eventsExpanded = false
+    /// The hero's supporting stats (rating, last week, fleet, routes) collapse
+    /// behind a disclosure so the score leads.
+    @State private var heroStatsExpanded = false
     /// A route the player tapped to open from the attention card (GDD §26).
     @State private var routeRef: RouteRef?
     /// Jump to the Fleet tab (worn-aircraft rows are tappable — service them).
@@ -510,17 +513,35 @@ struct DashboardView: View {
                 netWorthText
             }
             PanelGroove()
-            HStack(alignment: .top, spacing: 8) {
-                reputationTile
-                if let report = engine.latestReport {
-                    heroWell("Last wk",
-                             (report.profit >= 0 ? "+" : "") + report.profit.money,
-                             report.profit >= 0 ? Theme.profit : Theme.loss)
+            // The supporting stats collapse behind a disclosure — the score
+            // leads; tap to unfold rating, last week, fleet, and routes.
+            Button {
+                withAnimation(.snappy) { heroStatsExpanded.toggle() }
+            } label: {
+                HStack(spacing: 6) {
+                    engravedLabel(heroStatsExpanded ? "Hide details" : "Rating, fleet & more")
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.down")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(Theme.textSecondary)
+                        .rotationEffect(.degrees(heroStatsExpanded ? 180 : 0))
                 }
-                heroWell("Fleet", "\(engine.state.fleet.count)", Theme.textPrimary)
-                heroWell("Routes", "\(engine.state.routes.count)", Theme.textPrimary)
             }
-            .fixedSize(horizontal: false, vertical: true)
+            .buttonStyle(.plain)
+            if heroStatsExpanded {
+                HStack(alignment: .top, spacing: 8) {
+                    reputationTile
+                    if let report = engine.latestReport {
+                        heroWell("Last wk",
+                                 (report.profit >= 0 ? "+" : "") + report.profit.money,
+                                 report.profit >= 0 ? Theme.profit : Theme.loss)
+                    }
+                    heroWell("Fleet", "\(engine.state.fleet.count)", Theme.textPrimary)
+                    heroWell("Routes", "\(engine.state.routes.count)", Theme.textPrimary)
+                }
+                .fixedSize(horizontal: false, vertical: true)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
         }
     }
 
