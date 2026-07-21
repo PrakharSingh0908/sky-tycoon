@@ -52,10 +52,10 @@ struct DashboardView: View {
             // Your Desk (§34): news, eroding routes (§26), timed effects,
             // and the fleet that needs a look — the whole ops board in one.
             if hqHasContent { headquartersCard }
-            // Marketing lives at HQ now (§34) — an ongoing brand decision.
-            marketingCard
             trendsCard
             industryCard
+            // Marketing lives at HQ now (§34) — an ongoing brand decision.
+            marketingCard
             if let report = engine.latestReport { lastWeekCard(report) }
         }
         // One-shot settle flash: the hero border blinks profit-green when a
@@ -370,7 +370,7 @@ struct DashboardView: View {
                      display: "\(Int(engine.state.brandAwareness))/100",
                      color: Theme.health(0.3 + engine.state.brandAwareness / 150))
             HStack(spacing: 10) {
-                Text("Weekly budget").font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
+                Text("Budget").font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
                 Slider(value: Binding(
                     get: { engine.state.weeklyMarketingSpend },
                     set: { engine.setMarketingSpend($0) }
