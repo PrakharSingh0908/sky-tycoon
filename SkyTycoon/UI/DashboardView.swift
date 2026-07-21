@@ -49,9 +49,8 @@ struct DashboardView: View {
             // same machined housing, until the airline flies.
             if !firstFlightDone { firstFlightCard }
             if engine.state.reputation < 2.0 { reputationCollapseBanner }
-            // Living competition (GDD §26): eroding routes surface here so a
-            // "set and forget" route can't quietly bleed.
-            if !engine.routesNeedingAttention.isEmpty { routeAttentionCard }
+            // Head Quarter (§33): news, eroding routes (§26), timed effects,
+            // and the fleet that needs a look — the whole ops board in one.
             if hqHasContent { headquartersCard }
             trendsCard
             industryCard
@@ -76,30 +75,27 @@ struct DashboardView: View {
         }
     }
 
-    // ── Routes need attention: defend what you built (GDD §26) ───────────
+    // ── Routes need attention: defend what you built (GDD §26) — rows
+    // embedded in the Head Quarter card.
 
-    private var routeAttentionCard: some View {
-        GameCard {
-            SectionHeader(title: "Routes need attention",
-                          icon: "exclamationmark.triangle.fill", accent: Theme.warn)
-            ForEach(engine.routesNeedingAttention) { alert in
-                Button {
-                    routeRef = RouteRef(id: alert.id)
-                } label: {
-                    HStack {
-                        StatusBadge(text: alert.title,
-                                    color: alert.critical ? Theme.loss : Theme.warn)
-                        Spacer()
-                        Text(alert.reason)
-                            .font(.game(.caption))
-                            .foregroundStyle(alert.critical ? Theme.loss : Theme.textSecondary)
-                        Image(systemName: "chevron.right")
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(Theme.textTertiary)
-                    }
+    @ViewBuilder private var routeAttentionRows: some View {
+        ForEach(engine.routesNeedingAttention) { alert in
+            Button {
+                routeRef = RouteRef(id: alert.id)
+            } label: {
+                HStack {
+                    StatusBadge(text: alert.title,
+                                color: alert.critical ? Theme.loss : Theme.warn)
+                    Spacer()
+                    Text(alert.reason)
+                        .font(.game(.caption))
+                        .foregroundStyle(alert.critical ? Theme.loss : Theme.textSecondary)
+                    Image(systemName: "chevron.right")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(Theme.textTertiary)
                 }
-                .buttonStyle(.plain)
             }
+            .buttonStyle(.plain)
         }
     }
 
@@ -369,21 +365,24 @@ struct DashboardView: View {
 
     /// Head Quarter shows when there's news to read or a condition to act on.
     private var hqHasContent: Bool {
-        !gazetteItems.isEmpty || !engine.state.activeEffects.isEmpty
+        !gazetteItems.isEmpty || !engine.routesNeedingAttention.isEmpty
+            || !engine.state.activeEffects.isEmpty
             || !wornAircraft.isEmpty || !engine.agingAircraft.isEmpty
     }
 
     // The Head Quarter (§33): the newsroom AND the ops board in one — the
-    // Gazette (news + its effects, as trends) on top, then the timed
-    // modifiers in force and the aircraft that need a look.
+    // Gazette (news + its effects, as trends) on top, then eroding routes,
+    // the timed modifiers in force, and the aircraft that need a look.
     private var headquartersCard: some View {
         let items = gazetteItems
-        let hasOps = !engine.state.activeEffects.isEmpty || !wornAircraft.isEmpty
+        let hasOps = !engine.routesNeedingAttention.isEmpty
+            || !engine.state.activeEffects.isEmpty || !wornAircraft.isEmpty
             || !engine.agingAircraft.isEmpty
         return GameCard {
             SectionHeader(title: "Head Quarter", icon: "building.2.fill", accent: accent)
             if !items.isEmpty { gazette(items) }
             if !items.isEmpty && hasOps { Divider().overlay(Theme.hairline) }
+            routeAttentionRows
             ForEach(engine.state.activeEffects) { effect in
                 HStack {
                     StatusBadge(text: effect.label,

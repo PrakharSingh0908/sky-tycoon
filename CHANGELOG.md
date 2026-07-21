@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Metallic toast + routes-attention folded into Head Quarter
+
+- The celebration toast (milestones, ambitions, rival overtakes) lost its blue stroke and now wears the machined MetalPanel look of the notable cards — dark metal face, white rim, polished-silver icon.
+- "Routes need attention" is no longer a separate card; its rows now live inside the Head Quarter card alongside the news, timed effects, and worn/aging fleet — one ops board.
+
+*Why:* per request — match the toast to the design system's metal cards, and consolidate route alerts into HQ.
+
+
 ## Rival owners are named for the campaign country
 
 - Rival-carrier CEO bylines (in the Gazette's rival watch and acquisition news) were drawn from a fixed mixed name pool, so a US campaign could show Indian owner names. They now use the campaign country's own name lists, so rivals read local to the market (American names in the US game, Indian in India, etc.).

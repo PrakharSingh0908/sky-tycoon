@@ -18,22 +18,23 @@ struct CelebrationBanner: View {
     var icon: String = "checkmark.seal.fill"
 
     var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: icon)
-                .font(.title3).foregroundStyle(Theme.cornflower)
-            VStack(alignment: .leading, spacing: 1) {
-                Text(title)
-                    .font(.game(.subheadline, weight: .medium))
-                    .foregroundStyle(Color.white)
-                Text(subtitle)
-                    .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+        // Machined like the notable cards (MetalPanel): a dark metal face
+        // with a white rim highlight — no colored stroke. The icon carries
+        // the accent as a polished-silver instrument.
+        MetalPanel {
+            HStack(spacing: 10) {
+                Image(systemName: icon)
+                    .font(.title3).polishedSilver()
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(title)
+                        .font(.game(.subheadline, weight: .medium))
+                        .foregroundStyle(Color.white)
+                    Text(subtitle)
+                        .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                }
+                Spacer(minLength: 0)
             }
-            Spacer(minLength: 0)
         }
-        .padding(14)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.corner))
-        .overlay(RoundedRectangle(cornerRadius: Theme.corner)
-            .strokeBorder(Theme.cornflower.opacity(0.8), lineWidth: 1))
         .padding(.horizontal, Theme.gutter)
     }
 }
