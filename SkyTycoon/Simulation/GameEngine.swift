@@ -1288,17 +1288,18 @@ final class GameEngine {
         let incident = incidentContext(for: card)
         let poach = poachContext(for: card)
         let recall = recallContext(for: card)
-        let collapse = card.id == "rivalCollapse" ? rivalCollapseBody() : nil
+        let collapse = card.id == "rivalCollapse" ? rivalCollapseContext() : nil
         // A lawsuit's claim scales with the airline's public value, so the
         // options and body are rebuilt from the scaled fee at fire time.
         // Every other card's founder-scale cash figures grow with net worth.
         let options = incident.map { lawsuitOptions(cardID: card.id, fee: $0.fee) }
             ?? poach.map { poachOptions(raise: $0.raise) }
+            ?? collapse.map { collapseOptions(offer: $0.offer) }
             ?? scaledOptions(card.options)
         state.pendingEvent = GameEvent(
             id: UUID(), cardID: card.id, category: card.category,
             isNegative: card.isNegative, title: card.title,
-            body: incident?.body ?? poach?.body ?? recall?.body ?? collapse ?? card.body,
+            body: incident?.body ?? poach?.body ?? recall?.body ?? collapse?.body ?? card.body,
             options: options, firedOn: state.date,
             subjectID: incident?.subjectID ?? poach?.subjectID,
             subjectAircraftType: recall?.type,
@@ -1306,7 +1307,8 @@ final class GameEngine {
             autoResolveDay: card.severity == .ambient
                 ? state.date.totalDays + Balance.ambientEventGraceDays : nil,
             defaultOptionIndex: max(0, options.count - 1),
-            incidentFee: incident?.fee)
+            incidentFee: incident?.fee,
+            collapseOffer: collapse?.offer)
         state.lastEventTotalWeek = state.date.totalWeeks
         logEvent(title: card.title, isNegative: card.isNegative)
         if card.isNegative {
@@ -1415,15 +1417,101 @@ final class GameEngine {
                                .happiness(role: .pilots, delta: -6)])]
     }
 
-    /// Names a plausible collapsing rival for the acquisition card (GDD §27)
-    /// — one ranked below you, so it reads as a smaller carrier folding.
-    private func rivalCollapseBody() -> String {
+    /// Generates the failing carrier's whole operation at fire time (GDD
+    /// §32): a small regional fleet, the routes it flies, its crew, and the
+    /// reputation that quality earns — plus a fire-sale price. Deterministic
+    /// (seeded RNG). A rival ranked below you, so it reads as a smaller
+    /// carrier folding.
+    private func rivalCollapseContext() -> (body: String, offer: RivalCollapseOffer)? {
         let cap = marketCap
         let below = Balance.rivals(for: state.country).filter { $0.marketCap < cap }
-        let candidates = below.isEmpty ? Balance.rivals(for: state.country) : below
-        let name = candidates.isEmpty ? "A regional carrier"
-            : candidates[Int.random(in: 0..<candidates.count, using: &state.seedRNG)].name
-        return "\(name) has filed for bankruptcy. Its jets and crews are on the block at fire-sale prices. Snap up the lot, take just the crews, or let the market pick the bones."
+        let pool = below.isEmpty ? Balance.rivals(for: state.country) : below
+        guard !pool.isEmpty else { return nil }
+        let name = pool[Int.random(in: 0..<pool.count, using: &state.seedRNG)].name
+
+        // Metal a lower-tier carrier would fly: tier ≤ 2, and only what you
+        // could actually operate.
+        let usable = AircraftType.allCases.filter {
+            Balance.fleetTier(of: $0) <= 2 && isUnlocked($0)
+        }
+        let types = usable.isEmpty
+            ? AircraftType.allCases.filter { Balance.fleetTier(of: $0) == 0 }
+            : usable
+        guard !types.isEmpty else { return nil }
+        let fleetTypes = (0..<2).map { _ in types[Int.random(in: 0..<types.count, using: &state.seedRNG)] }
+
+        // Their fleet: 2–3 airframes, worn but flyable.
+        let count = Int.random(in: 2...3, using: &state.seedRNG)
+        var planes: [RivalCollapseOffer.Plane] = []
+        for i in 0..<count {
+            let type = fleetTypes[i % fleetTypes.count]
+            let age = Double.random(in: 7...15, using: &state.seedRNG)
+            let cond = min(Double.random(in: 45...78, using: &state.seedRNG),
+                           Balance.maxCondition(ageYears: age))
+            planes.append(.init(type: type, condition: cond, ageYears: age))
+        }
+        let avgCondition = planes.map(\.condition).reduce(0, +) / Double(planes.count)
+        let crewSkill = Double.random(in: 2.0...3.6, using: &state.seedRNG)
+        // Reputation is the quality of what they built: crew and metal.
+        let reputation = max(1, min(5, 1 + 4 * (0.55 * crewSkill / 5 + 0.45 * avgCondition / 100)))
+
+        // Their routes: pairs you don't already fly, that this metal can
+        // operate (range + runway), in your country.
+        let profile = Balance.countryProfiles[state.country]!
+        let maxReq = fleetTypes.map { Balance.specs[$0]!.requiredRunwayClass }.max() ?? 1
+        let minRange = fleetTypes.map { spec -> Double in
+            let s = Balance.specs[spec]!
+            return s.rangeKm   // brochure range; cabins are standard here
+        }.min() ?? 800
+        let cities = Balance.cities(for: state.country)
+        let mine = Set(state.routes.map { [$0.originID, $0.destinationID].sorted().joined() })
+        var routeLines: [RivalCollapseOffer.RouteLine] = []
+        outer: for a in cities.shuffled(using: &state.seedRNG) {
+            for b in cities where a.id < b.id {
+                let key = [a.id, b.id].sorted().joined()
+                guard !mine.contains(key) else { continue }
+                guard a.runwayClass >= maxReq, b.runwayClass >= maxReq else { continue }
+                let dist = Balance.distance(a.id, b.id)
+                guard dist <= minRange else { continue }
+                let ref = dist * Balance.referenceFarePerKm * profile.fareLevel
+                let fare = (ref * Double.random(in: 0.95...1.1, using: &state.seedRNG) / 5).rounded() * 5
+                routeLines.append(.init(originID: a.id, destinationID: b.id,
+                                        fare: max(50, fare),
+                                        frequency: Int.random(in: 7...14, using: &state.seedRNG)))
+                if routeLines.count >= min(2, planes.count) { break outer }
+            }
+        }
+
+        // Crew sized to run the operation.
+        let pilots = planes.count * 2
+        let seats = planes.map { Balance.specs[$0.type]!.maxSeats }.reduce(0, +)
+        let cabin = max(2, Int((Double(seats) / 50.0).rounded(.up)))
+        let ground = planes.count + 1
+
+        // Fire sale: a fraction of the fleet's resale value.
+        let assetValue = planes.map { Balance.resaleValue(type: $0.type, ageYears: $0.ageYears, condition: $0.condition) }
+            .reduce(0, +)
+        let price = (assetValue * 0.6 / 10_000).rounded() * 10_000
+
+        let offer = RivalCollapseOffer(
+            rivalName: name, reputation: reputation, planes: planes, routes: routeLines,
+            pilots: pilots, cabinCrew: cabin, ground: ground, crewSkill: crewSkill, price: price)
+        return (collapseBody(offer: offer), offer)
+    }
+
+    /// The collapse card's body from a stored offer (no RNG) — refresh-safe.
+    private func collapseBody(offer: RivalCollapseOffer) -> String {
+        "\(offer.rivalName) has filed for bankruptcy. Its entire operation is on the block: \(offer.planes.count) aircraft, \(offer.routes.count) route\(offer.routes.count == 1 ? "" : "s"), and its crews. Take the whole airline and keep it flying, poach just the people, or let the market pick the bones."
+    }
+
+    /// The three collapse options, priced from the generated offer.
+    private func collapseOptions(offer: RivalCollapseOffer) -> [EventOption] {
+        [EventOption(label: "Acquire the airline · −\(offer.price.money)",
+                     effects: [.cash(-offer.price), .acquireOperation(crewOnly: false)]),
+         EventOption(label: "Hire their crews only",
+                     effects: [.acquireOperation(crewOnly: true)]),
+         EventOption(label: "Let the market have it",
+                     effects: [.aircraftMarketShock(multiplier: 0.85, weeks: 8)])]
     }
 
     /// The poach body from stored facts only (no RNG) — refresh-safe.
@@ -1475,6 +1563,10 @@ final class GameEngine {
         } else if let type = event.subjectAircraftType {
             event.options = card.options
             event.body = recallBody(type: type)
+        } else if event.cardID == "rivalCollapse", let offer = event.collapseOffer {
+            // Rebuild the acquisition dossier from the persisted offer.
+            event.options = collapseOptions(offer: offer)
+            event.body = collapseBody(offer: offer)
         } else {
             event.options = card.options
             event.body = card.body
@@ -1665,7 +1757,81 @@ final class GameEngine {
             grant(.pilots, pilots); grant(.cabinCrew, cabinCrew); grant(.ground, ground)
             logEvent(title: "Hired \(pilots + cabinCrew + ground) crew from a failed rival",
                      isNegative: false)
+
+        case .acquireOperation(let crewOnly):
+            guard let offer = eventCollapseOffer else { return }
+            applyCollapseOffer(offer, crewOnly: crewOnly)
         }
+    }
+
+    /// Inherits a failed carrier's whole operation (GDD §32): its routes open
+    /// under your flag with its planes and crew already on them. crewOnly
+    /// takes just the people.
+    private func applyCollapseOffer(_ offer: RivalCollapseOffer, crewOnly: Bool) {
+        let profile = Balance.countryProfiles[state.country]!
+
+        // Crews always transfer — at their own skill, a touch under market.
+        func hire(_ role: StaffRole, _ n: Int) {
+            guard n > 0, var p = state.staff[role] else { return }
+            for _ in 0..<n {
+                let person = Self.generatePerson(role: role, country: state.country, rng: &state.seedRNG)
+                p.members.append(StaffMember(id: UUID(), name: person.name,
+                    skill: offer.crewSkill, weeklyWage: role.marketWage * profile.laborCost * 0.9,
+                    hiredOn: state.date, avatar: person.avatar))
+            }
+            p.headcount = p.members.count
+            recomputeAggregates(&p)
+            state.staff[role] = p
+        }
+        hire(.pilots, offer.pilots); hire(.cabinCrew, offer.cabinCrew); hire(.ground, offer.ground)
+
+        guard !crewOnly else {
+            logEvent(title: "Hired \(offer.rivalName)'s crews", isNegative: false)
+            return
+        }
+
+        // Their routes reopen under your flag — established (mature), seeded
+        // with satisfaction that reflects their reputation.
+        var newRouteIDs: [UUID] = []
+        for line in offer.routes {
+            let key = [line.originID, line.destinationID].sorted().joined()
+            if state.routes.contains(where: { [$0.originID, $0.destinationID].sorted().joined() == key }) { continue }
+            let clamped = min(line.frequency, freeSlots(at: line.originID), freeSlots(at: line.destinationID))
+            let route = Route(id: UUID(), originID: line.originID, destinationID: line.destinationID,
+                              distanceKm: Balance.distance(line.originID, line.destinationID),
+                              weeklyFrequency: max(0, clamped), fare: line.fare,
+                              assignedAircraftIDs: [], satisfaction: offer.reputation / 5 * 100,
+                              lastLoadFactor: 0, lastWeeklyProfit: 0,
+                              lastWeeklyRevenue: 0, lastWeeklyFuel: 0,
+                              loadFactorHistory: [], lastPunctuality: 1.0,
+                              openedOn: nil)   // an inherited route is already mature
+            state.routes.append(route)
+            newRouteIDs.append(route.id)
+        }
+
+        // Their planes arrive with your registration and go onto those routes.
+        var planeIDs: [UUID] = []
+        for p in offer.planes {
+            let spec = Balance.specs[p.type]!
+            let id = UUID()
+            state.fleet.append(Aircraft(
+                id: id, type: p.type, nickname: nextTailCode(),
+                status: .idle, acquisition: .ownedUsed, weeklyLeaseCost: 0,
+                deliveryWeeksRemaining: 0,
+                cabin: .standard(abreast: spec.seatsAbreast),
+                wear: Double.random(in: 25...45, using: &state.seedRNG),
+                condition: p.condition, ageYears: p.ageYears,
+                assignedRouteID: nil, groundedWeeksRemaining: 0))
+            planeIDs.append(id)
+        }
+        // Distribute the inherited planes across the inherited routes.
+        if !newRouteIDs.isEmpty {
+            for (i, planeID) in planeIDs.enumerated() {
+                assign(aircraftID: planeID, to: newRouteIDs[i % newRouteIDs.count])
+            }
+        }
+        logEvent(title: "Acquired \(offer.rivalName): \(offer.planes.count) aircraft, \(newRouteIDs.count) routes",
+                 isNegative: false)
     }
 
     /// The public trial (GDD §19). Credibility = the accused's skill stars
@@ -1731,6 +1897,7 @@ final class GameEngine {
         eventSubjectID = event.subjectID
         eventSubjectAircraftType = event.subjectAircraftType
         eventSubjectRouteID = event.subjectRouteID
+        eventCollapseOffer = event.collapseOffer
         state.pendingEvent = nil
         // Cash spent settling an incident is booked as an Incidents cost so
         // the quarter reflects it (the cash itself still leaves immediately).
@@ -1744,14 +1911,16 @@ final class GameEngine {
         eventSubjectID = nil
         eventSubjectAircraftType = nil
         eventSubjectRouteID = nil
+        eventCollapseOffer = nil
         save()
     }
 
-    /// The roster member / aircraft model / route the event being resolved
-    /// is about (GDD §19, §20, §26).
+    /// The roster member / aircraft model / route / acquisition offer the
+    /// event being resolved is about (GDD §19, §20, §26, §32).
     private var eventSubjectID: UUID?
     private var eventSubjectAircraftType: AircraftType?
     private var eventSubjectRouteID: UUID?
+    private var eventCollapseOffer: RivalCollapseOffer?
 
     // ── Industry trends (GDD §14) ────────────────────────────────────────
     // One LONG economic regime is always in force; up to two SHORT shocks

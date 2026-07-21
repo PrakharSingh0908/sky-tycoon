@@ -70,6 +70,74 @@ struct EventCardView: View {
         }
     }
 
+    /// The failing carrier's operation, laid out for inspection (GDD §32):
+    /// reputation, then the fleet, routes, and crew you'd inherit.
+    @ViewBuilder private func acquisitionDossier(_ offer: RivalCollapseOffer) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Reputation — the direct read on the quality of their operation.
+            HStack {
+                Text("\(offer.rivalName.uppercased()) · REPUTATION")
+                    .font(.data(.caption2)).tracking(0.9)
+                    .foregroundStyle(Theme.textSecondary)
+                Spacer()
+                StarRating(rating: offer.reputation, size: 12)
+            }
+
+            dossierGroup("FLEET · \(offer.planes.count)") {
+                ForEach(Array(offer.planes.enumerated()), id: \.offset) { _, p in
+                    HStack(spacing: 10) {
+                        AircraftPhotoView(type: p.type, livery: nil)
+                            .frame(width: 56, height: 34)
+                        Text(Balance.specs[p.type]!.displayName)
+                            .font(.game(.subheadline)).foregroundStyle(Theme.textPrimary)
+                        Spacer(minLength: 6)
+                        Text("\(Int(p.condition))% cond · \(String(format: "%.0f", p.ageYears))y")
+                            .font(.game(.caption2))
+                            .foregroundStyle(Theme.health(p.condition / 100))
+                    }
+                }
+            }
+
+            if !offer.routes.isEmpty {
+                dossierGroup("ROUTES · \(offer.routes.count)") {
+                    ForEach(Array(offer.routes.enumerated()), id: \.offset) { _, r in
+                        HStack {
+                            Text("\(r.originID) ✈︎ \(r.destinationID)")
+                                .font(.game(.subheadline)).foregroundStyle(Theme.textPrimary)
+                            Spacer()
+                            Text("\(r.frequency)/wk · \(r.fare.money)")
+                                .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                        }
+                    }
+                }
+            }
+
+            dossierGroup("CREW · \(offer.pilots + offer.cabinCrew + offer.ground)") {
+                HStack {
+                    Text("\(offer.pilots) pilots · \(offer.cabinCrew) cabin · \(offer.ground) ground")
+                        .font(.game(.subheadline)).foregroundStyle(Theme.textPrimary)
+                    Spacer()
+                    Text(String(format: "%.1f★ avg", offer.crewSkill))
+                        .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                }
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.corner))
+        .overlay(RoundedRectangle(cornerRadius: Theme.corner)
+            .strokeBorder(Theme.hairline, lineWidth: 1))
+    }
+
+    @ViewBuilder private func dossierGroup<C: View>(_ title: String,
+                                                    @ViewBuilder _ content: () -> C) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).font(.data(.caption2)).tracking(0.9)
+                .foregroundStyle(Theme.cornflower)
+            content()
+        }
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 18) {
@@ -96,6 +164,12 @@ struct EventCardView: View {
                             .fixedSize(horizontal: false, vertical: true)
                             .padding(.top, paragraph.hasPrefix("Counsel") ? 6 : 0)
                     }
+                }
+
+                // Acquisition dossier (GDD §32): what the failing carrier
+                // brings — its reputation, fleet, routes, and crew.
+                if let offer = event.collapseOffer {
+                    acquisitionDossier(offer)
                 }
 
                 VStack(spacing: 10) {

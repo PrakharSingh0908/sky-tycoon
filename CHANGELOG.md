@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Rival collapse is now a whole-airline acquisition (GDD §32)
+
+- "A Rival Has Collapsed" now offers a failing carrier's entire operation, shown as a dossier on the card: its **reputation** (stars — derived directly from the quality of its crew and planes), its **fleet** (with photos, model, and condition), the **routes** it flies, and its **crew**. The price is a fire sale (60% of the fleet's resale value).
+- **Acquire the airline** inherits all of it as a going concern: the routes reopen under your flag already *mature* (seeded with satisfaction matching their reputation), the planes arrive with your tail codes, the crew joins, and the planes are put straight onto the inherited routes — you buy an airline that's already flying, not loose parts. "Hire their crews only" takes just the people; "Let the market have it" leaves the used-metal glut.
+
+*Why:* per request — acquiring a collapsing rival should mean taking over their whole operation (fleet + people + routes), with their reputation reflecting the quality of what you're buying.
+
+
 ## Fix: the Service button did nothing (GDD §31)
 
 - The Fleet card's **Service** action was dead on device (Route and Cabin worked). Root cause: the action row's `.fadeEdge(.trailing)` was implemented with a SwiftUI `.mask`, and masks clip hit-testing as well as rendering — Service, the trailing-most chip, sat in the faded strip and never received the tap. The engine's service logic was correct all along. The same defect quietly affected the new-route origin airport picker's trailing airports.

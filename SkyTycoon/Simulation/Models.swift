@@ -564,6 +564,10 @@ enum EventEffect: Codable, Equatable {
     /// Take on a failed rival's crews (GDD §27): ready-made staff join your
     /// pools (they carry ongoing wages — talent, not a freebie).
     case acquireStaff(pilots: Int, cabinCrew: Int, ground: Int)
+    /// Acquire a failed rival's WHOLE operation from the event's offer (GDD
+    /// §32): its routes open under your flag with its planes and crew already
+    /// on them. `crewOnly` takes just the people (no routes/planes/price).
+    case acquireOperation(crewOnly: Bool)
 }
 
 /// A running timed modifier ("Fuel +30% · 4 wk"), applied each tick.
@@ -671,6 +675,8 @@ struct GameEvent: Codable, Identifiable {
     /// The route a slot-review card is about (GDD §26 Pillar 3). Optional
     /// for save-compat.
     var subjectRouteID: UUID? = nil
+    /// The failing carrier's operation on offer (GDD §32). Optional.
+    var collapseOffer: RivalCollapseOffer? = nil
 }
 
 struct EventOption: Codable, Identifiable {
@@ -788,6 +794,32 @@ struct RivalQuote: Codable, Equatable {
     var headline: String     // "MONSOON AIRWAYS REACTS"
     var quote: String        // the line itself
     var attribution: String  // "Rohan Mehta, Monsoon Airways"
+}
+
+/// A failing carrier's whole operation, offered up for acquisition (GDD
+/// §32): its planes, the routes it flies, its crew, and the reputation that
+/// quality earns. Generated when the card fires and persisted on the event.
+struct RivalCollapseOffer: Codable, Equatable {
+    struct Plane: Codable, Equatable {
+        var type: AircraftType
+        var condition: Double
+        var ageYears: Double
+    }
+    struct RouteLine: Codable, Equatable {
+        var originID: String
+        var destinationID: String
+        var fare: Double
+        var frequency: Int
+    }
+    var rivalName: String
+    var reputation: Double        // 1…5, from crew skill + fleet condition
+    var planes: [Plane]
+    var routes: [RouteLine]
+    var pilots: Int
+    var cabinCrew: Int
+    var ground: Int
+    var crewSkill: Double         // 1…5
+    var price: Double             // fire-sale, derived from the assets
 }
 
 /// The airline's personal bests (GDD §29) — pure vanity, updated each week

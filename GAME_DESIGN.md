@@ -1100,3 +1100,31 @@ contains interactive controls** — masks clip hit-testing. A purely visual
 effect must be applied as a non-hit-testing overlay, not a mask. When a
 control "does nothing," suspect the view tree (an ancestor eating the tap)
 before the handler; here the handler was provably fine.
+
+---
+
+## §32 — Rival collapse as a whole-operation acquisition (2026-07-21)
+
+The "A Rival Has Collapsed" card (GDD §27) grew from loose assets into
+inheriting an entire airline. When it fires, `rivalCollapseContext()`
+generates a concrete `RivalCollapseOffer` (seeded, deterministic) for a
+carrier ranked below you:
+- **Fleet** — 2–3 tier-≤2 airframes you can actually operate, worn but
+  flyable (condition 45–78, capped by the age ceiling).
+- **Routes** — up to 2 city pairs you don't already fly, within the fleet's
+  range/runway, priced near the market reference.
+- **Crew** — pilots/cabin/ground sized to run it, at a single skill level.
+- **Reputation** — derived: `1 + 4·(0.55·skill/5 + 0.45·avgCondition/100)`.
+  It IS the quality of their crew and metal, shown as stars on the card.
+- **Price** — a fire sale: 0.6 × the fleet's resale value.
+
+The card (EventCardView) shows this as a dossier: reputation stars, fleet
+rows (photo + model + condition), route rows, and the crew line.
+
+Acquiring (`applyCollapseOffer`) inherits the whole operation, not just
+assets: the routes reopen under your flag **already mature** (openedOn nil)
+with satisfaction seeded to their reputation, the planes arrive with your
+tail codes, the crew joins, and **the planes are assigned onto the inherited
+routes** — you buy a flying airline, not a pile of parts. "Hire their crews
+only" takes just the people. The offer is persisted on the `GameEvent` and
+rebuilt by `refreshPendingEventCopy` on reload.
