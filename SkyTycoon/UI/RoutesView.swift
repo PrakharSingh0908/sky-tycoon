@@ -460,8 +460,6 @@ struct RouteDetailView: View {
                         HStack(spacing: 20) {
                             StatTile(label: "Demand",
                                      value: "~\(Int(econ.demand)) pax")
-                            StatTile(label: "Passengers",
-                                     value: affluenceLabel(econ.affluence))
                             StatTile(label: "Rivals",
                                      value: econ.competitors == 0
                                         ? "None" : "\(econ.competitors)",
@@ -472,7 +470,7 @@ struct RouteDetailView: View {
                                      color: Theme.health(econ.captureShare))
                         }
                         if econ.competitors > 0 && econ.captureShare < 0.4 {
-                            Text("Passengers are choosing your rivals. \(econ.affluence > 0.35 ? "This crowd pays for comfort." : "This crowd shops on price.") Comfort, fair fares, and satisfaction win them back.")
+                            Text("Passengers are choosing your rivals. Comfort, fair fares, and satisfaction win them back.")
                                 .font(.game(.caption2)).foregroundStyle(Theme.warn)
                         }
                         // Market maturity & over-supply (GDD §26 Pillar 2).
@@ -600,11 +598,6 @@ struct RouteDetailView: View {
                     .font(.game(.caption2)).foregroundStyle(Theme.loss)
             }
         }
-    }
-
-    /// Who flies this pair: business share read as spending power.
-    private func affluenceLabel(_ affluence: Double) -> String {
-        affluence < 0.25 ? "Budget" : affluence < 0.38 ? "Mixed" : "Affluent"
     }
 
     /// Tile-width names; the art carries the identity.
