@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Rival owners are named for the campaign country
+
+- Rival-carrier CEO bylines (in the Gazette's rival watch and acquisition news) were drawn from a fixed mixed name pool, so a US campaign could show Indian owner names. They now use the campaign country's own name lists, so rivals read local to the market (American names in the US game, Indian in India, etc.).
+
+*Why:* per report — the owners of other companies should match the country you're playing.
+
+
 ## Splash zoom dives straight in
 
 - The founding window-reveal now zooms from dead center instead of an anchor above center, so it dives straight in and fades rather than appearing to drift sideways as it scales. (An off-center `scaleEffect` anchor grows the frame away from that point, which — with the porthole not centered in the art — read as a leftward wander.)

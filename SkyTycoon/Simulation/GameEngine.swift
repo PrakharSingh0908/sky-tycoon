@@ -2656,9 +2656,13 @@ final class GameEngine {
     private func stablePick<T>(_ arr: [T], seed: String) -> T {
         arr[stableHash(seed) % arr.count]
     }
-    /// A plausible, stable CEO byline for a rival carrier.
+    /// A plausible, stable CEO byline for a rival carrier — named from the
+    /// CAMPAIGN's market (a US game gets American names, not Indian).
     private func spokesperson(for rival: String) -> String {
-        "\(stablePick(Balance.ceoFirst, seed: rival + "·first")) \(stablePick(Balance.ceoLast, seed: rival + "·last"))"
+        let male = stableHash(rival + "·g") % 2 == 0
+        let firsts = Balance.firstNames(country: state.country, male: male)
+        let lasts = Balance.lastNames(country: state.country)
+        return "\(stablePick(firsts, seed: rival + "·first")) \(stablePick(lasts, seed: rival + "·last"))"
     }
 
     /// The rival press line for the Gazette: a fresh overtake reaction if one

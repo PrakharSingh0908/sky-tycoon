@@ -815,13 +815,8 @@ enum Balance {
     static let overtakenHeadlines = ["RIVAL REACTS", "SOUR GRAPES", "PASSED, AND STINGING", "NO COMMENT (BUT PLENTY OF COMMENT)"]
     static let jabHeadlines = ["EYES ON THE UPSTART", "THE INCUMBENT SPEAKS", "PUNCHING DOWN"]
 
-    /// Spokesperson name pools — a plausible CEO byline for a rival.
-    static let ceoFirst = ["Arjun", "Priya", "Marcus", "Elena", "Rohan", "Grace",
-                           "Vikram", "Sofia", "David", "Naina", "James", "Mei",
-                           "Tara", "Owen", "Ava", "Dev"]
-    static let ceoLast = ["Mehta", "Sharma", "Cole", "Novak", "Reddy", "Hayes",
-                          "Kapoor", "Sterling", "Nguyen", "Bose", "Walsh", "Rao",
-                          "Fisher", "Iyer", "Doyle", "Khan"]
+    // CEO bylines are drawn from the campaign's country name lists
+    // (firstNames/lastNames) so rivals read local to the market (§34).
 
     // ── The event deck (GDD §4.7, M3) ────────────────────────────────────
 
