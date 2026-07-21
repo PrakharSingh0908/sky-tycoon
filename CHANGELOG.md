@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Splash zoom dives straight in
+
+- The founding window-reveal now zooms from dead center instead of an anchor above center, so it dives straight in and fades rather than appearing to drift sideways as it scales. (An off-center `scaleEffect` anchor grows the frame away from that point, which — with the porthole not centered in the art — read as a leftward wander.)
+
+*Why:* per report — the splash should zoom and fade straight, not slide.
+
+
 ## Head Quarter: news + effects in one place; acquisitions make headlines (GDD §33)
 
 - The Dashboard's "Ops conditions" card is now **Head Quarter** — the newsroom and ops board together. The Industry Gazette moved here (out of the Industry card), sitting above the active timed modifiers and the aircraft that need attention. So the news and the *effects* of the news (trend %·weeks, plus fuel/demand event modifiers) are finally in the same place.

@@ -25,9 +25,9 @@ struct WindowRevealView: View {
             }
         }
         .ignoresSafeArea()
-        // Anchor slightly above center: the zoom dives into the sky, not
-        // the seatback below the window.
-        .scaleEffect(zoomed ? 3.6 : 1.0, anchor: UnitPoint(x: 0.5, y: 0.42))
+        // Zoom dead-center so it dives straight in — an off-center anchor
+        // makes the frame appear to drift sideways as it scales.
+        .scaleEffect(zoomed ? 3.6 : 1.0, anchor: .center)
         .opacity(zoomed ? 0 : 1)
         .onAppear {
             withAnimation(.easeIn(duration: 1.4).delay(0.35)) { zoomed = true }
