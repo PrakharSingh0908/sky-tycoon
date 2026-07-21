@@ -516,7 +516,9 @@ struct DashboardView: View {
             // The supporting stats collapse behind a disclosure — the score
             // leads; tap to unfold rating, last week, fleet, and routes.
             Button {
-                withAnimation(.snappy) { heroStatsExpanded.toggle() }
+                withAnimation(.spring(response: 0.34, dampingFraction: 0.86)) {
+                    heroStatsExpanded.toggle()
+                }
             } label: {
                 HStack(spacing: 6) {
                     engravedLabel(heroStatsExpanded ? "Hide details" : "Rating, fleet & more")
@@ -526,6 +528,8 @@ struct DashboardView: View {
                         .foregroundStyle(Theme.textSecondary)
                         .rotationEffect(.degrees(heroStatsExpanded ? 180 : 0))
                 }
+                // The whole row is the target — including the gap by the chevron.
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             if heroStatsExpanded {
@@ -540,7 +544,9 @@ struct DashboardView: View {
                     heroWell("Routes", "\(engine.state.routes.count)", Theme.textPrimary)
                 }
                 .fixedSize(horizontal: false, vertical: true)
-                .transition(.opacity.combined(with: .move(edge: .top)))
+                // The tiles fade in place as the card grows — no sliding up
+                // over the heading, which was the odd part.
+                .transition(.opacity)
             }
         }
     }
