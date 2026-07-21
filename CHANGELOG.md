@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Fix: disabled buttons now look disabled (dead "Post job ad") — GDD §35
+
+- The "Post job ad" button did nothing when tapped. Root cause: it's disabled when cash is below the $2K ad fee, but `GameButtonStyle` never reflected the disabled state — so after the recent cost increases pushed the airline's cash under $2K, the button looked completely normal yet was disabled and ate the tap. The engine logic was correct all along.
+- Fix (systemic): every `GameButtonStyle` key now dims and desaturates when disabled, and takes no press travel or haptic — so a disabled button always reads as disabled, and you can see *why* an action isn't available. Same class of bug as the Service button (§31): the control's look must match its interactive state. Full postmortem in GAME_DESIGN.md §35.
+
+*Why:* per report (second time) — find the true root cause, fix the whole class, and write it down.
+
+
 ## HQ tab reshuffle: Your Desk, marketing home, leaner Dashboard
 
 - The **Dashboard tab is now "HQ"** (building icon). The old "Head Quarter" card inside it is renamed **"Your Desk."**

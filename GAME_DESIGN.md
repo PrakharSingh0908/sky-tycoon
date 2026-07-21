@@ -1151,3 +1151,37 @@ which is what the player expected.
   you pass ("RANN CONNECT ABSORBS SATPURA EXPRESS", acquirer = next rung up
   by market cap via `collapseAcquirer`). Stored on `state.pressHeadline`,
   shown as a BREAKING page for six weeks (`currentPressHeadline`).
+
+---
+
+## §35 — Postmortem: the dead "Post job ad" button (2026-07-21)
+
+### Symptom
+"Post job ad" did nothing on tap — reported twice, persisting across
+rebuilds (so not the install).
+
+### Root cause
+The button is `.disabled(engine.state.cash < Balance.jobAdFee)` ($2K). When
+visible, no ad is running, so the ONLY thing that can disable it is low
+cash — and after the fuel/lease/inflation cost hikes, the airline's cash
+had dipped under $2K. The real defect: **`GameButtonStyle` never read
+`@Environment(\.isEnabled)`**, so a disabled key rendered identically to a
+live one — full brightness, no hint — and silently swallowed taps. The
+engine's `postJobAd` was correct the whole time (verified in isolation).
+Same CLASS as §31 (the Service button): a control whose look did not match
+its interactive state.
+
+### Fix
+`GameButtonStyle` now honors `isEnabled` via a nested view (a ButtonStyle's
+`makeBody` can't read the environment directly): disabled keys dim to 0.4,
+desaturate, take no press travel, and fire no haptic. Every disabled key in
+the app now reads as disabled — so a broke player sees WHY they can't post,
+and no dead key can masquerade as live again.
+
+### Lesson
+A control's APPEARANCE must track its INTERACTIVE state. When something
+"does nothing," suspect the view layer — a `.disabled()` with no visual
+feedback, a `.mask` eating hits (§31), a gesture/overlay — before the
+handler. Custom `ButtonStyle`/control styles MUST reflect
+`@Environment(\.isEnabled)`. Verify the handler in isolation first
+(RunCodeSnippet), then hunt the UI.

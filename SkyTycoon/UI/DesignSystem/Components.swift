@@ -409,22 +409,44 @@ struct GameButtonStyle: ButtonStyle {
     var lines: Int = 1
 
     func makeBody(configuration: Configuration) -> some View {
-        let material = finish ?? (prominent ? .chrome : .gunmetal)
-        configuration.label
-            .font(.game(.subheadline, weight: .medium))
-            .lineLimit(lines)
-            .multilineTextAlignment(.center)
-            // Long labels scale down inside the key — never overflow it.
-            .minimumScaleFactor(0.8)
-            .padding(.horizontal, 16).padding(.vertical, 8)
-            .frame(minHeight: 36)
-            .foregroundStyle(material.ink)
-            .metalKey(material, pressed: configuration.isPressed,
-                      tint: finish == nil && !prominent ? color : nil)
-            .sensoryFeedback(.impact(weight: .light),
-                             trigger: configuration.isPressed) { old, new in
-                !old && new
-            }
+        // A nested view so we can read @Environment(\.isEnabled): a
+        // ButtonStyle's makeBody can't. WITHOUT this, a .disabled() key looked
+        // identical to a live one and silently ate taps (GDD §35 — the dead
+        // "Post job ad" button was just disabled on low cash).
+        KeyBody(configuration: configuration, color: color,
+                prominent: prominent, finish: finish, lines: lines)
+    }
+
+    private struct KeyBody: View {
+        let configuration: ButtonStyleConfiguration
+        let color: Color
+        let prominent: Bool
+        let finish: MetalFinish?
+        let lines: Int
+        @Environment(\.isEnabled) private var isEnabled
+
+        var body: some View {
+            let material = finish ?? (prominent ? .chrome : .gunmetal)
+            configuration.label
+                .font(.game(.subheadline, weight: .medium))
+                .lineLimit(lines)
+                .multilineTextAlignment(.center)
+                // Long labels scale down inside the key — never overflow it.
+                .minimumScaleFactor(0.8)
+                .padding(.horizontal, 16).padding(.vertical, 8)
+                .frame(minHeight: 36)
+                .foregroundStyle(material.ink)
+                .metalKey(material, pressed: configuration.isPressed && isEnabled,
+                          tint: finish == nil && !prominent ? color : nil)
+                // Disabled reads as disabled: dimmed and desaturated so a
+                // dead key never masquerades as a live one.
+                .opacity(isEnabled ? 1 : 0.4)
+                .saturation(isEnabled ? 1 : 0)
+                .sensoryFeedback(.impact(weight: .light),
+                                 trigger: configuration.isPressed) { old, new in
+                    isEnabled && !old && new
+                }
+        }
     }
 }
 
