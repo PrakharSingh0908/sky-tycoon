@@ -32,49 +32,48 @@ struct GameCard<Content: View>: View {
 
 /// Gradient mask fading one edge — the soft cut for scrolling or collapsed
 /// content (v2.1: gradients only ever shade existing geometry).
+/// A soft fade at one edge — used to hint that a row scrolls. It is drawn
+/// as a NON-INTERACTIVE overlay in the surface color, NOT a `.mask`: a mask
+/// clips hit-testing as well as rendering, which silently kills any control
+/// living under the faded strip (GDD §31 — the Service button was the
+/// trailing-most chip and stopped responding). This version fades the look
+/// without ever eating a tap.
 struct FadeEdgeModifier: ViewModifier {
     var edge: Edge = .bottom
     var length: CGFloat = 24
+    /// The surface the content sits on, so the fade dissolves INTO it.
+    var color: Color = Theme.card
 
     func body(content: Content) -> some View {
-        content.mask {
-            switch edge {
-            case .top, .bottom:
-                VStack(spacing: 0) {
-                    if edge == .top {
-                        LinearGradient(colors: [.clear, .black],
-                                       startPoint: .top, endPoint: .bottom)
-                            .frame(height: length)
-                    }
-                    Rectangle()
-                    if edge == .bottom {
-                        LinearGradient(colors: [.black, .clear],
-                                       startPoint: .top, endPoint: .bottom)
-                            .frame(height: length)
-                    }
-                }
-            case .leading, .trailing:
-                HStack(spacing: 0) {
-                    if edge == .leading {
-                        LinearGradient(colors: [.clear, .black],
-                                       startPoint: .leading, endPoint: .trailing)
-                            .frame(width: length)
-                    }
-                    Rectangle()
-                    if edge == .trailing {
-                        LinearGradient(colors: [.black, .clear],
-                                       startPoint: .leading, endPoint: .trailing)
-                            .frame(width: length)
-                    }
-                }
-            }
+        content.overlay(alignment: alignment) {
+            LinearGradient(colors: colors, startPoint: start, endPoint: end)
+                .frame(width: isHorizontal ? length : nil,
+                       height: isHorizontal ? nil : length)
+                .allowsHitTesting(false)   // the whole point: never gate touches
         }
     }
+
+    private var isHorizontal: Bool { edge == .leading || edge == .trailing }
+    private var alignment: Alignment {
+        switch edge {
+        case .top: .top; case .bottom: .bottom
+        case .leading: .leading; case .trailing: .trailing
+        }
+    }
+    private var colors: [Color] {
+        switch edge {
+        case .top, .leading: [color, .clear]
+        case .bottom, .trailing: [.clear, color]
+        }
+    }
+    private var start: UnitPoint { isHorizontal ? .leading : .top }
+    private var end: UnitPoint { isHorizontal ? .trailing : .bottom }
 }
 
 extension View {
-    func fadeEdge(_ edge: Edge = .bottom, length: CGFloat = 24) -> some View {
-        modifier(FadeEdgeModifier(edge: edge, length: length))
+    func fadeEdge(_ edge: Edge = .bottom, length: CGFloat = 24,
+                  color: Color = Theme.card) -> some View {
+        modifier(FadeEdgeModifier(edge: edge, length: length, color: color))
     }
 }
 

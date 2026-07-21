@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Fix: the Service button did nothing (GDD §31)
+
+- The Fleet card's **Service** action was dead on device (Route and Cabin worked). Root cause: the action row's `.fadeEdge(.trailing)` was implemented with a SwiftUI `.mask`, and masks clip hit-testing as well as rendering — Service, the trailing-most chip, sat in the faded strip and never received the tap. The engine's service logic was correct all along. The same defect quietly affected the new-route origin airport picker's trailing airports.
+- Fix: `fadeEdge` now draws the fade as a non-interactive overlay (identical look) instead of a mask, so it can never swallow a touch — fixing every use at once. Full postmortem in GAME_DESIGN.md §31.
+
+*Why:* per request — fix the bug, find the true root cause, and write it down so we don't repeat it.
+
+
 ## Rival trash talk + a shareable airline card (GDD §30)
 
 - **The ladder now talks back.** A "Rival Watch" page in the Industry Gazette carries trash talk: for a few weeks after you overtake a carrier, its (named) CEO reacts in the press ("Congratulations to Cirrus Air. Enjoy the view — it's windy up here."); the rest of the time, the carrier directly above you takes a jab at the upstart. Bylines and lines are deterministic, so they read consistently.

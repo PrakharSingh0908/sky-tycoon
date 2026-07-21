@@ -144,7 +144,7 @@ struct NewRouteSheet: View {
                         }
                     }
                 }
-                .fadeEdge(.trailing, length: 16)
+                .fadeEdge(.trailing, length: 16, color: Theme.bgElevated)
                 Text("From \(engine.city(effectiveOrigin)?.name ?? effectiveOrigin) · \(engine.freeSlots(at: effectiveOrigin)) free slots")
                     .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
 

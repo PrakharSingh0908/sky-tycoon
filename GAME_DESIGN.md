@@ -1066,3 +1066,37 @@ Driven by a precomputed `AirlineCardData` value so the live preview and the
 exported image are identical. Shared from the Profile via `ShareCardSheet`
 → `ImageRenderer` (scale 3) → the system share sheet (`ActivityView`) with
 a caption. No new assets; pure design-system composition.
+
+---
+
+## §31 — Postmortem: the dead Service button (2026-07-21)
+
+### Symptom
+The Fleet card's **Service** action did nothing on device. Route and Cabin
+(the other two chips in the same row) worked fine.
+
+### Root cause
+The action row is a horizontal `ScrollView` with a cosmetic
+`.fadeEdge(.trailing)`. `fadeEdge` was implemented with SwiftUI's
+`.mask { LinearGradient(... .clear) }`. **A `.mask` clips HIT-TESTING as
+well as rendering** — any view sitting under the transparent part of the
+mask silently stops receiving touches. **Service is the trailing-most chip**,
+so it lived exactly in the faded strip and its tap target was masked out.
+Route (leading) and Cabin (middle) were never under the fade, so they
+worked — which is why the bug looked Service-specific. The engine's
+`orderCheck` was correct the whole time (verified in isolation: cash −$30K,
+wear 67→42, grounds, recovers). Same defect silently hit the new-route
+origin airport picker (its trailing airports).
+
+### Fix
+`fadeEdge` no longer masks. It now draws the fade as a NON-INTERACTIVE
+`.overlay` gradient toward the surface color with `.allowsHitTesting(false)`
+— identical look, but it can never gate a touch. Fixes every current and
+future use at once.
+
+### Lesson
+**Never use `.mask` (or `.clipShape` beyond intended bounds) on a view that
+contains interactive controls** — masks clip hit-testing. A purely visual
+effect must be applied as a non-hit-testing overlay, not a mask. When a
+control "does nothing," suspect the view tree (an ancestor eating the tap)
+before the handler; here the handler was provably fine.
