@@ -124,23 +124,27 @@ struct DashboardView: View {
             Text("Three moves and \(engine.state.airlineName) is an airline.")
                 .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
             VStack(alignment: .leading, spacing: 4) {
+                let route = engine.state.routes.first
+                let routeLabel = route.map { "\($0.originID) ✈︎ \($0.destinationID)" }
                 firstFlightRow(number: 1, isLast: false,
-                               done: !engine.state.fleet.isEmpty,
-                               title: "Lease your first aircraft",
-                               detail: "No capital needed. A feeder flies day one.") {
-                    showingShowroom = true
-                }
-                firstFlightRow(number: 2, isLast: false,
                                done: !engine.state.routes.isEmpty,
                                title: "Open your first route",
                                detail: "Pick a pair where the demand is.") {
                     showingNewRoute = true
                 }
+                firstFlightRow(number: 2, isLast: false,
+                               done: !engine.state.fleet.isEmpty,
+                               title: routeLabel.map { "Lease an aircraft for \($0)" }
+                                   ?? "Lease your first aircraft",
+                               detail: "No capital needed. A feeder flies day one.") {
+                    showingShowroom = true
+                }
                 firstFlightRow(number: 3, isLast: true,
                                done: hasAssignedRoute,
-                               title: "Put the plane on the route",
+                               title: routeLabel.map { "Put the plane on \($0)" }
+                                   ?? "Put the plane on the route",
                                detail: "Assign it and the week starts earning.") {
-                    if engine.state.routes.first != nil {
+                    if route != nil {
                         showingFirstRoute = true
                     } else {
                         showingNewRoute = true

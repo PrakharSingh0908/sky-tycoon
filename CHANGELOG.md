@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## First-flight checklist: route first, then name the route
+
+- Reordered the founder's checklist so **step 1 is now "Open your first route."** Once a route exists, **step 2 reads "Lease an aircraft for LHR ✈︎ CDG"** and **step 3 "Put the plane on LHR ✈︎ CDG"** — the two follow-up steps now name the pair you just opened. Before a route is open they fall back to the generic wording.
+
+*Why:* per request — deciding the route first gives the lease and assignment a concrete target, so the three moves read as one continuous story ("open this pair → get a plane for it → fly it") instead of three loose chores.
+
+
 ## Auto-service autopilot + slower wear — GDD §36
 
 - **New HQ setting: "Auto-service worn aircraft"** (Profile → Operations). When on, HQ automatically grounds and services any plane that crosses 78% wear at the weekly close — a line check ($30K, one week down, −25 wear) — *before* the airworthiness crash sweep runs, so a plane can never fall out of the sky purely from neglect while you're busy elsewhere. It skips a plane only when cash can't cover the check, and then the normal wear warnings still apply. Off by default; opt-in for hands-off players.
