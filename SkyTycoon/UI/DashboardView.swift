@@ -153,7 +153,11 @@ struct DashboardView: View {
             }
         }
         .sheet(isPresented: $showingShowroom) {
-            NavigationStack { ShowroomView(initialTab: .lease) }
+            // Shopping straight off the checklist: pass the route just opened
+            // so every offer shows whether it can actually fly it.
+            NavigationStack {
+                ShowroomView(fittingRoute: engine.state.routes.first, initialTab: .lease)
+            }
         }
         .sheet(isPresented: $showingNewRoute) { NewRouteSheet() }
         .sheet(isPresented: $showingFirstRoute) {

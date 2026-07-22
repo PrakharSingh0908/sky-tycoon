@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Showroom shows fit for your first route
+
+- Opening the Showroom from the first-flight checklist now passes the route you just opened, so every offer carries a fit badge — green **"Fits LHR ✈︎ CDG"** when the airframe can actually fly it, or the reason it can't (**"Beyond range"**, **"Runway too short"**). Previously this verdict only appeared when shopping from a route's own page; the checklist path showed no guidance at all.
+
+*Why:* per request — a first-time player picking their first plane needs to know which ones can serve the route they just opened, not guess from raw range numbers.
+
+
 ## New-route drawer closes on Open
 
 - Tapping **Open** in the new-route drawer now dismisses it automatically, dropping you back on the map with the new route drawn — no manual swipe-down needed before moving to the next step.
