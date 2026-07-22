@@ -7,6 +7,16 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Route screen: service from the route, tidier layout, tap-anywhere cards
+
+- **Tap any aircraft on a route to open an action drawer** — assign it, move it here, take it off the route, or **send it for a line check ($30K) or heavy check ($250K) right there.** So a plane that grounded itself at 100% wear can be serviced straight from the route it flew, without hunting for it in the Fleet. Only affordable checks are offered, so no button dead-ends.
+- **"Aircraft on this route" moved up** — now directly below the load-factor chart.
+- **Fare and Flights/week lead the Economics card** — the levers you touch most are at the top, the read-outs below.
+- **The whole boarding-pass card is tappable** now (opens the route), not just a button. Cancel-route still lives on the card.
+
+*Why:* per request.
+
+
 ## Crisp headlines, no truncation, no em-dashes
 
 - **Gazette headlines are short and never truncate.** Shortened the rival-watch headlines ("NO COMMENT (BUT PLENTY OF COMMENT)" → "NO COMMENT", etc.) and let the headline wrap and center instead of clipping with an ellipsis.

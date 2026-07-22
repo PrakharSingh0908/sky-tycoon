@@ -259,6 +259,18 @@ private struct BoardingPassCard: View {
     private let stubHeight: CGFloat = 124
 
     var body: some View {
+        NavigationLink {
+            RouteDetailView(routeID: route.id)
+        } label: {
+            cardBody
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// The whole ticket is the tap target (opens the route detail); the
+    /// inner controls — cancel, the aircraft disclosure — capture their own
+    /// taps, so nothing dead-ends.
+    private var cardBody: some View {
         VStack(spacing: 0) {
             // ── The flight ───────────────────────────────────────────────
             HStack(alignment: .center, spacing: 12) {
@@ -292,21 +304,12 @@ private struct BoardingPassCard: View {
                                font: .game(.subheadline, weight: .bold),
                                color: projMargin >= 0 ? Theme.profit : Theme.loss)
                 }
-                HStack(spacing: 10) {
-                    NavigationLink {
-                        RouteDetailView(routeID: route.id)
-                    } label: {
-                        // Fresh routes get set up; operating ones get tuned.
-                        Text(route.assignedAircraftIDs.isEmpty
-                             ? "Set up route" : "Configure")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(GameButtonStyle(finish: .bronze))
-                    Button("Cancel route", role: .destructive) {
-                        confirmingCancel = true
-                    }
-                    .buttonStyle(GameButtonStyle(finish: .obsidian))
+                Button(role: .destructive) {
+                    confirmingCancel = true
+                } label: {
+                    Text("Cancel route").frame(maxWidth: .infinity)
                 }
+                .buttonStyle(GameButtonStyle(finish: .obsidian))
             }
             .padding(.horizontal, Theme.cardPadding)
             .frame(height: stubHeight)
@@ -428,8 +431,9 @@ struct RouteDetailView: View {
     @State private var shoppingForRoute: Route?
     /// The poaching pool stays folded until someone goes looking.
     @State private var showOtherRoutes = false
-    /// A busy plane tapped for this route waits here for the go-ahead.
-    @State private var poaching: Aircraft?
+    /// A tapped aircraft opens an action drawer: assign / move / take off,
+    /// plus send it for a check (service a worn one right here).
+    @State private var servicing: Aircraft?
     @State private var clockToken = UUID()
     private let accent = Theme.teal
 
@@ -443,8 +447,18 @@ struct RouteDetailView: View {
                     SectionHeader(title: "Load factor · 13 weeks", icon: "chart.xyaxis.line", accent: accent)
                     LoadFactorSparkline(history: route.loadFactorHistory)
                 }
+                assignCard(route)
                 GameCard {
                     SectionHeader(title: "Economics", icon: "slider.horizontal.3", accent: accent)
+                    // Fare and schedule lead the card (the levers you reach
+                    // for most); the read-outs follow below.
+                    PillStepper(label: "Fare", value: route.fare.money, accent: accent,
+                        onDecrement: { engine.setFare(routeID: routeID, fare: route.fare - 5) },
+                        onIncrement: { engine.setFare(routeID: routeID, fare: route.fare + 5) })
+                    PillStepper(label: "Flights/week", value: "\(route.weeklyFrequency)", accent: accent,
+                        onDecrement: { engine.setFrequency(routeID: routeID, frequency: route.weeklyFrequency - 1) },
+                        onIncrement: { engine.setFrequency(routeID: routeID, frequency: route.weeklyFrequency + 1) })
+                    Divider().overlay(Theme.hairline)
                     // Projected LF: moves the instant fare/frequency/
                     // assignment change (immediacy rule).
                     let projLF = engine.routeEconomics(routeID: routeID)?.loadFactor
@@ -486,13 +500,6 @@ struct RouteDetailView: View {
                                 .font(.game(.caption2)).foregroundStyle(Theme.warn)
                         }
                     }
-                    Divider().overlay(Theme.hairline)
-                    PillStepper(label: "Fare", value: route.fare.money, accent: accent,
-                        onDecrement: { engine.setFare(routeID: routeID, fare: route.fare - 5) },
-                        onIncrement: { engine.setFare(routeID: routeID, fare: route.fare + 5) })
-                    PillStepper(label: "Flights/week", value: "\(route.weeklyFrequency)", accent: accent,
-                        onDecrement: { engine.setFrequency(routeID: routeID, frequency: route.weeklyFrequency - 1) },
-                        onIncrement: { engine.setFrequency(routeID: routeID, frequency: route.weeklyFrequency + 1) })
                     if let econ = engine.routeEconomics(routeID: routeID) {
                         // The fare↔satisfaction link, live: cheap fares
                         // please passengers, gouging costs goodwill.
@@ -507,41 +514,58 @@ struct RouteDetailView: View {
                     cateringRow(route)
                 }
                 weeklyMoneyCard(route)
-                assignCard(route)
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Theme.bgElevated, for: .navigationBar)
             .sheet(item: $shoppingForRoute) { route in
                 NavigationStack { ShowroomView(fittingRoute: route) }
             }
-            .onChange(of: poaching?.id) { _, moving in
+            .onChange(of: servicing?.id) { _, open in
                 // Dialogs have no content lifecycle — hold via a stable token.
-                if moving != nil { engine.beginInteraction(clockToken) }
+                if open != nil { engine.beginInteraction(clockToken) }
                 else { engine.endInteraction(clockToken) }
             }
             .confirmationDialog(
-                poachTitle(for: route),
-                isPresented: Binding(get: { poaching != nil },
-                                     set: { if !$0 { poaching = nil } }),
+                serviceTitle(),
+                isPresented: Binding(get: { servicing != nil },
+                                     set: { if !$0 { servicing = nil } }),
                 titleVisibility: .visible,
-                presenting: poaching
+                presenting: servicing
             ) { plane in
-                Button("Move it here") {
-                    engine.assign(aircraftID: plane.id, to: routeID)
+                let onThisRoute = plane.assignedRouteID == routeID
+                    || route.assignedAircraftIDs.contains(plane.id)
+                let elsewhere = plane.assignedRouteID != nil && !onThisRoute
+                if onThisRoute {
+                    Button("Take off route") { engine.unassign(aircraftID: plane.id) }
+                } else if elsewhere {
+                    Button("Move to this route") { engine.assign(aircraftID: plane.id, to: routeID) }
+                } else {
+                    Button("Assign to this route") { engine.assign(aircraftID: plane.id, to: routeID) }
                 }
-                Button("Keep it there", role: .cancel) {}
-            } message: { _ in
-                Text("It stops flying that route the moment it moves.")
+                // Service it right here. Only offered when it isn't already in
+                // the shop and the cash is there, so no key ever dead-ends.
+                if plane.groundedWeeksRemaining == 0 {
+                    if engine.state.cash >= 30_000 {
+                        Button("Line check · $30K") { engine.orderCheck(aircraftID: plane.id, heavy: false) }
+                    }
+                    if engine.state.cash >= 250_000 {
+                        Button("Heavy check · $250K") { engine.orderCheck(aircraftID: plane.id, heavy: true) }
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: { plane in
+                Text("\(Balance.specs[plane.type]!.displayName) · \(Int(plane.wear))% wear · condition \(Int(plane.condition)). A line check sheds wear (1 week in the shop); a heavy check restores it (2 weeks).")
             }
         }
     }
 
-    /// "Move AI-C off BOS ✈ PHL?" — names the plane and the route it leaves.
-    private func poachTitle(for route: Route) -> String {
-        guard let plane = poaching,
-              let from = engine.state.routes.first(where: { $0.id == plane.assignedRouteID })
-        else { return "Move this aircraft?" }
-        return "Move \(plane.nickname) off \(from.originID) ✈︎ \(from.destinationID)?"
+    /// Title for the aircraft action drawer: the tail and where it's flying.
+    private func serviceTitle() -> String {
+        guard let plane = servicing else { return "Aircraft" }
+        if plane.wear >= Balance.wearGroundingLimit {
+            return "\(plane.nickname) · grounded at 100% wear"
+        }
+        return plane.nickname
     }
 
     // ── Catering (GDD §18): choose the service, mind the hardware ────────
@@ -711,13 +735,10 @@ struct RouteDetailView: View {
     private func assignRow(_ plane: Aircraft, route: Route, kind: AssignRowKind) -> some View {
         let spec = Balance.specs[plane.type]!
         return Button {
-            switch kind {
-            case .onRoute: engine.unassign(aircraftID: plane.id)
-            case .free: engine.assign(aircraftID: plane.id, to: route.id)
-            // Pulling a plane off another route is a deliberate move:
-            // it waits for the confirmation dialog's go-ahead.
-            case .busy: if plane.status != .onOrder { poaching = plane }
-            }
+            // Every delivered plane opens the action drawer: assign / move /
+            // take off route, and service it right here (GDD §39). On-order
+            // planes have nothing to do yet.
+            if plane.status != .onOrder { servicing = plane }
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: kind == .onRoute ? "checkmark.circle.fill" : "plus.circle")
