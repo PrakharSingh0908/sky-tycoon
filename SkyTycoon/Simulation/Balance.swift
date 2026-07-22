@@ -833,6 +833,10 @@ enum Balance {
     /// Per-flying-week loss probability at 100% wear (quadratic from the
     /// threshold: 92% wear ≈ 0.3%/wk, 96% ≈ 1.2%, 100% = 8%).
     static let crashRiskAt100Wear = 0.08
+    /// Hard airworthiness floor: a plane at this wear is pulled from service
+    /// automatically (independent of the opt-in auto-service) — an airframe
+    /// at the ceiling must not keep flying itself into a crash unattended.
+    static let wearGroundingLimit = 100.0
     /// Court settlement per life lost.
     static let settlementPerLife = 200_000.0
 

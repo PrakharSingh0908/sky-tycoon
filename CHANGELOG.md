@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Worn-out planes are grounded automatically, and hire buttons swapped
+
+- **A plane that hits 100% wear is now pulled from service automatically** — regardless of the auto-service setting. It sits idle until you service it (lost revenue is the cost of neglect), instead of flying on with an escalating crash risk until it goes down while you're looking elsewhere. Planes in the 90–99% danger band still carry risk and still warn you; only the absolute ceiling force-grounds. *Why:* an airframe at the end of its life shouldn't fly itself into a hull loss unattended — that felt unfair.
+- **Hiring drawer: "Hire at asking" and "Make offer" swapped** so "Hire at asking" is on the left.
+
+*Why:* per request.
+
+
 ## Bigger tap targets on the speed keys
 
 - The pause / x1 / x2 keys are easier to hit — each key's tap area now extends well above and below the key, and the x2 key's target also reaches to the right into the space past the pill. The keys and the clock pill look exactly the same size; only the (invisible) touch surface grew.

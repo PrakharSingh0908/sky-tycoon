@@ -486,8 +486,6 @@ private struct NegotiationSheet: View {
                 }
 
                 HStack(spacing: 10) {
-                    Button("Make offer") { makeOffer(person) }
-                        .buttonStyle(GameButtonStyle(color: Theme.violet, prominent: true))
                     Button("Hire at asking") {
                         let contract = SignedContract(applicant: person,
                                                       wage: person.askingWage)
@@ -497,6 +495,8 @@ private struct NegotiationSheet: View {
                         dismiss()
                     }
                     .buttonStyle(GameButtonStyle(color: Theme.violet))
+                    Button("Make offer") { makeOffer(person) }
+                        .buttonStyle(GameButtonStyle(color: Theme.violet, prominent: true))
                 }
             } else {
                 Text("They've left the table.")

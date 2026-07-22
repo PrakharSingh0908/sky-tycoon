@@ -678,6 +678,25 @@ final class GameEngine {
             }
         }
 
+        // Hard airworthiness floor (always on, independent of the opt-in
+        // auto-service): a plane that has hit the wear ceiling is pulled from
+        // service so it can't keep flying itself into a crash while the
+        // player's attention is elsewhere. It sits idle until serviced — the
+        // lost revenue is the real cost of neglect, not a random hull loss.
+        let grounded = state.fleet.filter {
+            $0.status == .assigned && $0.wear >= Balance.wearGroundingLimit
+        }.map(\.id)
+        for id in grounded {
+            let name = state.fleet.first(where: { $0.id == id })?.displayName ?? "An aircraft"
+            unassignEverywhere(aircraftID: id)
+            if let i = state.fleet.firstIndex(where: { $0.id == id }) {
+                state.fleet[i].assignedRouteID = nil
+                state.fleet[i].status = .idle
+            }
+            logEvent(title: "\(name) grounded at 100% wear — service it before it flies again",
+                     isNegative: true)
+        }
+
         // Airworthiness crash sweep (RNG, at most one hull loss/week).
         for i in state.fleet.indices {
             let plane = state.fleet[i]
