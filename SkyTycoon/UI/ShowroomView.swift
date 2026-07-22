@@ -44,7 +44,7 @@ struct ShowroomView: View {
         let effectiveRange = spec.rangeKm
             * CabinLayout.standard(abreast: spec.seatsAbreast).rangeFactor(spec: spec)
         if effectiveRange < route.distanceKm {
-            return ("Beyond range for \(route.originID) ✈︎ \(route.destinationID)", false)
+            return ("Beyond range", false)
         }
         if origin.runwayClass < spec.requiredRunwayClass
             || dest.runwayClass < spec.requiredRunwayClass {

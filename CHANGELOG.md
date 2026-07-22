@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Shorter "Beyond range" badge
+
+- The unsuitable-range fit badge now reads just **"Beyond range"** instead of "Beyond range for LHR ✈︎ CDG" — the route is already obvious from context, and the shorter chip reads cleaner.
+
+*Why:* per request.
+
+
 ## Showroom shows fit for your first route
 
 - Opening the Showroom from the first-flight checklist now passes the route you just opened, so every offer carries a fit badge — green **"Fits LHR ✈︎ CDG"** when the airframe can actually fly it, or the reason it can't (**"Beyond range"**, **"Runway too short"**). Previously this verdict only appeared when shopping from a route's own page; the checklist path showed no guidance at all.
