@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Workload ceiling 135%, and signatures no longer clip
+
+- The overtime ceiling is raised from **120% to 135%** — staff now absorb more peak load as overtime before contractors take the overflow (so the workload meter can read up to 135%). More overtime pay and strain at the top end; contractors kick in later.
+- **Fixed handwritten signatures clipping on the right.** Cursive glyphs overhang their advance width, and the reveal mask was cutting the final letter's flourish. The signature frame now leaves room, so aunt's name (and every other signature) draws in full.
+
+*Why:* per request.
+
+
 ## Real aircraft on the map + swipe-away toasts
 
 - The map's planes are now a **top-view aircraft** instead of a dart — a proper little airliner banking along each route. (The source art is a white plane on a white field, so its background is flood-filled out at load and the silhouette gets a soft shadow to sit on the bright globe.)

@@ -142,6 +142,10 @@ struct HandwrittenSignature: View {
         Text(name)
             .font(.handwriting(size))
             .foregroundStyle(color)
+            // Cursive glyphs overhang their advance width; without this the
+            // final letter's flourish is clipped on the right. Give the
+            // frame room, then mask over the padded width.
+            .padding(.trailing, size * 0.4)
             .mask(alignment: .leading) {
                 GeometryReader { geo in
                     Rectangle().frame(width: geo.size.width * (inked ? 1 : 0))
