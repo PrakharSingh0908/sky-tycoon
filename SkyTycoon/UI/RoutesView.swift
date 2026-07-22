@@ -198,6 +198,9 @@ struct NewRouteSheet: View {
                     _ = engine.openRoute(from: effectiveOrigin, to: prospect.city.id,
                         fare: dist * Balance.referenceFarePerKm * fareLevel,
                         frequency: 7)
+                    // The drawer's one job is done — get out of the way so the
+                    // player lands back on the map with the new route drawn.
+                    dismiss()
                 }
                 .buttonStyle(GameButtonStyle(color: accent, prominent: true))
             }

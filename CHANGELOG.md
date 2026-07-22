@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## New-route drawer closes on Open
+
+- Tapping **Open** in the new-route drawer now dismisses it automatically, dropping you back on the map with the new route drawn — no manual swipe-down needed before moving to the next step.
+
+*Why:* per request — the drawer exists only to pick a pair; once opened, it should get out of the way.
+
+
 ## First-flight checklist: route first, then name the route
 
 - Reordered the founder's checklist so **step 1 is now "Open your first route."** Once a route exists, **step 2 reads "Lease an aircraft for LHR ✈︎ CDG"** and **step 3 "Put the plane on LHR ✈︎ CDG"** — the two follow-up steps now name the pair you just opened. Before a route is open they fall back to the generic wording.
