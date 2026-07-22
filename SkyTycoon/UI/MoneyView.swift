@@ -20,8 +20,6 @@ struct MoneyView: View {
             // The bank leads (§34): financing is the first lever a founder
             // reaches for. Marketing moved to HQ.
             loansCard
-            trustFundCard
-            if !engine.state.letters.isEmpty { lettersCard }
             balanceSheetCard
             GameCard {
                 SectionHeader(title: "Daily P&L · 13 weeks", icon: "chart.bar.fill", accent: accent)
@@ -30,6 +28,10 @@ struct MoneyView: View {
                 pnlLegend
             }
             if let r = engine.latestReport { statementCard(r) }
+            // The aunt's narrative cards sit at the bottom, below the hard
+            // financials.
+            trustFundCard
+            if !engine.state.letters.isEmpty { lettersCard }
         }
         .sheet(item: $explanation) { FormulaSheet(explanation: $0) }
     }

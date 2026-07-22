@@ -2770,7 +2770,7 @@ final class GameEngine {
         }
     }
 
-    // ── Grand honors + the ops-chief briefing (GDD §38) ──────────────────
+    // ── Grand honors (GDD §38) ───────────────────────────────────────────
 
     /// The honors currently satisfied — reaching #1 on the ladder and
     /// serving every city in the home country.
@@ -2804,45 +2804,6 @@ final class GameEngine {
                  isNegative: false)
     }
 
-    /// A stable name for the ops chief — the second voice beside the aunt,
-    /// named from the campaign's market so it fits the country.
-    var opsChiefName: String {
-        let male = stableHash(state.airlineName + "chief·g") % 2 == 0
-        let firsts = Balance.firstNames(country: state.country, male: male)
-        let lasts = Balance.lastNames(country: state.country)
-        return "\(stablePick(firsts, seed: state.airlineName + "chief·f")) "
-             + "\(stablePick(lasts, seed: state.airlineName + "chief·l"))"
-    }
-
-    /// The single most useful thing to do this week, in the ops chief's
-    /// voice (GDD §38). Priority: safety → bleeding cash → morale → slipping
-    /// routes → idle metal → aging fleet → all-clear.
-    var opsChiefBriefing: String {
-        if let p = state.fleet.first(where: {
-            $0.status == .assigned && $0.wear >= Balance.wearDangerThreshold
-        }) {
-            return "\(p.displayName) is flying dangerously worn. Get it into the hangar before we lose it."
-        }
-        if let losing = routesNeedingAttention.first(where: \.critical) {
-            return "\(losing.title) is losing money. Re-price it or trim the schedule."
-        }
-        if let role = strikeRiskPools.first {
-            return "\(role.displayName) morale is dangerously low. A raise or a hire settles them before a walkout."
-        }
-        if let slipping = routesNeedingAttention.first {
-            return "\(slipping.title): \(slipping.reason.lowercased()). Worth a look this week."
-        }
-        if let idle = state.fleet.first(where: { $0.status == .idle }) {
-            return "\(idle.displayName) is parked idle. Put it on a route and it starts earning."
-        }
-        if let old = agingAircraft.first {
-            return "\(old.displayName) is getting on in years. Worth planning its replacement."
-        }
-        if let rival = nextRival {
-            return "All quiet on the network. Bank the profit, or set your sights on \(rival.name) up the ladder."
-        }
-        return "All quiet, and no one left above us. Enjoy the view from the top."
-    }
 
     /// Give a plane a personal name (GDD §29); empty clears it back to tail.
     func renameAircraft(id: UUID, name: String) {

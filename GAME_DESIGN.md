@@ -1305,7 +1305,12 @@ cooldown that keeps it a genuine "career best" moment, not a growth-spurt
 spammer. It sets `state.lastRecordProfit` (raw Double; the UI formats via
 `.money`), shown as a `CelebrationBanner`.
 
-### Ops-chief briefing
+### Ops-chief briefing — REMOVED (2026-07-22)
+Cut shortly after shipping: the desk already surfaces the actionable
+conditions directly, and the extra voice was redundant. Your Desk was
+reordered so conditions and effects lead, with the Gazette news beneath.
+The original design is kept below for the record.
+
 A second character beside the aunt. `opsChiefName` is a stable,
 country-appropriate name (same pools as rival spokespeople). `opsChiefBriefing`
 returns the single highest-value action in the chief's voice, by priority:

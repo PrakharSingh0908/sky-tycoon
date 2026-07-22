@@ -52,8 +52,6 @@ struct DashboardView: View {
             // same machined housing, until the airline flies.
             if !firstFlightDone { firstFlightCard }
             if engine.state.reputation < 2.0 { reputationCollapseBanner }
-            // The ops chief's one-line read on what most wants doing (§38).
-            if firstFlightDone { opsBriefingCard }
             // Finances leads the board, above the ops desk.
             trendsCard
             // Your Desk (§34): news, eroding routes (§26), timed effects,
@@ -377,35 +375,6 @@ struct DashboardView: View {
     }
 
     // ── Marketing (§34): buy awareness, awareness buys demand — an HQ call.
-    // ── Ops-chief briefing (GDD §38): the one thing worth doing ──────────
-    private var opsBriefingCard: some View {
-        GameCard {
-            HStack(alignment: .top, spacing: 12) {
-                ZStack {
-                    Circle().fill(Theme.bg)
-                    Circle().strokeBorder(Theme.hairline, lineWidth: 1)
-                    Image(systemName: "person.fill")
-                        .font(.headline).polishedSilver()
-                }
-                .frame(width: 40, height: 40)
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 6) {
-                        Text(engine.opsChiefName)
-                            .font(.game(.subheadline, weight: .semibold))
-                            .foregroundStyle(Theme.textPrimary)
-                        Text("OPS CHIEF")
-                            .font(.data(.caption2)).tracking(0.85)
-                            .foregroundStyle(Theme.textSecondary)
-                    }
-                    Text(engine.opsChiefBriefing)
-                        .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                Spacer(minLength: 0)
-            }
-        }
-    }
-
     private var marketingCard: some View {
         GameCard {
             SectionHeader(title: "Marketing", icon: "megaphone.fill", accent: accent)
@@ -435,9 +404,9 @@ struct DashboardView: View {
             || !wornAircraft.isEmpty || !engine.agingAircraft.isEmpty
     }
 
-    // The Head Quarter (§33): the newsroom AND the ops board in one — the
-    // Gazette (news + its effects, as trends) on top, then eroding routes,
-    // the timed modifiers in force, and the aircraft that need a look.
+    // The Head Quarter (§33): the ops board AND the newsroom in one — the
+    // conditions to act on (eroding routes, worn/aging aircraft) and the
+    // timed modifiers in force come FIRST, then the Gazette news below.
     private var headquartersCard: some View {
         let items = gazetteItems
         let hasOps = !engine.routesNeedingAttention.isEmpty
@@ -445,20 +414,7 @@ struct DashboardView: View {
             || !engine.agingAircraft.isEmpty
         return GameCard {
             SectionHeader(title: "Your Desk", icon: "briefcase.fill", accent: accent)
-            if !items.isEmpty { gazette(items) }
-            if !items.isEmpty && hasOps { Divider().overlay(Theme.hairline) }
             routeAttentionRows
-            ForEach(engine.state.activeEffects) { effect in
-                HStack {
-                    StatusBadge(text: effect.label,
-                                color: effect.multiplier > 1 && effect.kind == .demand
-                                    || effect.multiplier < 1 && effect.kind == .fuelPrice
-                                    ? Theme.profit : Theme.warn)
-                    Spacer()
-                    Text("\(effect.weeksRemaining) wk remaining")
-                        .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
-                }
-            }
             ForEach(wornAircraft) { plane in
                 let critical = plane.wear >= Balance.wearDangerThreshold
                 // Tap a worn plane to jump to the Fleet, where it leads the
@@ -499,6 +455,21 @@ struct DashboardView: View {
                 }
                 .buttonStyle(.plain)
             }
+            // Timed effects currently in force.
+            ForEach(engine.state.activeEffects) { effect in
+                HStack {
+                    StatusBadge(text: effect.label,
+                                color: effect.multiplier > 1 && effect.kind == .demand
+                                    || effect.multiplier < 1 && effect.kind == .fuelPrice
+                                    ? Theme.profit : Theme.warn)
+                    Spacer()
+                    Text("\(effect.weeksRemaining) wk remaining")
+                        .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
+                }
+            }
+            // The Gazette (news) sits below the conditions and effects.
+            if hasOps && !items.isEmpty { Divider().overlay(Theme.hairline) }
+            if !items.isEmpty { gazette(items) }
         }
     }
 

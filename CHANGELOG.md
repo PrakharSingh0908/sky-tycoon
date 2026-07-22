@@ -7,6 +7,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## HQ tidy-up: conditions first, ops-chief removed, aunt cards to the bottom
+
+- **Your Desk now leads with what needs acting on** — eroding routes, worn/aging aircraft, and the timed effects in force sit at the top; the Gazette news moved below them.
+- **Removed the ops-chief briefing** entirely (card and its engine text).
+- **On the Money tab, the aunt's Trust Fund and Letters cards moved to the bottom**, below the bank, balance sheet, P&L, and statement — the hard financials lead, the narrative sits last.
+
+*Why:* per request — surface the actionable stuff first at HQ, and keep Money leading with the numbers.
+
+
 ## Workload ceiling 135%, and signatures no longer clip
 
 - The overtime ceiling is raised from **120% to 135%** — staff now absorb more peak load as overtime before contractors take the overflow (so the workload meter can read up to 135%). More overtime pay and strain at the top end; contractors kick in later.
