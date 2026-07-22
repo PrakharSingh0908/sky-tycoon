@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Crisp headlines, no truncation, no em-dashes
+
+- **Gazette headlines are short and never truncate.** Shortened the rival-watch headlines ("NO COMMENT (BUT PLENTY OF COMMENT)" → "NO COMMENT", etc.) and let the headline wrap and center instead of clipping with an ellipsis.
+- **Removed every em-dash from player-facing text** — the rival byline, quotes, event copy, the record-week banner, and the share caption now use plain punctuation. It's a standing rule now: no em-dashes anywhere in the UI.
+
+*Why:* per request, and recorded as a permanent content rule.
+
+
 ## Worn-out planes are grounded automatically, and hire buttons swapped
 
 - **A plane that hits 100% wear is now pulled from service automatically** — regardless of the auto-service setting. It sits idle until you service it (lost revenue is the cost of neglect), instead of flying on with an escalating crash risk until it goes down while you're looking elsewhere. Planes in the 90–99% danger band still carry risk and still warn you; only the absolute ceiling force-grounds. *Why:* an airframe at the end of its life shouldn't fly itself into a hull loss unattended — that felt unfair.

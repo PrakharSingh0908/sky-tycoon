@@ -693,7 +693,7 @@ final class GameEngine {
                 state.fleet[i].assignedRouteID = nil
                 state.fleet[i].status = .idle
             }
-            logEvent(title: "\(name) grounded at 100% wear — service it before it flies again",
+            logEvent(title: "\(name) grounded at 100% wear. Service it before it flies again",
                      isNegative: true)
         }
 

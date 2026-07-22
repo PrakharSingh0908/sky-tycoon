@@ -799,7 +799,7 @@ enum Balance {
     // upstart. Placeholders: {you} = your airline, {rival} = their name.
     static let overtakenQuotes = [
         "\"{you}? A flash in the pan. We've flown these skies for decades.\"",
-        "\"Congratulations to {you}. Enjoy the view — it's windy up here.\"",
+        "\"Congratulations to {you}. Enjoy the view. It's windy up here.\"",
         "\"One good run doesn't make a carrier. We're not losing sleep.\"",
         "\"So {you} slipped ahead. We'll be right back on their tail.\"",
         "\"Respect to {you}. They earned it. Now the real fight begins.\"",
@@ -812,8 +812,8 @@ enum Balance {
         "\"We admire the ambition of {you}. Ambition is cheap.\"",
         "\"Let {you} have the scraps. We'll take the trunk routes.\"",
     ]
-    static let overtakenHeadlines = ["RIVAL REACTS", "SOUR GRAPES", "PASSED, AND STINGING", "NO COMMENT (BUT PLENTY OF COMMENT)"]
-    static let jabHeadlines = ["EYES ON THE UPSTART", "THE INCUMBENT SPEAKS", "PUNCHING DOWN"]
+    static let overtakenHeadlines = ["RIVAL REACTS", "SOUR GRAPES", "STUNG", "NO COMMENT"]
+    static let jabHeadlines = ["EYES ON YOU", "BIG TALK", "PUNCHING DOWN"]
 
     // CEO bylines are drawn from the campaign's country name lists
     // (firstNames/lastNames) so rivals read local to the market (§34).
@@ -917,7 +917,7 @@ enum Balance {
         // ── Weather ──────────────────────────────────────────────────────
         EventCard(id: "cyclone", category: .weather,
             title: "Cyclone Warning",
-            body: "A cyclone is tracking toward the coast. Ground the fleet and refund, or push through the system — but flying into a cyclone batters airframes, and one may come out badly enough to need the hangar.",
+            body: "A cyclone is tracking toward the coast. Ground the fleet and refund, or push through the system. Flying into a cyclone batters airframes, and one may come out badly enough to need the hangar.",
             baseWeight: 0.8, isNegative: true, minTotalWeek: 8,
             options: [
                 EventOption(label: "Ground & refund · −$40K",

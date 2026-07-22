@@ -292,7 +292,7 @@ struct ShareCardSheet: View {
             .background(Theme.bg))
         renderer.scale = 3
         guard let image = renderer.uiImage else { return }
-        let caption = "\(data.airlineName) — \(data.rankLine). Built in SkyTycoon. ✈︎"
+        let caption = "\(data.airlineName): \(data.rankLine). Built in SkyTycoon. ✈︎"
         shareItems = [image, caption]
         showShare = true
     }

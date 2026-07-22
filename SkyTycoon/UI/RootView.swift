@@ -160,7 +160,7 @@ struct RootView: View {
         .overlay(alignment: .top) {
             if let recordProfit {
                 topBanner(title: "Best week ever",
-                          subtitle: "\(recordProfit.money) banked — a new record",
+                          subtitle: "\(recordProfit.money) banked, a new record",
                           accent: Theme.profit, icon: "chart.line.uptrend.xyaxis",
                           dismiss: { withAnimation(.easeOut(duration: 0.2)) { self.recordProfit = nil } })
             }
