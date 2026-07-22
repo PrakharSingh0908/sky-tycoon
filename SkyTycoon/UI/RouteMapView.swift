@@ -499,21 +499,68 @@ struct RouteMapView: View {
                    lineWidth: 1.5)
     }
 
-    /// A small dart, nose along +x at angle 0, with a dark outline so it
-    /// reads on bright terrain.
+    /// Draws the top-view aircraft, rotated to travel. The source art's nose
+    /// points up (−y), so we rotate by `angle + π/2` to align it with the
+    /// heading. Falls back to a dart if the image is unavailable.
     private func drawPlane(ctx: inout GraphicsContext, at p: CGPoint, angle: Double) {
+        var g = ctx
+        g.translateBy(x: p.x, y: p.y)
+        g.rotate(by: .radians(angle + .pi / 2))
+        if let img = Self.planeImage {
+            let s: CGFloat = 22
+            let rect = CGRect(x: -s / 2, y: -s / 2, width: s, height: s)
+            // A soft shadow lifts the white airframe off bright terrain.
+            g.drawLayer { layer in
+                layer.addFilter(.shadow(color: .black.opacity(0.5), radius: 1.5, y: 0.5))
+                layer.draw(Image(uiImage: img), in: rect)
+            }
+            return
+        }
         let len: CGFloat = 5.5, wide: CGFloat = 3.2
         var dart = Path()
-        dart.move(to: CGPoint(x: len, y: 0))
+        dart.move(to: CGPoint(x: len, y: 0))       // dart nose points +x
         dart.addLine(to: CGPoint(x: -len * 0.7, y: wide))
         dart.addLine(to: CGPoint(x: -len * 0.3, y: 0))
         dart.addLine(to: CGPoint(x: -len * 0.7, y: -wide))
         dart.closeSubpath()
-        var g = ctx
-        g.translateBy(x: p.x, y: p.y)
-        g.rotate(by: .radians(angle))
+        g.rotate(by: .radians(-.pi / 2))           // undo the image alignment
         g.stroke(dart, with: .color(.black.opacity(0.55)), lineWidth: 2)
         g.fill(dart, with: .color(.white))
+    }
+
+    /// The plane marker, cached once with its white background knocked out.
+    /// The source is a white airframe on a white field, so colour keying
+    /// can't separate them — instead we flood-fill the near-white background
+    /// inward from the borders, which stops at the plane's shaded outline.
+    private static let planeImage: UIImage? = makePlaneImage()
+
+    private static func makePlaneImage() -> UIImage? {
+        guard let src = UIImage(named: "plane_top")?.cgImage else { return nil }
+        let w = src.width, h = src.height, bpr = w * 4
+        var px = [UInt8](repeating: 0, count: w * h * 4)
+        guard let cs = CGColorSpace(name: CGColorSpace.sRGB),
+              let ctx = CGContext(data: &px, width: w, height: h, bitsPerComponent: 8,
+                                  bytesPerRow: bpr, space: cs,
+                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        ctx.draw(src, in: CGRect(x: 0, y: 0, width: w, height: h))
+        let thresh: UInt8 = 244
+        func isBackground(_ i: Int) -> Bool {
+            px[i + 3] > 0 && px[i] >= thresh && px[i + 1] >= thresh && px[i + 2] >= thresh
+        }
+        var stack = [Int]()
+        for x in 0..<w { stack.append((x) * 4); stack.append(((h - 1) * w + x) * 4) }
+        for y in 0..<h { stack.append((y * w) * 4); stack.append((y * w + w - 1) * 4) }
+        while let i = stack.popLast() {
+            guard isBackground(i) else { continue }
+            px[i] = 0; px[i + 1] = 0; px[i + 2] = 0; px[i + 3] = 0   // clear
+            let p = i / 4, x = p % w, y = p / w
+            if x > 0 { stack.append(i - 4) }
+            if x < w - 1 { stack.append(i + 4) }
+            if y > 0 { stack.append(i - bpr) }
+            if y < h - 1 { stack.append(i + bpr) }
+        }
+        return ctx.makeImage().map { UIImage(cgImage: $0) }
     }
 }
 

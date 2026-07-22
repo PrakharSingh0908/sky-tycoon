@@ -1318,3 +1318,18 @@ HQ once the airline is flying.
 
 All three respect the no-formatting-in-Simulation rule and save-compat
 (new fields optional, nil-grandfathered).
+
+### §37/§38 addendum — real plane art + swipe-away toasts (2026-07-22)
+- **Top-view aircraft marker.** The living-map dart is replaced by a
+  top-down airliner photo (`plane_top`, Resources/Art). The source is a
+  white plane on a white field — colour keying can't separate them — so at
+  load we FLOOD-FILL the near-white background inward from the borders
+  (threshold 244), which stops at the plane's shaded outline, leaving the
+  airframe intact. Cached once (`RouteMapView.planeImage`), drawn rotated
+  by `heading + π/2` (art nose points up) with a soft drop shadow to read
+  on bright terrain. Dart remains as a fallback if the image is missing.
+- **Swipe-up dismissal.** `CelebrationBanner` gained an optional
+  `onDismiss`; when set, a short upward flick clears the toast early
+  (milestones, ambitions, overtakes, record week) instead of waiting out
+  the 3.5s timer. The four RootView banners were extracted into a `topBanner`
+  helper to keep `body` inside the type-checker's budget.

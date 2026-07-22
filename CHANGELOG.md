@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Real aircraft on the map + swipe-away toasts
+
+- The map's planes are now a **top-view aircraft** instead of a dart — a proper little airliner banking along each route. (The source art is a white plane on a white field, so its background is flood-filled out at load and the silhouette gets a soft shadow to sit on the bright globe.)
+- **Celebration toasts can be flicked up to dismiss** — milestones, ambitions, overtakes, and record weeks no longer make you wait out the timer.
+
+*Why:* per request — a recognizable plane reads far better than an abstract dart, and a swipe-away is the expected way to clear a toast early.
+
+
 ## Win moments + an ops chief who tells you what matters (GDD §38)
 
 - **Grand-honor ceremony.** Reaching **#1 in your country** or becoming the **flag carrier** (serving every city at home) now triggers a full-screen ceremony with a gold medallion that springs in. Reserved for the handful of moments that define a whole campaign.

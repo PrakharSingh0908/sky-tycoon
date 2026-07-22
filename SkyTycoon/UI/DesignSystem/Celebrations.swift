@@ -16,6 +16,9 @@ struct CelebrationBanner: View {
     let subtitle: String
     var accent: Color = Theme.warn
     var icon: String = "checkmark.seal.fill"
+    /// When set, the banner can be flicked up to dismiss it early.
+    var onDismiss: (() -> Void)? = nil
+    @State private var dragY: CGFloat = 0
 
     var body: some View {
         // Machined like the notable cards (MetalPanel): a dark metal face
@@ -36,6 +39,19 @@ struct CelebrationBanner: View {
             }
         }
         .padding(.horizontal, Theme.gutter)
+        .offset(y: dragY)
+        .gesture(onDismiss.map { dismiss in
+            DragGesture(minimumDistance: 8)
+                .onChanged { v in dragY = min(0, v.translation.height) }
+                .onEnded { v in
+                    if v.translation.height < -24 {
+                        withAnimation(.easeOut(duration: 0.2)) { dragY = -160 }
+                        dismiss()
+                    } else {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { dragY = 0 }
+                    }
+                }
+        })
     }
 }
 

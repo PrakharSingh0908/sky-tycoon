@@ -92,11 +92,10 @@ struct RootView: View {
         // ── Milestone celebration: a win, announced, then gone ────────────
         .overlay(alignment: .top) {
             if let celebration {
-                CelebrationBanner(title: "Milestone: \(celebration.displayTitle(for: engine.state.country))",
-                                  subtitle: "Reward \(celebration.reward.money) banked",
-                                  accent: Theme.profit, icon: "flag.checkered")
-                    .padding(.top, 4)
-                    .transition(.move(edge: .top).combined(with: .opacity))
+                topBanner(title: "Milestone: \(celebration.displayTitle(for: engine.state.country))",
+                          subtitle: "Reward \(celebration.reward.money) banked",
+                          accent: Theme.profit, icon: "flag.checkered",
+                          dismiss: { withAnimation(.easeOut(duration: 0.2)) { self.celebration = nil } })
             }
         }
         .onAppear { seenMilestones = engine.state.completedMilestones }
@@ -117,11 +116,10 @@ struct RootView: View {
         // ── Ambition celebration: a bigger win, same treatment ────────────
         .overlay(alignment: .top) {
             if let ambitionWin {
-                CelebrationBanner(title: "Ambition: \(ambitionWin.title)",
-                                  subtitle: "Reward \(ambitionWin.reward.money) banked",
-                                  accent: Theme.sky, icon: "trophy.fill")
-                    .padding(.top, 4)
-                    .transition(.move(edge: .top).combined(with: .opacity))
+                topBanner(title: "Ambition: \(ambitionWin.title)",
+                          subtitle: "Reward \(ambitionWin.reward.money) banked",
+                          accent: Theme.sky, icon: "trophy.fill",
+                          dismiss: { withAnimation(.easeOut(duration: 0.2)) { self.ambitionWin = nil } })
             }
         }
         .onAppear { if seenAmbitions == nil { seenAmbitions = engine.state.completedAmbitions ?? [] } }
@@ -143,11 +141,10 @@ struct RootView: View {
         // ── Rival overtake: the ladder-climb moment (GDD §29) ─────────────
         .overlay(alignment: .top) {
             if let overtook {
-                CelebrationBanner(title: "You overtook \(overtook)",
-                                  subtitle: "Another rival now sits below you on the ladder",
-                                  accent: Theme.cornflower, icon: "arrow.up.forward.circle.fill")
-                    .padding(.top, 4)
-                    .transition(.move(edge: .top).combined(with: .opacity))
+                topBanner(title: "You overtook \(overtook)",
+                          subtitle: "Another rival now sits below you on the ladder",
+                          accent: Theme.cornflower, icon: "arrow.up.forward.circle.fill",
+                          dismiss: { withAnimation(.easeOut(duration: 0.2)) { self.overtook = nil } })
             }
         }
         .onChange(of: engine.state.lastOvertakenRival) { _, new in
@@ -162,11 +159,10 @@ struct RootView: View {
         // ── Record week: a genuine career-best, bragged (GDD §38) ─────────
         .overlay(alignment: .top) {
             if let recordProfit {
-                CelebrationBanner(title: "Best week ever",
-                                  subtitle: "\(recordProfit.money) banked — a new record",
-                                  accent: Theme.profit, icon: "chart.line.uptrend.xyaxis")
-                    .padding(.top, 4)
-                    .transition(.move(edge: .top).combined(with: .opacity))
+                topBanner(title: "Best week ever",
+                          subtitle: "\(recordProfit.money) banked — a new record",
+                          accent: Theme.profit, icon: "chart.line.uptrend.xyaxis",
+                          dismiss: { withAnimation(.easeOut(duration: 0.2)) { self.recordProfit = nil } })
             }
         }
         .onChange(of: engine.state.lastRecordProfit) { _, new in
@@ -196,6 +192,17 @@ struct RootView: View {
                               reputation: engine.state.reputation,
                               auntName: engine.state.country.auntName)
         }
+    }
+
+    /// A top celebration toast, flick-up-dismissible. Extracted so `body`
+    /// stays inside the type-checker's budget.
+    @ViewBuilder
+    private func topBanner(title: String, subtitle: String, accent: Color,
+                           icon: String, dismiss: @escaping () -> Void) -> some View {
+        CelebrationBanner(title: title, subtitle: subtitle, accent: accent,
+                          icon: icon, onDismiss: dismiss)
+            .padding(.top, 4)
+            .transition(.move(edge: .top).combined(with: .opacity))
     }
 
     /// Builds the ceremony copy for a grand honor (GDD §38).
