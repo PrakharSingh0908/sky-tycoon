@@ -181,10 +181,17 @@ struct SpeedControl: View {
                             in: RoundedRectangle(cornerRadius: 6)
                         )
                         .foregroundStyle(engine.speed == speed ? Theme.bg : Theme.textSecondary)
+                        // Grow the tappable area vertically (transparent) so
+                        // these small keys are easy to hit; the visible pill
+                        // stays 28×26 and the row's height is collapsed below
+                        // so the chrome doesn't grow.
+                        .padding(.vertical, 11)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
         }
+        .frame(height: 26)     // visible height unchanged; keys overflow for touch
         .padding(3)
         .background(Theme.bg, in: RoundedRectangle(cornerRadius: Theme.corner))
         .sensoryFeedback(.selection, trigger: engine.speed)
