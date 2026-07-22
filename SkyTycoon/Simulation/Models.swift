@@ -923,6 +923,10 @@ struct GameState: Codable {
     var lastOvertakenRival: String? = nil
     /// Personal bests (GDD §29).
     var records: Records? = nil
+    /// Opt-in autopilot (GDD §36): when on, HQ auto-services any plane that
+    /// crosses the wear threshold, so a hands-off player never loses one to
+    /// neglect. Optional/off by default.
+    var autoServiceWorn: Bool? = nil
     /// The latest rival press reaction (GDD §30) — shown in the Gazette.
     var rivalQuote: RivalQuote? = nil
     /// The week that reaction fired, so it fades back to a standing jab.

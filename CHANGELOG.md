@@ -7,6 +7,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Auto-service autopilot + slower wear — GDD §36
+
+- **New HQ setting: "Auto-service worn aircraft"** (Profile → Operations). When on, HQ automatically grounds and services any plane that crosses 78% wear at the weekly close — a line check ($30K, one week down, −25 wear) — *before* the airworthiness crash sweep runs, so a plane can never fall out of the sky purely from neglect while you're busy elsewhere. It skips a plane only when cash can't cover the check, and then the normal wear warnings still apply. Off by default; opt-in for hands-off players.
+- **Wear now accrues ~30% slower** (`wearPerBlockHour` 0.05 → 0.035). Long-haul flying no longer sends fresh airframes to the danger zone in just a few weeks.
+- **Finances above Your Desk on the HQ page** — the weekly P&L reads first, the desk (news, attention, active effects) below it.
+
+*Why:* per request — the player didn't want a nagging pop-up nor a silent killer plane. This threads the needle: wear is gentler, it's still visible in the attention list, and anyone who prefers hands-off can flip on the autopilot and trust it.
+
+
 ## Fix: disabled buttons now look disabled (dead "Post job ad") — GDD §35
 
 - The "Post job ad" button did nothing when tapped. Root cause: it's disabled when cash is below the $2K ad fee, but `GameButtonStyle` never reflected the disabled state — so after the recent cost increases pushed the airline's cash under $2K, the button looked completely normal yet was disabled and ate the tap. The engine logic was correct all along.

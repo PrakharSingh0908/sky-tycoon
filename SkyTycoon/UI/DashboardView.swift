@@ -1355,6 +1355,7 @@ private struct ProfileSheet: View {
             VStack(alignment: .leading, spacing: 18) {
                 identity
                 // Airline card hidden for now — needs a redesign pass.
+                operationsCard
                 milestoneSummary
                 ambitionsCard
                 recordsCard
@@ -1497,6 +1498,27 @@ private struct ProfileSheet: View {
     }
 
     // ── Personal bests (GDD §29) ─────────────────────────────────────────
+    // ── Operations autopilot (GDD §36) ───────────────────────────────────
+    private var operationsCard: some View {
+        GameCard {
+            SectionHeader(title: "Operations", icon: "gearshape.2.fill", accent: accent)
+            Toggle(isOn: Binding(
+                get: { engine.autoServiceWorn },
+                set: { engine.setAutoServiceWorn($0) }
+            )) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Auto-service worn aircraft")
+                        .font(.game(.subheadline, weight: .semibold))
+                        .foregroundStyle(Theme.textPrimary)
+                    Text("Grounds and services any plane past \(Int(Balance.autoServiceWearThreshold))% wear before it can fall out of the sky. Each check costs \(Double(30_000).money).")
+                        .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .tint(accent)
+        }
+    }
+
     private var recordsCard: some View {
         let r = engine.state.records ?? Records()
         return GameCard {

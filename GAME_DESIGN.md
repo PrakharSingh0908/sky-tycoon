@@ -1185,3 +1185,40 @@ feedback, a `.mask` eating hits (§31), a gesture/overlay — before the
 handler. Custom `ButtonStyle`/control styles MUST reflect
 `@Environment(\.isEnabled)`. Verify the handler in isolation first
 (RunCodeSnippet), then hunt the UI.
+
+
+## §36 — Fleet wear: the neglect problem, solved without a nag (2026-07-22)
+
+### The problem
+Fleet wear was meant as gentle upkeep pressure, but it turned into a
+silent killer: a player deep in routes, hiring, and finances would
+forget a plane, and it would crash from wear they never got a warning
+about at the right moment. The two obvious fixes both fail the feel bar:
+a blocking pop-up guarantees everyone just clicks "service" (no
+decision, pure friction), while leaving it fully hidden keeps the
+unfair deaths. We wanted it *visible but not nagging, forgiving but not
+free.*
+
+### The fix — three moves
+1. **Gentler curve.** `wearPerBlockHour` 0.05 → 0.035 (~30% slower).
+   Airframes now take meaningfully longer to reach the danger zone, so
+   routine attention is enough; you're punished for real neglect, not a
+   busy week.
+2. **Auto-service autopilot (opt-in).** A single HQ toggle
+   (`state.autoServiceWorn`, surfaced in Profile → Operations). When on,
+   `closeWeek` runs a pass BEFORE the crash sweep: every delivered,
+   flying, un-grounded plane at or past `autoServiceWearThreshold` (78%)
+   is sent for a line check ($30K, −25 wear, grounded one week), cash
+   permitting. Because it runs first, a serviced plane is lifted out of
+   the crash zone that same week — the autopilot can't be beaten to the
+   punch by the RNG. If cash is short it skips, and the plane falls back
+   to the normal on-screen warnings. Off by default.
+3. **Stays visible.** Worn/aging aircraft remain in the HQ attention
+   list either way, so even with the autopilot on you still see what's
+   happening — it's an assistant, not a black box.
+
+### Lesson
+When a mechanic creates unfair-feeling failure, don't reach for a modal.
+Soften the curve, keep the signal on-screen, and offer an opt-in
+autopilot for players who'd rather not micro-manage — three light
+touches beat one heavy interruption.

@@ -824,6 +824,9 @@ enum Balance {
     /// Wear gained per block hour (2026-07-21): eased 0.05 → 0.035 so an
     /// airframe takes noticeably longer to reach the danger zone.
     static let wearPerBlockHour = 0.035
+    /// Opt-in auto-service (GDD §36) sends a plane in for a line check once
+    /// its wear crosses this — comfortably below the danger zone.
+    static let autoServiceWearThreshold = 78.0
     /// Above this wear, a flying airframe is a hull-loss risk — the Fleet
     /// card warns quietly; ignoring it can end in a crash.
     static let wearDangerThreshold = 90.0

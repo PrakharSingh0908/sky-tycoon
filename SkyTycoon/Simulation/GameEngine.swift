@@ -664,6 +664,20 @@ final class GameEngine {
             state.routes[i].rivalPressure = max(0, min(Balance.rivalMaxPerRoute, pressure))
         }
 
+        // Auto-service (GDD §36): opt-in autopilot sends any plane past the
+        // threshold in for a line check BEFORE the crash sweep, so a
+        // hands-off player never loses one to neglect. Skips if it can't
+        // afford the check; the plane then falls to the normal warnings.
+        if autoServiceWorn {
+            let due = state.fleet.filter {
+                $0.status != .onOrder && $0.groundedWeeksRemaining == 0
+                    && $0.wear >= Balance.autoServiceWearThreshold
+            }.map(\.id)
+            for id in due where state.cash >= 30_000 {
+                orderCheck(aircraftID: id, heavy: false)
+            }
+        }
+
         // Airworthiness crash sweep (RNG, at most one hull loss/week).
         for i in state.fleet.indices {
             let plane = state.fleet[i]
@@ -2498,6 +2512,14 @@ final class GameEngine {
     /// Weekly marketing budget (M5), clamped to the slider's range.
     func setMarketingSpend(_ spend: Double) {
         state.weeklyMarketingSpend = max(0, min(Balance.marketingSpendMax, spend))
+        save()
+    }
+
+    /// Auto-service autopilot (GDD §36): opt in and HQ services worn planes
+    /// for you before they reach the danger zone.
+    var autoServiceWorn: Bool { state.autoServiceWorn ?? false }
+    func setAutoServiceWorn(_ on: Bool) {
+        state.autoServiceWorn = on
         save()
     }
 
