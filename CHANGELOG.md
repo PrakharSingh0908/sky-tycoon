@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Signature clipping, actually fixed
+
+- The handwritten signatures were still losing their final letter on the right. The previous trailing allowance was too small for the script font's tail; widened it (and pinned the text so nothing compresses it), verified in the real right-aligned card context. Every signature now shows in full.
+
+*Why:* the earlier fix under-shot the font's overhang.
+
+
 ## HQ tidy-up: conditions first, ops-chief removed, aunt cards to the bottom
 
 - **Your Desk now leads with what needs acting on** — eroding routes, worn/aging aircraft, and the timed effects in force sit at the top; the Gazette news moved below them.

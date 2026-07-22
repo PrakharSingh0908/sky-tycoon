@@ -142,10 +142,13 @@ struct HandwrittenSignature: View {
         Text(name)
             .font(.handwriting(size))
             .foregroundStyle(color)
-            // Cursive glyphs overhang their advance width; without this the
-            // final letter's flourish is clipped on the right. Give the
-            // frame room, then mask over the padded width.
-            .padding(.trailing, size * 0.4)
+            // Never let a parent compress the text (which would truncate it).
+            .fixedSize()
+            // Cursive glyphs overhang their advance width, so the final
+            // letter's tail spills past the text's reported box and gets
+            // clipped on the right. Generous trailing room keeps the whole
+            // flourish inside the frame the mask reveals.
+            .padding(.trailing, size * 0.9)
             .mask(alignment: .leading) {
                 GeometryReader { geo in
                     Rectangle().frame(width: geo.size.width * (inked ? 1 : 0))
@@ -175,11 +178,17 @@ extension LiveryColor {
 }
 
 #Preview("Handwriting") {
+    // Mimics the real usage: right-aligned inside a card, where the tail
+    // used to clip. The trailing edge of each row is the stress point.
     VStack(spacing: 14) {
-        Text("Aunt Margaret").font(.handwriting(38)).foregroundStyle(.white)
-        HandwrittenSignature(name: "Aunt Meera", size: 38)
+        ForEach(["Aunt Meera", "Aunt Margaret", "Aunt Priya", "Aunt Wei"], id: \.self) { n in
+            HandwrittenSignature(name: n, size: 32)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .padding(10)
+                .background(Theme.bg, in: RoundedRectangle(cornerRadius: Theme.corner))
+        }
     }
-    .padding(30)
-    .background(Theme.bg)
+    .padding(12)
+    .background(Theme.bgElevated)
     .preferredColorScheme(.dark)
 }
