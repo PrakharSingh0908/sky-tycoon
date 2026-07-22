@@ -1222,3 +1222,45 @@ When a mechanic creates unfair-feeling failure, don't reach for a modal.
 Soften the curve, keep the signal on-screen, and offer an opt-in
 autopilot for players who'd rather not micro-manage — three light
 touches beat one heavy interruption.
+
+
+## §37 — The living map: planes fly the arcs (2026-07-22)
+
+The globe was beautiful but inert: gorgeous terrain, static arcs, nothing
+in motion. The first slice of the "give the world a pulse" pillar (Pillar
+A of the fun roadmap) makes the network *operate* in front of the player.
+Feature A3.1 — core motion.
+
+### What it does
+While the sim runs, aircraft glide along each STAFFED route's bow, nose
+oriented to travel. Plane **count** encodes frequency (a trunk route
+buzzes with three, a feeder trickles with one); every plane moves at the
+same calm pace, so the map never looks frantic. Busy routes fly in both
+directions; a lone plane goes one way. Planned (unstaffed) routes stay
+dashed and empty, so flying-vs-planned is instantly legible. On pause,
+planes freeze — consistent with the charter ("nothing happens while you
+aren't looking").
+
+### How it works (pure UI, zero sim coupling)
+- One file: `RouteMapView.swift`. No `GameState`, no Simulation, no RNG,
+  no persisted field touched — it only READS state.
+- A `TimelineView(.animation)` wraps the Canvas; its schedule is `paused`
+  whenever `engine.speed == .paused` or Reduce Motion is on (back to the
+  old zero-cost static globe). Each frame it advances a monotonic
+  `flightPhase` by `Δtime × engine.speed.rawValue` — so pause truly
+  freezes, x2 doubles the tempo, and positions are a pure function of the
+  phase (a pan/zoom mid-flight can't teleport a plane off the terrain, the
+  same guarantee the city dots have).
+- Planes ride the exact drawn arc: `arcPoints(for:)` returns the quad-
+  bezier the route stroke uses, and `bezier`/`bezierTangent` give position
+  and heading. A stable per-route hash offsets and desyncs planes.
+- Perf: ~1 plane per daily departure, capped at 3/route and 40 on screen
+  (busiest routes first); horizon-culled by the existing projection.
+
+### Where it appears
+Full-network map AND the single-route focus map (Route Detail), where one
+or two planes make inspecting a route a quiet little moment.
+
+### Deferred to A3.2
+Comet trails, load-factor arc "breathing," and an arrival ripple at the
+destination dot — to be judged on device before adding.

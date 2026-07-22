@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## The living map: planes fly your routes (GDD §37)
+
+- The globe is no longer static. While time runs, **aircraft glide along your staffed routes**, nose pointed the way they're travelling. Busy trunk routes buzz with up to three planes and fly both directions; a thin feeder shows one. Planned (unstaffed) routes stay dashed and empty, so you can tell at a glance what's actually flying. **Pause and everything freezes**; x2 speeds the tempo to match the clock. Shows on both the network map and a route's own focus map.
+- Purely visual: it reads the game state and never touches the simulation, so saves, determinism, and balance are all unchanged. Respects Reduce Motion, and costs nothing while paused.
+
+*Why:* first slice of the "give the world a pulse" plan. The map was beautiful but inert; now the network operates in front of you and the airline finally feels alive. (Comet trails, load-factor glow, and arrival ripples are queued as a follow-up once we judge the core motion on device.)
+
+
 ## Shorter "Beyond range" badge
 
 - The unsuitable-range fit badge now reads just **"Beyond range"** instead of "Beyond range for LHR ✈︎ CDG" — the route is already obvious from context, and the shorter chip reads cleaner.

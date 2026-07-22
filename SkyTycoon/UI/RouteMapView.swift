@@ -174,13 +174,32 @@ struct RouteMapView: View {
     @State private var camera: GlobeCamera = .india
     @State private var dragStart: GlobeCamera?
     @State private var zoomStart: Double?
+    // A3 living map: a monotonic display-time phase that advances planes
+    // along the arcs. Scaled by sim speed and frozen on pause, so the map's
+    // tempo matches the clock and nothing moves while the player isn't
+    // watching. Purely visual — never touches the simulation.
+    @State private var flightPhase: Double = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         GeometryReader { geo in
             ZStack {
                 GlobeSceneView(camera: camera, size: geo.size)
-                Canvas { ctx, size in
-                    drawOverlay(ctx: &ctx, size: size)
+                // The animation schedule is paused (zero cost, back to a
+                // static globe) whenever time isn't running or the player
+                // has Reduce Motion on; otherwise it drives one repaint per
+                // frame so planes glide.
+                TimelineView(.animation(minimumInterval: 1.0 / 60.0,
+                                        paused: engine.speed == .paused || reduceMotion)) { timeline in
+                    Canvas { ctx, size in
+                        drawOverlay(ctx: &ctx, size: size)
+                    }
+                    .onChange(of: timeline.date) { old, new in
+                        // Clamp the step so returning from the background (a
+                        // huge gap) nudges rather than teleports the planes.
+                        let dt = min(new.timeIntervalSince(old), 1.0 / 20.0)
+                        flightPhase += dt * engine.speed.rawValue
+                    }
                 }
             }
             .background(Color(red: 0.043, green: 0.071, blue: 0.125))
@@ -283,20 +302,8 @@ struct RouteMapView: View {
         }
         let routesToDraw = focusRoute.map { [$0] } ?? engine.state.routes
         for route in routesToDraw {
-            guard let origin = engine.city(route.originID),
-                  let dest = engine.city(route.destinationID),
-                  let p1 = project(origin.longitude, origin.latitude,
-                                   size: size, radius: radius),
-                  let p2 = project(dest.longitude, dest.latitude,
-                                   size: size, radius: radius) else { continue }
-            let mid = CGPoint(x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2)
-            let dx = p2.x - p1.x, dy = p2.y - p1.y
-            let chord = max(hypot(dx, dy), 1)
-            // Perpendicular offset, always bowing toward the top of the map.
-            var normal = CGPoint(x: -dy / chord, y: dx / chord)
-            if normal.y > 0 { normal = CGPoint(x: -normal.x, y: -normal.y) }
-            let control = CGPoint(x: mid.x + normal.x * chord * 0.22,
-                                  y: mid.y + normal.y * chord * 0.22)
+            guard let (p1, control, p2) = arcPoints(for: route, size: size,
+                                                    radius: radius) else { continue }
             var arc = Path()
             arc.move(to: p1)
             arc.addQuadCurve(to: p2, control: control)
@@ -309,6 +316,10 @@ struct RouteMapView: View {
             ctx.stroke(arc, with: .color(color),
                        style: StrokeStyle(lineWidth: coreWidth, lineCap: .round, dash: dash))
         }
+
+        // Living map (A3): aircraft in flight on staffed routes, above the
+        // arcs and beneath the city dots (which stay crisp anchors).
+        drawFlights(ctx: &ctx, size: size, radius: radius)
 
         // City markers. Codes label only a focused route's two endpoints;
         // the network map stays label-free (dots + arcs tell the story).
@@ -347,6 +358,102 @@ struct RouteMapView: View {
             return .white.opacity(0.75)
         }
         return route.lastWeeklyProfit >= 0 ? Theme.profit : Theme.loss
+    }
+
+    // MARK: - Living map (A3): planes gliding the arcs
+
+    /// The drawn bow for a route — the same quad-bezier the arcs use, so a
+    /// plane rides exactly the line the player sees. nil past the horizon.
+    private func arcPoints(for route: Route, size: CGSize,
+                           radius: Double) -> (CGPoint, CGPoint, CGPoint)? {
+        guard let origin = engine.city(route.originID),
+              let dest = engine.city(route.destinationID),
+              let p1 = project(origin.longitude, origin.latitude,
+                               size: size, radius: radius),
+              let p2 = project(dest.longitude, dest.latitude,
+                               size: size, radius: radius) else { return nil }
+        let mid = CGPoint(x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2)
+        let dx = p2.x - p1.x, dy = p2.y - p1.y
+        let chord = max(hypot(dx, dy), 1)
+        // Perpendicular offset, always bowing toward the top of the map.
+        var normal = CGPoint(x: -dy / chord, y: dx / chord)
+        if normal.y > 0 { normal = CGPoint(x: -normal.x, y: -normal.y) }
+        let control = CGPoint(x: mid.x + normal.x * chord * 0.22,
+                              y: mid.y + normal.y * chord * 0.22)
+        return (p1, control, p2)
+    }
+
+    private func bezier(_ p1: CGPoint, _ c: CGPoint, _ p2: CGPoint,
+                        _ t: Double) -> CGPoint {
+        let mt = 1 - t
+        let a = mt * mt, b = 2 * mt * t, d = t * t
+        return CGPoint(x: a * p1.x + b * c.x + d * p2.x,
+                       y: a * p1.y + b * c.y + d * p2.y)
+    }
+
+    private func bezierTangent(_ p1: CGPoint, _ c: CGPoint, _ p2: CGPoint,
+                               _ t: Double) -> CGPoint {
+        CGPoint(x: 2 * (1 - t) * (c.x - p1.x) + 2 * t * (p2.x - c.x),
+                y: 2 * (1 - t) * (c.y - p1.y) + 2 * t * (p2.y - c.y))
+    }
+
+    /// Draws aircraft in flight. Plane COUNT encodes frequency (a trunk
+    /// route buzzes, a feeder trickles); every plane moves at the same calm
+    /// pace so the map never looks frantic. Budgeted so a huge network stays
+    /// smooth — the busiest routes get planes first.
+    private func drawFlights(ctx: inout GraphicsContext, size: CGSize, radius: Double) {
+        guard !reduceMotion else { return }
+        let staffed = Set(engine.state.fleet.compactMap(\.assignedRouteID))
+        let focusRoute = focusRouteID.flatMap { id in
+            engine.state.routes.first { $0.id == id }
+        }
+        let candidates = (focusRoute.map { [$0] } ?? engine.state.routes)
+            .filter { staffed.contains($0.id) && $0.weeklyFrequency > 0 }
+            .sorted { $0.weeklyFrequency > $1.weeklyFrequency }
+        let traversal = 6.0          // seconds end-to-end at x1
+        var budget = 40              // global plane cap (perf)
+        for route in candidates {
+            guard budget > 0,
+                  let (p1, c, p2) = arcPoints(for: route, size: size, radius: radius)
+            else { continue }
+            // ~1 plane per daily departure, capped at 3.
+            let daily = Int((Double(route.weeklyFrequency) / 7.0).rounded())
+            let count = min(budget, min(3, max(1, daily)))
+            // A stable per-route offset spaces this route's planes apart and
+            // desyncs routes from one another.
+            let jitter = Double(abs(route.id.hashValue) % 997) / 997.0
+            for i in 0..<count {
+                budget -= 1
+                let offset = (Double(i) / Double(count) + jitter)
+                    .truncatingRemainder(dividingBy: 1.0)
+                let base = (flightPhase / traversal + offset)
+                    .truncatingRemainder(dividingBy: 1.0)
+                // Busy routes fly both ways; a lone plane goes one way.
+                let backward = count >= 2 && i % 2 == 1
+                let t = backward ? 1.0 - base : base
+                let pos = bezier(p1, c, p2, t)
+                var tan = bezierTangent(p1, c, p2, t)
+                if backward { tan = CGPoint(x: -tan.x, y: -tan.y) }
+                drawPlane(ctx: &ctx, at: pos, angle: atan2(tan.y, tan.x))
+            }
+        }
+    }
+
+    /// A small dart, nose along +x at angle 0, with a dark outline so it
+    /// reads on bright terrain.
+    private func drawPlane(ctx: inout GraphicsContext, at p: CGPoint, angle: Double) {
+        let len: CGFloat = 5.5, wide: CGFloat = 3.2
+        var dart = Path()
+        dart.move(to: CGPoint(x: len, y: 0))
+        dart.addLine(to: CGPoint(x: -len * 0.7, y: wide))
+        dart.addLine(to: CGPoint(x: -len * 0.3, y: 0))
+        dart.addLine(to: CGPoint(x: -len * 0.7, y: -wide))
+        dart.closeSubpath()
+        var g = ctx
+        g.translateBy(x: p.x, y: p.y)
+        g.rotate(by: .radians(angle))
+        g.stroke(dart, with: .color(.black.opacity(0.55)), lineWidth: 2)
+        g.fill(dart, with: .color(.white))
     }
 }
 
