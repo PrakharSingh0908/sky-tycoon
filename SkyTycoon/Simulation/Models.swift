@@ -923,6 +923,15 @@ struct GameState: Codable {
     var lastOvertakenRival: String? = nil
     /// Personal bests (GDD §29).
     var records: Records? = nil
+    /// Grand honors already awarded (GDD §38): reaching #1 on the ladder,
+    /// becoming flag carrier. nil grandfathers current standing unannounced.
+    var honorsAwarded: Set<String>? = nil
+    /// The honor just awarded, for the ceremony overlay (id string).
+    var lastHonor: String? = nil
+    /// The profit of a just-set record week worth bragging about, and the
+    /// week it fired — a quarterly cooldown keeps it rare (GDD §38).
+    var lastRecordProfit: Double? = nil
+    var lastRecordWeek: Int? = nil
     /// Opt-in autopilot (GDD §36): when on, HQ auto-services any plane that
     /// crosses the wear threshold, so a hands-off player never loses one to
     /// neglect. Optional/off by default.

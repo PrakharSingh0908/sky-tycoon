@@ -787,6 +787,8 @@ final class GameEngine {
         // Rival overtakes + personal bests (GDD §29).
         checkRivalOvertakes()
         updateRecords()
+        // Grand honors: #1 on the ladder, flag carrier (GDD §38).
+        checkHonors()
 
         // Fail state (GDD §3.2): 8 insolvent weeks with nothing to sell.
         state.weeksInsolvent = state.cash < 0 ? state.weeksInsolvent + 1 : 0
@@ -2749,6 +2751,7 @@ final class GameEngine {
     /// Rolls the airline's personal bests forward (GDD §29).
     private func updateRecords() {
         var r = state.records ?? Records()
+        let prevBestWeek = r.bestWeekProfit
         r.bestWeekProfit = max(r.bestWeekProfit, state.reports.last?.profit ?? 0)
         r.bestRouteProfit = max(r.bestRouteProfit, state.routes.map(\.lastWeeklyProfit).max() ?? 0)
         r.largestFleet = max(r.largestFleet, state.fleet.filter { $0.status != .onOrder }.count)
@@ -2756,6 +2759,89 @@ final class GameEngine {
         r.highestMarketCap = max(r.highestMarketCap, marketCap)
         r.mostWeeklyPax = max(r.mostWeeklyPax, weeklyPax)
         state.records = r
+        // A brag when the best week is SMASHED (≥20% over, real money), at
+        // most once a quarter so it stays a genuine "career best" moment,
+        // not a growth-spurt spammer (GDD §38). UI formats the figure.
+        let cooled = state.lastRecordWeek.map { state.date.totalWeeks - $0 >= 13 } ?? true
+        if prevBestWeek > 0, r.bestWeekProfit >= prevBestWeek * 1.2,
+           r.bestWeekProfit >= 50_000, cooled {
+            state.lastRecordProfit = r.bestWeekProfit
+            state.lastRecordWeek = state.date.totalWeeks
+        }
+    }
+
+    // ── Grand honors + the ops-chief briefing (GDD §38) ──────────────────
+
+    /// The honors currently satisfied — reaching #1 on the ladder and
+    /// serving every city in the home country.
+    private func currentHonors() -> Set<String> {
+        var s = Set<String>()
+        if industryRank.rank == 1 { s.insert("rank1") }
+        let served = Set(state.routes.flatMap { [$0.originID, $0.destinationID] })
+        if !state.cities.isEmpty, state.cities.allSatisfy({ served.contains($0.id) }) {
+            s.insert("flagCarrier")
+        }
+        return s
+    }
+
+    /// Awards each grand honor once, with ceremony. First encounter (nil)
+    /// grandfathers whatever's already true, unannounced.
+    private func checkHonors() {
+        let met = currentHonors()
+        guard var awarded = state.honorsAwarded else {
+            state.honorsAwarded = met
+            return
+        }
+        let newly = met.subtracting(awarded)
+        // Flag carrier before #1 if both land at once — the rarer network feat.
+        guard let honor = newly.sorted().first else { return }
+        awarded.formUnion(newly)
+        state.honorsAwarded = awarded
+        state.lastHonor = honor
+        logEvent(title: honor == "rank1"
+                 ? "Reached #1 in \(state.country.displayName)"
+                 : "Became the flag carrier of \(state.country.displayName)",
+                 isNegative: false)
+    }
+
+    /// A stable name for the ops chief — the second voice beside the aunt,
+    /// named from the campaign's market so it fits the country.
+    var opsChiefName: String {
+        let male = stableHash(state.airlineName + "chief·g") % 2 == 0
+        let firsts = Balance.firstNames(country: state.country, male: male)
+        let lasts = Balance.lastNames(country: state.country)
+        return "\(stablePick(firsts, seed: state.airlineName + "chief·f")) "
+             + "\(stablePick(lasts, seed: state.airlineName + "chief·l"))"
+    }
+
+    /// The single most useful thing to do this week, in the ops chief's
+    /// voice (GDD §38). Priority: safety → bleeding cash → morale → slipping
+    /// routes → idle metal → aging fleet → all-clear.
+    var opsChiefBriefing: String {
+        if let p = state.fleet.first(where: {
+            $0.status == .assigned && $0.wear >= Balance.wearDangerThreshold
+        }) {
+            return "\(p.displayName) is flying dangerously worn. Get it into the hangar before we lose it."
+        }
+        if let losing = routesNeedingAttention.first(where: \.critical) {
+            return "\(losing.title) is losing money. Re-price it or trim the schedule."
+        }
+        if let role = strikeRiskPools.first {
+            return "\(role.displayName) morale is dangerously low. A raise or a hire settles them before a walkout."
+        }
+        if let slipping = routesNeedingAttention.first {
+            return "\(slipping.title): \(slipping.reason.lowercased()). Worth a look this week."
+        }
+        if let idle = state.fleet.first(where: { $0.status == .idle }) {
+            return "\(idle.displayName) is parked idle. Put it on a route and it starts earning."
+        }
+        if let old = agingAircraft.first {
+            return "\(old.displayName) is getting on in years. Worth planning its replacement."
+        }
+        if let rival = nextRival {
+            return "All quiet on the network. Bank the profit, or set your sights on \(rival.name) up the ladder."
+        }
+        return "All quiet, and no one left above us. Enjoy the view from the top."
     }
 
     /// Give a plane a personal name (GDD §29); empty clears it back to tail.

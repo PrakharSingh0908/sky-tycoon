@@ -31,6 +31,9 @@ struct RootView: View {
     @State private var seenAmbitions: Set<String>?
     // Rival-overtake moment (GDD §29).
     @State private var overtook: String?
+    // Grand-honor ceremony + record-week brag (GDD §38).
+    @State private var honorAward: HonorAward?
+    @State private var recordProfit: Double?
 
     enum GameTab: Hashable {
         case dashboard, fleet, routes, people, money
@@ -156,6 +159,31 @@ struct RootView: View {
             try? await Task.sleep(for: .seconds(3.5))
             withAnimation(.easeOut(duration: 0.5)) { overtook = nil }
         }
+        // ── Record week: a genuine career-best, bragged (GDD §38) ─────────
+        .overlay(alignment: .top) {
+            if let recordProfit {
+                CelebrationBanner(title: "Best week ever",
+                                  subtitle: "\(recordProfit.money) banked — a new record",
+                                  accent: Theme.profit, icon: "chart.line.uptrend.xyaxis")
+                    .padding(.top, 4)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .onChange(of: engine.state.lastRecordProfit) { _, new in
+            guard let profit = new else { return }
+            withAnimation(.snappy) { recordProfit = profit }
+        }
+        .task(id: recordProfit) {
+            guard recordProfit != nil else { return }
+            try? await Task.sleep(for: .seconds(3.5))
+            withAnimation(.easeOut(duration: 0.5)) { recordProfit = nil }
+        }
+        // ── Grand-honor ceremony: #1, flag carrier (GDD §38) ──────────────
+        .onChange(of: engine.state.lastHonor) { _, new in
+            guard let id = new else { return }
+            honorAward = makeHonorAward(for: id)
+        }
+        .sheet(item: $honorAward) { HonorCeremonyView(award: $0) }
         // ── Quarter close: the report card moment ─────────────────────────
         .onChange(of: engine.state.letters.count) { old, new in
             guard new > old, let latest = engine.state.letters.last else { return }
@@ -167,6 +195,20 @@ struct RootView: View {
                               streak: engine.state.consecutiveProfitableQuarters,
                               reputation: engine.state.reputation,
                               auntName: engine.state.country.auntName)
+        }
+    }
+
+    /// Builds the ceremony copy for a grand honor (GDD §38).
+    private func makeHonorAward(for id: String) -> HonorAward {
+        let airline = engine.state.airlineName
+        let country = engine.state.country.displayName
+        switch id {
+        case "rank1":
+            return HonorAward(id: id, title: "Top of the Table",
+                              subtitle: "\(airline) is the number-one carrier in \(country). No one flies above you.")
+        default:
+            return HonorAward(id: id, title: "Flag Carrier",
+                              subtitle: "\(airline) now serves every city in \(country).")
         }
     }
 

@@ -1278,3 +1278,43 @@ or two planes make inspecting a route a quiet little moment.
   plane just reached — destination at the half-lap, origin at the wrap.
 All still pure UI, frozen on pause / Reduce Motion, within the same 40-
 plane budget.
+
+
+## §38 — Phase-1 win moments & a second voice (2026-07-22)
+
+Three cheap, high-payoff pieces of the fun roadmap: a ceremony for the
+career-defining wins, a record-week brag, and an ops-chief voice that
+tells you the one thing worth doing.
+
+### Grand-honor ceremony
+Two honors now trigger a full-screen ceremony (a gold medallion that
+springs in — the "punch" the polish audit found missing): reaching **#1**
+on the industry ladder, and becoming the **flag carrier** (serving every
+city in the home country). `checkHonors()` runs at `closeWeek` after the
+records pass; `state.honorsAwarded` awards each once, and — like the
+ambition ladder — the FIRST encounter grandfathers whatever's already true
+UNANNOUNCED, so loading a grown airline doesn't fire a stale ceremony. The
+transient `state.lastHonor` drives a `.sheet` in RootView; the ceremony
+copy is built in the UI (country/airline names), so the engine stays
+formatting-free.
+
+### Record-week brag
+`updateRecords` now flags a new **best week** that beats the prior best by
+≥20% (real money ≥ $50K), at most once every 13 weeks — a quarterly
+cooldown that keeps it a genuine "career best" moment, not a growth-spurt
+spammer. It sets `state.lastRecordProfit` (raw Double; the UI formats via
+`.money`), shown as a `CelebrationBanner`.
+
+### Ops-chief briefing
+A second character beside the aunt. `opsChiefName` is a stable,
+country-appropriate name (same pools as rival spokespeople). `opsChiefBriefing`
+returns the single highest-value action in the chief's voice, by priority:
+a plane flying dangerously worn → a route losing money → a pool at
+strike-risk morale → a slipping route → idle metal → an aging airframe →
+an all-clear (nudging the next rival, or a nod from the top of the table).
+It reuses existing signals (`routesNeedingAttention`, `strikeRiskPools`,
+`agingAircraft`, wear) — no new sim state — and rides a card at the top of
+HQ once the airline is flying.
+
+All three respect the no-formatting-in-Simulation rule and save-compat
+(new fields optional, nil-grandfathered).

@@ -39,6 +39,79 @@ struct CelebrationBanner: View {
     }
 }
 
+// ── HonorCeremony — the rare, game-defining wins (GDD §38) ───────────────
+
+/// A grand honor to celebrate full-screen: reaching #1, becoming flag carrier.
+struct HonorAward: Identifiable {
+    let id: String          // "rank1" | "flagCarrier"
+    let title: String
+    let subtitle: String
+    var icon: String { id == "rank1" ? "crown.fill" : "flag.checkered" }
+}
+
+/// A full-screen ceremony with a gold medallion that pops in — reserved for
+/// the handful of moments that define a whole campaign.
+struct HonorCeremonyView: View {
+    @Environment(\.dismiss) private var dismiss
+    let award: HonorAward
+    @State private var appear = false
+
+    private let gold = Color(red: 0.85, green: 0.68, blue: 0.30)
+
+    var body: some View {
+        VStack(spacing: 22) {
+            Spacer()
+            ZStack {
+                Circle().fill(gold.opacity(0.14)).frame(width: 168, height: 168)
+                    .blur(radius: 12)
+                Circle()
+                    .fill(LinearGradient(colors: [gold.opacity(0.95),
+                                                  gold.opacity(0.45)],
+                                         startPoint: .top, endPoint: .bottom))
+                    .frame(width: 120, height: 120)
+                Circle().strokeBorder(.white.opacity(0.6), lineWidth: 1.5)
+                    .frame(width: 120, height: 120)
+                Image(systemName: award.icon)
+                    .font(.system(size: 52, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.35), radius: 2, y: 1)
+            }
+            .scaleEffect(appear ? 1 : 0.55)
+            .opacity(appear ? 1 : 0)
+
+            VStack(spacing: 8) {
+                Text(award.title)
+                    .font(.display(.largeTitle)).foregroundStyle(Theme.textPrimary)
+                    .multilineTextAlignment(.center)
+                Text(award.subtitle)
+                    .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 28)
+            }
+            .opacity(appear ? 1 : 0)
+
+            Spacer()
+            Button {
+                dismiss()
+            } label: {
+                Text("Take a bow").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(GameButtonStyle(color: gold, prominent: true))
+            .padding(.horizontal, Theme.gutter)
+            .padding(.bottom, 20)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Theme.bgElevated)
+        .presentationBackground(Theme.bgElevated)
+        .preferredColorScheme(.dark)
+        .holdsSimClock()
+        .task {
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) { appear = true }
+        }
+    }
+}
+
 // ── QuarterReportCard — the quarter close as a moment ────────────────────
 
 struct QuarterReportCard: View {
@@ -134,6 +207,17 @@ struct QuarterReportCard: View {
             TickerText(text: value, font: .game(.subheadline, weight: .bold), color: color)
         }
     }
+}
+
+#Preview("Honor ceremony") {
+    Color.black.ignoresSafeArea()
+        .sheet(isPresented: .constant(true)) {
+            HonorCeremonyView(award: HonorAward(
+                id: "rank1", title: "Top of the Table",
+                subtitle: "Aunt Air is the number-one carrier in India. No one flies above you."))
+                .environment(GameEngine.previewGame())
+        }
+        .preferredColorScheme(.dark)
 }
 
 #Preview("Banner") {

@@ -52,6 +52,8 @@ struct DashboardView: View {
             // same machined housing, until the airline flies.
             if !firstFlightDone { firstFlightCard }
             if engine.state.reputation < 2.0 { reputationCollapseBanner }
+            // The ops chief's one-line read on what most wants doing (§38).
+            if firstFlightDone { opsBriefingCard }
             // Finances leads the board, above the ops desk.
             trendsCard
             // Your Desk (§34): news, eroding routes (§26), timed effects,
@@ -375,6 +377,35 @@ struct DashboardView: View {
     }
 
     // ── Marketing (§34): buy awareness, awareness buys demand — an HQ call.
+    // ── Ops-chief briefing (GDD §38): the one thing worth doing ──────────
+    private var opsBriefingCard: some View {
+        GameCard {
+            HStack(alignment: .top, spacing: 12) {
+                ZStack {
+                    Circle().fill(Theme.bg)
+                    Circle().strokeBorder(Theme.hairline, lineWidth: 1)
+                    Image(systemName: "person.fill")
+                        .font(.headline).polishedSilver()
+                }
+                .frame(width: 40, height: 40)
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 6) {
+                        Text(engine.opsChiefName)
+                            .font(.game(.subheadline, weight: .semibold))
+                            .foregroundStyle(Theme.textPrimary)
+                        Text("OPS CHIEF")
+                            .font(.data(.caption2)).tracking(0.85)
+                            .foregroundStyle(Theme.textSecondary)
+                    }
+                    Text(engine.opsChiefBriefing)
+                        .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+            }
+        }
+    }
+
     private var marketingCard: some View {
         GameCard {
             SectionHeader(title: "Marketing", icon: "megaphone.fill", accent: accent)

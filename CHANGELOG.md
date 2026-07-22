@@ -7,6 +7,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Win moments + an ops chief who tells you what matters (GDD §38)
+
+- **Grand-honor ceremony.** Reaching **#1 in your country** or becoming the **flag carrier** (serving every city at home) now triggers a full-screen ceremony with a gold medallion that springs in. Reserved for the handful of moments that define a whole campaign.
+- **Record-week brag.** Smash your best-ever week (by a healthy margin, at most once a quarter) and a banner marks it — a genuine "career best," not spam.
+- **Ops-chief briefing.** A new voice at the top of HQ — your ops chief — reads the one thing most worth doing this week, in plain words: a plane flying dangerously worn, a route losing money, morale about to snap, a slipping route, a plane sitting idle, or an all-clear. It's a second character beside your aunt.
+
+*Why:* the cheap, high-payoff win-moments from the fun roadmap. The game now celebrates its biggest milestones properly and always has a clear, human answer to "what should I do next?"
+
+
 ## Living map, part two: trails, breathing routes, arrival rings (GDD §37)
 
 - **Comet trails** now streak behind each plane, so motion and direction read instantly.
