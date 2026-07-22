@@ -310,9 +310,22 @@ struct RouteMapView: View {
 
             let color = color(for: route)
             let coreWidth = 1.5 + CGFloat(route.weeklyFrequency) / 28.0 * 3.0
-            let dash: [CGFloat] = staffedRouteIDs.contains(route.id) ? [] : [6, 6]
-            ctx.stroke(arc, with: .color(color.opacity(0.30)),
-                       style: StrokeStyle(lineWidth: coreWidth + 4, lineCap: .round, dash: dash))
+            let staffed = staffedRouteIDs.contains(route.id)
+            let dash: [CGFloat] = staffed ? [] : [6, 6]
+            // Load-factor "breathing": a fuller staffed route pulses a wider,
+            // brighter glow; planned routes stay steady. Per-route phase so
+            // the network doesn't throb in unison.
+            var glowAlpha = 0.30
+            var glowWidth = coreWidth + 4
+            if staffed && !reduceMotion {
+                let lf = min(1, max(0, route.lastLoadFactor))
+                let off = Double(abs(route.id.hashValue) % 997) / 997.0 * 2 * .pi
+                let pulse = 0.5 + 0.5 * sin(flightPhase * 1.4 + off)
+                glowAlpha = 0.30 + 0.28 * lf * pulse
+                glowWidth = coreWidth + 4 + CGFloat(7 * lf * pulse)
+            }
+            ctx.stroke(arc, with: .color(color.opacity(glowAlpha)),
+                       style: StrokeStyle(lineWidth: glowWidth, lineCap: .round, dash: dash))
             ctx.stroke(arc, with: .color(color),
                        style: StrokeStyle(lineWidth: coreWidth, lineCap: .round, dash: dash))
         }
@@ -410,7 +423,7 @@ struct RouteMapView: View {
         let candidates = (focusRoute.map { [$0] } ?? engine.state.routes)
             .filter { staffed.contains($0.id) && $0.weeklyFrequency > 0 }
             .sorted { $0.weeklyFrequency > $1.weeklyFrequency }
-        let traversal = 6.0          // seconds end-to-end at x1
+        let roundTrip = 8.0          // seconds out-and-back at x1
         var budget = 40              // global plane cap (perf)
         for route in candidates {
             guard budget > 0,
@@ -419,24 +432,71 @@ struct RouteMapView: View {
             // ~1 plane per daily departure, capped at 3.
             let daily = Int((Double(route.weeklyFrequency) / 7.0).rounded())
             let count = min(budget, min(3, max(1, daily)))
-            // A stable per-route offset spaces this route's planes apart and
-            // desyncs routes from one another.
+            let col = color(for: route)
+            // A stable per-route offset spaces this route's planes around the
+            // cycle and desyncs routes from one another.
             let jitter = Double(abs(route.id.hashValue) % 997) / 997.0
             for i in 0..<count {
                 budget -= 1
                 let offset = (Double(i) / Double(count) + jitter)
                     .truncatingRemainder(dividingBy: 1.0)
-                let base = (flightPhase / traversal + offset)
+                // One lap is a full round trip: out (0→0.5) then back
+                // (0.5→1), so a plane shuttles smoothly and never teleports,
+                // and a single plane naturally shows both directions.
+                let lap = (flightPhase / roundTrip + offset)
                     .truncatingRemainder(dividingBy: 1.0)
-                // Busy routes fly both ways; a lone plane goes one way.
-                let backward = count >= 2 && i % 2 == 1
-                let t = backward ? 1.0 - base : base
+                let outbound = lap < 0.5
+                let t = outbound ? lap * 2 : (1 - lap) * 2
+                let paramDir = outbound ? 1.0 : -1.0
                 let pos = bezier(p1, c, p2, t)
                 var tan = bezierTangent(p1, c, p2, t)
-                if backward { tan = CGPoint(x: -tan.x, y: -tan.y) }
+                if !outbound { tan = CGPoint(x: -tan.x, y: -tan.y) }
+
+                drawArrivalRipple(ctx: &ctx, lap: lap, origin: p1, dest: p2, color: col)
+                drawTrail(ctx: &ctx, p1: p1, c: c, p2: p2, t: t, paramDir: paramDir)
                 drawPlane(ctx: &ctx, at: pos, angle: atan2(tan.y, tan.x))
             }
         }
+    }
+
+    /// A short fading streak trailing the plane along the arc.
+    private func drawTrail(ctx: inout GraphicsContext, p1: CGPoint, c: CGPoint,
+                           p2: CGPoint, t: Double, paramDir: Double) {
+        let steps = 6
+        let dl = 0.03
+        var pts = [bezier(p1, c, p2, t)]
+        for k in 1...steps {
+            let tt = min(1, max(0, t - paramDir * dl * Double(k)))
+            pts.append(bezier(p1, c, p2, tt))
+        }
+        var path = Path()
+        path.addLines(pts)
+        ctx.stroke(path,
+                   with: .linearGradient(
+                       Gradient(colors: [.white.opacity(0.5), .white.opacity(0)]),
+                       startPoint: pts.first!, endPoint: pts.last!),
+                   style: StrokeStyle(lineWidth: 2.4, lineCap: .round))
+    }
+
+    /// A quick expanding ring at whichever endpoint the plane just reached —
+    /// destination at the half-lap, origin at the wrap.
+    private func drawArrivalRipple(ctx: inout GraphicsContext, lap: Double,
+                                   origin: CGPoint, dest: CGPoint, color: Color) {
+        let w = 0.09
+        let hit: (CGPoint, Double)?
+        if lap >= 0.5 && lap < 0.5 + w {
+            hit = (dest, (lap - 0.5) / w)
+        } else if lap < w {
+            hit = (origin, lap / w)
+        } else {
+            hit = nil
+        }
+        guard let (center, prog) = hit else { return }
+        let rr = 3 + prog * 9
+        ctx.stroke(Path(ellipseIn: CGRect(x: center.x - rr, y: center.y - rr,
+                                          width: rr * 2, height: rr * 2)),
+                   with: .color(color.opacity(0.5 * (1 - prog))),
+                   lineWidth: 1.5)
     }
 
     /// A small dart, nose along +x at angle 0, with a dark outline so it

@@ -1261,6 +1261,20 @@ aren't looking").
 Full-network map AND the single-route focus map (Route Detail), where one
 or two planes make inspecting a route a quiet little moment.
 
-### Deferred to A3.2
-Comet trails, load-factor arc "breathing," and an arrival ripple at the
-destination dot — to be judged on device before adding.
+### A3.2 — embellishments + the round-trip fix (2026-07-22)
+- **Round-trip shuttle.** A3.1's planes wrapped 1→0 and snapped from
+  destination back to origin. A lap is now a full out-and-back (out 0→0.5,
+  back 0.5→1): a plane shuttles smoothly and never teleports, and a SINGLE
+  plane naturally shows both directions (staggered offsets keep a
+  multi-plane route busy in both). Lap time ~8s at x1.
+- **Comet trails.** A short white streak trails each nose, sampled along
+  the same bezier and faded with a linear gradient — reads motion and
+  direction at a glance.
+- **Load-factor breathing.** A staffed arc's glow underlay pulses wider and
+  brighter with `lastLoadFactor` (per-route phase so the network doesn't
+  throb in unison); planned routes stay steady. Zero-amplitude on empty
+  routes, so it only shows where planes actually fill seats.
+- **Arrival ripples.** A quick expanding ring at whichever endpoint the
+  plane just reached — destination at the half-lap, origin at the wrap.
+All still pure UI, frozen on pause / Reduce Motion, within the same 40-
+plane budget.

@@ -7,6 +7,16 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Living map, part two: trails, breathing routes, arrival rings (GDD §37)
+
+- **Comet trails** now streak behind each plane, so motion and direction read instantly.
+- **Routes breathe with how full they are** — a staffed arc's glow pulses wider and brighter the higher its load factor; empty and planned routes stay steady, so the map shows you where the money is at a glance.
+- **Arrival rings** ripple at an airport the moment a plane touches down.
+- **Fixed a snap from part one:** planes now fly a smooth **round trip** (out and back) instead of jumping from the destination back to the origin at the end of a lap. A single plane now shows both directions on its own.
+
+*Why:* the follow-up polish on the living map, judged on device after the core motion. Small touches, but they're the difference between "dots slide along lines" and "an airline operating."
+
+
 ## The living map: planes fly your routes (GDD §37)
 
 - The globe is no longer static. While time runs, **aircraft glide along your staffed routes**, nose pointed the way they're travelling. Busy trunk routes buzz with up to three planes and fly both directions; a thin feeder shows one. Planned (unstaffed) routes stay dashed and empty, so you can tell at a glance what's actually flying. **Pause and everything freezes**; x2 speeds the tempo to match the clock. Shows on both the network map and a route's own focus map.
