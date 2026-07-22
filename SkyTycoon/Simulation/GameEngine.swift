@@ -479,8 +479,10 @@ final class GameEngine {
                     let spec = Balance.specs[plane.type]!
                     let hours = route.distanceKm / spec.cruiseKmh * Double(route.weeklyFrequency) * 2
                     let fatigue = 0.7 + pow(state.fleet[idx].wear / 100, 1.5)
+                    // Slower accrual (2026-07-21): planes wear ~30% slower so
+                    // neglect is a slow-burn risk, not a fast one.
                     state.fleet[idx].wear = min(100, state.fleet[idx].wear
-                        + hours * 0.05 * fatigue
+                        + hours * Balance.wearPerBlockHour * fatigue
                         * (1.5 - state.fleet[idx].condition / 200) * f)
                 }
             }

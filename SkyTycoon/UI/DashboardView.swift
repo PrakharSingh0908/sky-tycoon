@@ -52,10 +52,11 @@ struct DashboardView: View {
             // same machined housing, until the airline flies.
             if !firstFlightDone { firstFlightCard }
             if engine.state.reputation < 2.0 { reputationCollapseBanner }
+            // Finances leads the board, above the ops desk.
+            trendsCard
             // Your Desk (§34): news, eroding routes (§26), timed effects,
             // and the fleet that needs a look — the whole ops board in one.
             if hqHasContent { headquartersCard }
-            trendsCard
             industryCard
             // Marketing lives at HQ now (§34) — an ongoing brand decision.
             marketingCard
