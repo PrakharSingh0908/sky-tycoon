@@ -9,7 +9,7 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ## Bigger tap targets on the speed keys
 
-- The pause / x1 / x2 keys are easier to hit — each key's tap area now extends well above and below the key. The keys and the clock pill look exactly the same size; only the (invisible) touch surface grew.
+- The pause / x1 / x2 keys are easier to hit — each key's tap area now extends well above and below the key, and the x2 key's target also reaches to the right into the space past the pill. The keys and the clock pill look exactly the same size; only the (invisible) touch surface grew.
 
 *Why:* per request — the little speed keys were fiddly to tap without enlarging the chrome.
 

@@ -184,14 +184,18 @@ struct SpeedControl: View {
                         // Grow the tappable area vertically (transparent) so
                         // these small keys are easy to hit; the visible pill
                         // stays 28×26 and the row's height is collapsed below
-                        // so the chrome doesn't grow.
+                        // so the chrome doesn't grow. The last key (x2) also
+                        // extends to the RIGHT, into the free space past the
+                        // pill, reabsorbed below so the pill width is unchanged.
                         .padding(.vertical, 11)
+                        .padding(.trailing, speed == .x2 ? 16 : 0)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
         }
-        .frame(height: 26)     // visible height unchanged; keys overflow for touch
+        .frame(height: 26)             // visible height unchanged; keys overflow for touch
+        .padding(.trailing, -16)       // reabsorb x2's trailing hit so the pill width is unchanged
         .padding(3)
         .background(Theme.bg, in: RoundedRectangle(cornerRadius: Theme.corner))
         .sensoryFeedback(.selection, trigger: engine.speed)
