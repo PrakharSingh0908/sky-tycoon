@@ -321,15 +321,17 @@ struct Aircraft: Codable, Identifiable {
     var comfortScore: Double {
         (0.32 + cabin.comfort * 0.60) * (0.7 + 0.3 * condition / 100.0)
     }
-    /// A 1...5 star rating for the onboard experience (GDD §40): the cabin
-    /// comfort and airframe condition (comfortScore), pulled down by heavy
-    /// wear and old age — what a passenger would give this aircraft.
-    var serviceRating: Double {
-        let wearPenalty = wear / 100 * 0.15               // up to −0.15 thrashed
+    /// 0...1 onboard quality (GDD §40): cabin comfort and condition
+    /// (comfortScore), pulled down by heavy wear and old age. This is what
+    /// passengers actually judge — it feeds route satisfaction and the
+    /// competition appeal, and is shown to the player as the flight rating.
+    var experienceScore: Double {
+        let wearPenalty = wear / 100 * 0.15                       // up to −0.15 thrashed
         let agePenalty = min(0.12, max(0, ageYears - 12) * 0.01)  // dips after 12y
-        let score = max(0, min(1, comfortScore - wearPenalty - agePenalty))
-        return 1 + score * 4
+        return max(0, min(1, comfortScore - wearPenalty - agePenalty))
     }
+    /// The same quality as a 1...5 star flight rating for the UI.
+    var serviceRating: Double { 1 + experienceScore * 4 }
 }
 
 /// A second-hand aircraft for sale (GDD §4.1). MVP: condition is visible

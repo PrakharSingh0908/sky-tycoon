@@ -463,7 +463,7 @@ final class GameEngine {
                                         profile: profile,
                                         fuelEventMult: fuelEventMult,
                                         demandEventMult: demandEventMult)
-            var avgComfort = activePlanes.map(\.comfortScore).reduce(0, +)
+            var avgComfort = activePlanes.map(\.experienceScore).reduce(0, +)
                 / Double(activePlanes.count)
             avgComfort = min(1, avgComfort)
             let catering = route.catering ?? CateringLevel.none
@@ -970,7 +970,7 @@ final class GameEngine {
             ?? Double(Balance.competitorCount(origin, dest))
         let affluence = (origin.businessIndex + dest.businessIndex) / 2
         var comfort = planes.isEmpty ? 0.4
-            : planes.map(\.comfortScore).reduce(0, +) / Double(planes.count)
+            : planes.map(\.experienceScore).reduce(0, +) / Double(planes.count)
         comfort = min(1, comfort)
         let priceValue = max(0, min(1, 1.5 - priceRatio))   // cheap = appealing
         // Affluent pairs weigh comfort over price; budget pairs the reverse.

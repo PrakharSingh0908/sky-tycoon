@@ -1487,3 +1487,14 @@ pass. It moves the instant you refit a cabin, run a check, or as a jet ages
 — a legible reason to invest in the cabin architect and keep airframes fresh.
 A top cabin on a pristine new jet approaches 5★; a thrashed old economy
 layout bottoms near 1★.
+
+### §40 addendum — the rating drives passengers (2026-07-24)
+The flight rating is no longer just a readout: the sim now reads
+`Aircraft.experienceScore` (the rating's 0…1 form) as the comfort term in
+BOTH route satisfaction (the 25% comfort weight) and the competition appeal
+that sets capture share — replacing the raw `comfortScore` it used before.
+So what passengers respond to is exactly the stars the player sees, and the
+wear/age dips now bite share and satisfaction directly (not only via slow
+condition decay). No double-count: it's a substitution, not an added term.
+Effect is light (≤0.27 swing for a thrashed old airframe), rewarding a
+fresh, well-appointed fleet in line with the anti-idle thesis (§26).
