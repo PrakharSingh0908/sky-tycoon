@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Workload shown as a vertical red gauge
+
+- On the People tab, each pool's workload is now a small **vertical gauge that fills red with the load** (full = at roster capacity, overwork pinned at the top), beside the percentage, instead of a horizontal bar. Happiness keeps its meter.
+
+*Why:* per request.
+
+
 ## Tidier Your Desk
 
 - The desk was piling route alerts, worn-plane warnings, timed effects, and the news into one undifferentiated stack. It's now grouped under quiet labels: **NEEDS ATTENTION** (routes, worn/aging aircraft) and **IN FORCE** (active demand/fuel effects), with the Gazette below. Same information, far easier to scan.
