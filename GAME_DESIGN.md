@@ -1388,3 +1388,31 @@ founder being bought whole for pocket change.
   Player economics are untouched, so no §26 balance regression.
 - Tuning (`rivalWeeklyGrowth` spread, noise, floor) lives in Balance; widen
   later if the movement should bite harder in play.
+
+### Phase 2 shipped — rivals act (2026-07-23)
+- **Named route incursions.** `Route.contender: String?`. In `closeWeek`, a
+  flying route whose `rivalPressure` climbs to `floor + 0.75` gets a named
+  challenger (cleared when it recedes to `floor + 0.4`). The name is a
+  size-appropriate peer (`incursionRival` — a giant won't bother a minnow;
+  a founder draws from the smallest carriers), seeded on the CITY PAIR (not
+  the route UUID) so it's fully deterministic across runs. The threshold was
+  lowered from `floor + 1` because elasticity caps how fat a route gets, so
+  `+1` was effectively unreachable (and had left the old "New competition"
+  attention signal near-dead too).
+- **News + attention.** The first new incursion each week posts a Gazette
+  headline (`incursionStories`/`incursionHeadlines`), and
+  `routesNeedingAttention` now flags "{rival} moved in" whenever a route has
+  a contender.
+- **Crew poaching.** `rivalPoachSweep` — once you field ≥6 crew and a
+  contender is active, a small weekly seeded chance (`rivalPoachChancePerWeek
+  = 3.5%`) that the raider hires away your HIGHEST-PAID member of a random
+  pool. Posts a Gazette headline; deterministic (seeded), placed after the
+  existing RNG draws so their outcomes are unchanged for a seed.
+- **Nemesis.** `state.nemesis` tracks the carrier just above you; the
+  standing Gazette jab now names your BUSIEST route (`nemesisJabs`) so it
+  reads personal.
+- Verified in-engine: a fat, high-yield, low-floor route pulls a named,
+  size-appropriate contender, posts the headline, and flags attention — and
+  the whole thing (caps, contenders, news) replays identically.
+- Player economics untouched (incursions only NAME the existing pressure);
+  the poach is the one new material consequence, kept rare.

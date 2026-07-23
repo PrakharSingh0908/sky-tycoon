@@ -421,6 +421,10 @@ struct Route: Codable, Identifiable {
     /// ramps up over a few weeks rather than arriving full. Optional for
     /// save-compat (nil → treated as fully mature, so old routes are unhurt).
     var openedOn: GameDate? = nil
+    /// Living Rivals (GDD §39 Pillar 2): the named carrier currently
+    /// contesting this pair, set when pressure climbs past the floor and
+    /// cleared when it recedes. nil = no named challenger right now.
+    var contender: String? = nil
 }
 
 enum StaffRole: String, Codable, CaseIterable, Identifiable {
@@ -924,6 +928,9 @@ struct GameState: Codable {
     /// weekly so the ladder moves under you. nil seeds from the static ladder
     /// on the first close (save-compat: old saves start from today's caps).
     var rivalCaps: [String: Double]? = nil
+    /// The carrier directly above you — your nemesis (GDD §39 Pillar 2). Its
+    /// jabs get personal and reference your busiest route.
+    var nemesis: String? = nil
     /// The most recent notable carrier overtaken, for the celebration banner.
     var lastOvertakenRival: String? = nil
     /// Personal bests (GDD §29).

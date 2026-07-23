@@ -7,6 +7,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Rivals fight back (GDD §39, Phase 2)
+
+- **Rivals now move onto your best routes by name** — when a fat, well-priced pair draws competition, a size-appropriate carrier is named as the challenger ("Monsoon Airways opened DEL ✈︎ BOM against you"), posted to the Gazette and flagged on your desk as "{rival} moved in." Defend your share (re-price, add capacity, lift service) or cede it.
+- **A rival can poach your best person** — occasionally, while a contender is active, they hire away your highest-paid crew member, with a headline to match. Rare, but it stings.
+- **Your nemesis got personal** — the carrier just above you now taunts you by name about your busiest route.
+
+*Why:* Phase 2 of Living Rivals. The ladder isn't just moving now, it's reaching onto your routes and into your crew room.
+
+
 ## The rival ladder is alive (GDD §39, Phase 1)
 
 - **Rival airlines' market caps now drift week to week** — some carriers climb, some stall, a few slip back — so the ladder moves under you instead of standing still. Your rank, the rivals you overtake, and the rung-based ambitions all reflect the living ladder now. It's the groundwork for rivals that actively fight you (and, later, invest in you). Fully deterministic; existing saves pick up from today's standings.

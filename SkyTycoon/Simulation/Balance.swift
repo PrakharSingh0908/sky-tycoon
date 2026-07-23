@@ -829,6 +829,29 @@ enum Balance {
     static let overtakenHeadlines = ["RIVAL REACTS", "SOUR GRAPES", "STUNG", "NO COMMENT"]
     static let jabHeadlines = ["EYES ON YOU", "BIG TALK", "PUNCHING DOWN"]
 
+    // ── Rivals act (GDD §39 Pillar 2) ────────────────────────────────────
+    /// Weekly chance a contender poaches one of your better people (only
+    /// once you have a real crew and a rival is contesting a route).
+    static let rivalPoachChancePerWeek = 0.035
+    /// Placeholders: {rival}, {route}, {role}, {name}.
+    static let incursionStories = [
+        "\"{rival} has launched flights on {route}, going straight for your passengers.\"",
+        "\"{rival} is muscling onto {route}. The fare war starts now.\"",
+        "\"{rival} opened {route} against you. Defend your share or cede it.\"",
+    ]
+    static let poachStories = [
+        "\"{rival} has hired away your {role}, {name}.\"",
+        "\"{name} has jumped ship from your {role} to {rival}.\"",
+    ]
+    /// Nemesis jabs that name your busiest route. Placeholders {rival}, {route}.
+    static let nemesisJabs = [
+        "\"{route}? Enjoy it while it lasts. We're coming for it.\"",
+        "\"We've flown circles around better than {rival} on {route}.\"",
+        "\"Cute network. {route} is the first thing we'll take.\"",
+    ]
+    static let incursionHeadlines = ["NEW ROUTE FIGHT", "THEY'VE MOVED IN", "FARE WAR"]
+    static let poachHeadlines = ["POACHED", "TALENT RAID", "THEY TOOK ONE"]
+
     // CEO bylines are drawn from the campaign's country name lists
     // (firstNames/lastNames) so rivals read local to the market (§34).
 

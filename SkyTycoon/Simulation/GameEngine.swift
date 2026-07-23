@@ -645,6 +645,7 @@ final class GameEngine {
         // they can leave any time.
         let compProfile = Balance.countryProfiles[state.country]!
         let pastGrace = state.date.totalWeeks > Balance.rivalEntryGraceWeeks
+        var newIncursion: (rival: String, route: String)? = nil
         for i in state.routes.indices {
             let route = state.routes[i]
             guard let origin = city(route.originID),
@@ -661,8 +662,21 @@ final class GameEngine {
             if target < pressure || pastGrace {
                 pressure += (target - pressure) * Balance.rivalDriftRate
             }
-            state.routes[i].rivalPressure = max(0, min(Balance.rivalMaxPerRoute, pressure))
+            let finalPressure = max(0, min(Balance.rivalMaxPerRoute, pressure))
+            state.routes[i].rivalPressure = finalPressure
+            // Named incursion (GDD §39 P2): a rival moves onto a fat pair and
+            // gets a face; it recedes (and clears) when pressure falls back.
+            if flying, pastGrace, finalPressure >= floor + 0.75, state.routes[i].contender == nil {
+                let name = incursionRival(routeKey: "\(route.originID)-\(route.destinationID)")
+                state.routes[i].contender = name
+                if newIncursion == nil {
+                    newIncursion = (name, "\(route.originID) ✈︎ \(route.destinationID)")
+                }
+            } else if finalPressure <= floor + 0.4 {
+                state.routes[i].contender = nil
+            }
         }
+        if let inc = newIncursion { postIncursionNews(rival: inc.rival, route: inc.route) }
 
         // Auto-service (GDD §36): opt-in autopilot sends any plane past the
         // threshold in for a line check BEFORE the crash sweep, so a
@@ -801,8 +815,11 @@ final class GameEngine {
             state.completedMilestones.insert(milestone.id)
             state.cash += milestone.reward
         }
-        // Living competition (GDD §39): the ladder drifts before we read it.
+        // Living competition (GDD §39): the ladder drifts before we read it,
+        // a contender may raid your crew, and your nemesis is refreshed.
         driftRivals()
+        rivalPoachSweep()
+        state.nemesis = nextRival?.name
         // Ambition ladder (GDD §26 Pillar 5): pay newly-reached rungs.
         checkAmbitions()
         // Rival overtakes + personal bests (GDD §29).
@@ -1030,12 +1047,10 @@ final class GameEngine {
                 return RouteAttention(id: route.id, title: title,
                                       reason: "Load factor slipping", critical: false)
             }
-            // New competition has moved in above the structural floor.
-            if let origin = city(route.originID), let dest = city(route.destinationID),
-               let p = route.rivalPressure,
-               p > Double(Balance.competitorCount(origin, dest)) + 1 {
+            // A named rival has moved onto the pair (GDD §39 P2).
+            if let contender = route.contender {
                 return RouteAttention(id: route.id, title: title,
-                                      reason: "New competition", critical: false)
+                                      reason: "\(contender) moved in", critical: false)
             }
             // Flying half-empty — capacity or fare is wrong.
             if route.lastLoadFactor < 0.45 {
@@ -2696,6 +2711,67 @@ final class GameEngine {
         state.rivalCaps = caps
     }
 
+    /// Picks the carrier that moves onto a contested route: a peer near your
+    /// own size reads most plausibly. Deterministic (stable per-route hash),
+    /// so an incursion doesn't reshuffle under the player.
+    private func incursionRival(routeKey: String) -> String {
+        let cap = marketCap
+        let sorted = currentRivals.sorted { $0.marketCap < $1.marketCap }
+        // Plausible challengers are near your size — a giant won't bother a
+        // minnow's pair. A founder (no peers this small) draws from the
+        // smallest carriers on the ladder instead.
+        let ceiling = max(cap * 8, Balance.rivalFloorCap * 20)
+        let band = sorted.filter { $0.marketCap >= cap * 0.1 && $0.marketCap <= ceiling }
+        let pool = (band.isEmpty ? Array(sorted.prefix(8)) : band).map(\.name)
+        guard !pool.isEmpty else { return "A rival" }
+        return stablePick(pool, seed: routeKey)
+    }
+
+    private func postIncursionNews(rival: String, route: String) {
+        let story = stablePick(Balance.incursionStories, seed: rival + route)
+            .replacingOccurrences(of: "{rival}", with: rival)
+            .replacingOccurrences(of: "{route}", with: route)
+        state.pressHeadline = RivalQuote(
+            headline: stablePick(Balance.incursionHeadlines, seed: rival + route),
+            quote: story, attribution: "The Skyward Gazette")
+        state.pressHeadlineWeek = state.date.totalWeeks
+        logEvent(title: "\(rival) launched \(route) against you", isNegative: true)
+    }
+
+    /// Occasionally a contender hires away one of your better people (GDD §39
+    /// P2): only once you field a real crew and a rival is actively contesting
+    /// a route, and only rarely — a sting, not a constant drain.
+    private func rivalPoachSweep() {
+        guard state.date.totalWeeks > Balance.rivalEntryGraceWeeks,
+              let raider = state.routes.compactMap(\.contender).first else { return }
+        let totalCrew = StaffRole.allCases.reduce(0) { $0 + (state.staff[$1]?.headcount ?? 0) }
+        guard totalCrew >= 6,
+              Double.random(in: 0...1, using: &state.seedRNG) < Balance.rivalPoachChancePerWeek
+        else { return }
+        let roles = StaffRole.allCases.filter { (state.staff[$0]?.members.count ?? 0) > 0 }
+        guard let role = roles.randomElement(using: &state.seedRNG),
+              var pool = state.staff[role],
+              // They take your BEST (priciest) — it stings.
+              let idx = pool.members.indices.max(by: {
+                  pool.members[$0].weeklyWage < pool.members[$1].weeklyWage
+              }) else { return }
+        let taken = pool.members[idx]
+        pool.members.remove(at: idx)
+        pool.headcount = pool.members.count
+        recomputeAggregates(&pool)
+        state.staff[role] = pool
+        let story = stablePick(Balance.poachStories, seed: raider + taken.name)
+            .replacingOccurrences(of: "{rival}", with: raider)
+            .replacingOccurrences(of: "{role}", with: role.displayName.lowercased())
+            .replacingOccurrences(of: "{name}", with: taken.name)
+        state.pressHeadline = RivalQuote(
+            headline: stablePick(Balance.poachHeadlines, seed: raider + taken.name),
+            quote: story, attribution: "The Skyward Gazette")
+        state.pressHeadlineWeek = state.date.totalWeeks
+        logEvent(title: "\(raider) poached \(taken.name) from your \(role.displayName)",
+                 isNegative: true)
+    }
+
     private func checkRivalOvertakes() {
         let cap = marketCap
         let rivals = currentRivals
@@ -2749,9 +2825,21 @@ final class GameEngine {
         if let q = state.rivalQuote, let w = state.rivalQuoteWeek,
            state.date.totalWeeks - w <= 6 { return q }
         guard let r = nextRival else { return nil }
-        let quote = stablePick(Balance.rivalJabs, seed: r.name)
-            .replacingOccurrences(of: "{you}", with: state.airlineName)
-            .replacingOccurrences(of: "{rival}", with: r.name)
+        // Your nemesis gets personal: if you have a busy route, they name it.
+        let busiest = state.routes
+            .filter { !$0.assignedAircraftIDs.isEmpty && $0.weeklyFrequency > 0 }
+            .max { $0.lastWeeklyRevenue < $1.lastWeeklyRevenue }
+        let quote: String
+        if let busiest {
+            let routeName = "\(busiest.originID) ✈︎ \(busiest.destinationID)"
+            quote = stablePick(Balance.nemesisJabs, seed: r.name + routeName)
+                .replacingOccurrences(of: "{rival}", with: state.airlineName)
+                .replacingOccurrences(of: "{route}", with: routeName)
+        } else {
+            quote = stablePick(Balance.rivalJabs, seed: r.name)
+                .replacingOccurrences(of: "{you}", with: state.airlineName)
+                .replacingOccurrences(of: "{rival}", with: r.name)
+        }
         return RivalQuote(headline: stablePick(Balance.jabHeadlines, seed: r.name),
                           quote: quote,
                           attribution: "\(spokesperson(for: r.name)), \(r.name)")
