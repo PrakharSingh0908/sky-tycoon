@@ -89,10 +89,13 @@ struct RootView: View {
         .overlay {
             if engine.state.isBankrupt { bankruptcyOverlay }
         }
-        // The exit ending: you sold the airline (a win) — GDD §39 Phase 4.
+        // The exit ending: you sold the airline (a win). Bankruptcy always
+        // wins the screen if somehow both are set (GDD §39 Phase 4).
         .overlay {
-            if engine.state.soldOut == true { exitOverlay }
-            else if engine.state.takeoverPending == true { takeoverOverlay }
+            if !engine.state.isBankrupt {
+                if engine.state.soldOut == true { exitOverlay }
+                else if engine.state.takeoverPending == true { takeoverOverlay }
+            }
         }
         // ── Milestone celebration: a win, announced, then gone ────────────
         .overlay(alignment: .top) {
@@ -278,7 +281,7 @@ struct RootView: View {
             Text("Bid for control")
                 .font(.display(.largeTitle)).foregroundStyle(Theme.textPrimary)
                 .padding(.top, 12)
-            Text("\(raider) has crossed \(Int(Balance.takeoverStakeThreshold * 100))% and is moving to take \(engine.state.airlineName). Buy them out to keep control, or accept the offer and cash out.")
+            Text("\(raider) has crossed \(Int(Balance.takeoverStakeThreshold * 100))% and is moving to take \(engine.state.airlineName). Buy their stake back down to keep control, or accept the offer and cash out rich.")
                 .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)

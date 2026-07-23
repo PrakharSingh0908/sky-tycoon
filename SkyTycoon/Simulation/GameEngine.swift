@@ -2735,9 +2735,11 @@ final class GameEngine {
     }
 
     /// A rival whose combined stake reaches the threshold moves to take
-    /// control; the clock holds until you defend or sell.
+    /// control; the clock holds until you defend or sell. Never while the
+    /// airline is already failing — bankruptcy takes precedence.
     private func checkTakeover() {
         guard !(state.takeoverPending ?? false), !(state.soldOut ?? false),
+              !state.isBankrupt,
               rivalStake >= Balance.takeoverStakeThreshold else { return }
         state.takeoverPending = true
         speed = .paused
@@ -2747,19 +2749,33 @@ final class GameEngine {
         }
     }
 
-    /// Cost to buy the raider out entirely (at the current valuation) and
-    /// keep control.
+    /// The stake a defense buys the rival back down to — just under the
+    /// takeover line, so defending is affordable and they linger as a
+    /// minority backer (the feud can flare again later).
+    private var defendTargetStake: Double { max(0, Balance.takeoverStakeThreshold - 0.02) }
+
+    /// Cost to buy the raider's stake down below the line at the current
+    /// valuation — a partial defense, far cheaper than a full buyout.
     func defendTakeoverCost() -> Double {
-        (dealValuation * rivalStake / 10_000).rounded() * 10_000
+        (dealValuation * max(0, rivalStake - defendTargetStake) / 10_000).rounded() * 10_000
     }
     func defendTakeover() {
         let cost = defendTakeoverCost()
-        guard state.cash >= cost else { return }
+        guard state.cash >= cost, cost > 0 else { return }
         state.cash -= cost
-        state.investors = investors.filter { !$0.isRival }
+        var toReduce = rivalStake - defendTargetStake
+        var list = state.investors ?? []
+        for i in list.indices where list[i].isRival && toReduce > 0.0001 {
+            let cut = min(list[i].stake, toReduce)
+            list[i].stake -= cut
+            toReduce -= cut
+        }
+        list.removeAll { $0.stake <= 0.001 }
+        state.investors = list
         state.takeoverPending = false
         state.boardDemand = nil
-        logEvent(title: "Bought the raider out for \(cost.money) and kept control", isNegative: false)
+        logEvent(title: "Fought off the takeover for \(cost.money) and kept control",
+                 isNegative: false)
         save()
     }
 
