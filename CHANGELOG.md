@@ -7,13 +7,6 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
-## People tab icon fills red with workload
-
-- The **People icon in the bottom tab bar** now fills red from the bottom in proportion to your busiest crew pool's workload — a glanceable strain gauge, so you can see overwork building without opening the tab. It shows the plain icon until people are actually working.
-
-*Why:* per request.
-
-
 ## Tidier Your Desk
 
 - The desk was piling route alerts, worn-plane warnings, timed effects, and the news into one undifferentiated stack. It's now grouped under quiet labels: **NEEDS ATTENTION** (routes, worn/aging aircraft) and **IN FORCE** (active demand/fuel effects), with the Gazette below. Same information, far easier to scan.
