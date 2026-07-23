@@ -327,6 +327,20 @@ enum Balance {
     /// (marketCap = max(0, netWorth) + multiple × trailing-year profit).
     static let marketCapEarningsMultiple = 6.0
 
+    // ── Living competition: rivals drift (GDD §39 Pillar 1) ──────────────
+    /// Small weekly random walk on top of each rival's stable growth rate.
+    static let rivalWeeklyNoise = 0.005
+    /// A rival's cap never sinks below this (charter/regional survival floor).
+    static let rivalFloorCap = 100_000.0
+    /// A rival's stable ANNUAL growth, spread deterministically by name so
+    /// some carriers climb and some stumble (roughly −2%…+10%/yr around a
+    /// 3% base). Returned as the equivalent WEEKLY rate.
+    static func rivalWeeklyGrowth(seed: Int) -> Double {
+        let spread = Double(abs(seed) % 1000) / 1000.0 * 0.12 - 0.05   // −5%…+7%
+        let annual = 0.03 + spread                                     // −2%…+10%
+        return pow(1 + annual, 1.0 / 52.0) - 1
+    }
+
     // ── Route markets & competition (GDD §21) ────────────────────────────
     /// Rivals flying a city pair, 0…4: big, business-heavy markets attract
     /// competition. Deterministic (stable pair hash), so a route's market

@@ -920,6 +920,10 @@ struct GameState: Codable {
     /// Named rivals already overtaken (GDD §29) — so each is celebrated once.
     /// nil grandfathers current standing unannounced.
     var passedRivals: Set<String>? = nil
+    /// Living competition (GDD §39): each rival's DYNAMIC market cap, drifting
+    /// weekly so the ladder moves under you. nil seeds from the static ladder
+    /// on the first close (save-compat: old saves start from today's caps).
+    var rivalCaps: [String: Double]? = nil
     /// The most recent notable carrier overtaken, for the celebration banner.
     var lastOvertakenRival: String? = nil
     /// Personal bests (GDD §29).

@@ -801,6 +801,8 @@ final class GameEngine {
             state.completedMilestones.insert(milestone.id)
             state.cash += milestone.reward
         }
+        // Living competition (GDD §39): the ladder drifts before we read it.
+        driftRivals()
         // Ambition ladder (GDD §26 Pillar 5): pay newly-reached rungs.
         checkAmbitions()
         // Rival overtakes + personal bests (GDD §29).
@@ -1461,8 +1463,8 @@ final class GameEngine {
     /// carrier folding.
     private func rivalCollapseContext() -> (body: String, offer: RivalCollapseOffer)? {
         let cap = marketCap
-        let below = Balance.rivals(for: state.country).filter { $0.marketCap < cap }
-        let pool = below.isEmpty ? Balance.rivals(for: state.country) : below
+        let below = currentRivals.filter { $0.marketCap < cap }
+        let pool = below.isEmpty ? currentRivals : below
         guard !pool.isEmpty else { return nil }
         let name = pool[Int.random(in: 0..<pool.count, using: &state.seedRNG)].name
 
@@ -2587,17 +2589,30 @@ final class GameEngine {
         return industry > 0 ? pax / industry : 0
     }
 
-    /// Rank by market cap among the nine incumbents (1 = biggest).
+    /// Rivals with their LIVE (drifting) caps applied (GDD §39 Pillar 1) —
+    /// the ladder the rank, overtakes, and collapse all read. Falls back to
+    /// the static ladder until the first weekly close seeds `rivalCaps`.
+    var currentRivals: [Balance.IndustryRival] {
+        let base = Balance.rivals(for: state.country)
+        guard let caps = state.rivalCaps else { return base }
+        return base
+            .map { Balance.IndustryRival(name: $0.name,
+                                         marketCap: caps[$0.name] ?? $0.marketCap,
+                                         weeklyPax: $0.weeklyPax) }
+            .sorted { $0.marketCap > $1.marketCap }
+    }
+
+    /// Rank by market cap among the incumbents (1 = biggest).
     var industryRank: (rank: Int, total: Int) {
         let cap = marketCap
-        let above = Balance.rivals(for: state.country).filter { $0.marketCap > cap }.count
-        return (above + 1, Balance.rivals(for: state.country).count + 1)
+        let above = currentRivals.filter { $0.marketCap > cap }.count
+        return (above + 1, currentRivals.count + 1)
     }
 
     /// The next carrier to overtake, if anyone is still above us.
     var nextRival: Balance.IndustryRival? {
         let cap = marketCap
-        return Balance.rivals(for: state.country)
+        return currentRivals
             .filter { $0.marketCap > cap }
             .min { $0.marketCap < $1.marketCap }
     }
@@ -2664,9 +2679,26 @@ final class GameEngine {
 
     /// Celebrates each named rival the first time your market cap passes it.
     /// First encounter grandfathers the current standing unannounced.
+    /// Living competition (GDD §39 Pillar 1): every rival's cap drifts each
+    /// week on a stable per-rival growth rate plus small seeded noise, so the
+    /// ladder moves under the player. Iterates the static ladder in its fixed
+    /// order (NOT the dictionary) to keep the RNG stream deterministic.
+    private func driftRivals() {
+        var caps = state.rivalCaps ?? Dictionary(uniqueKeysWithValues:
+            Balance.rivals(for: state.country).map { ($0.name, $0.marketCap) })
+        for rival in Balance.rivals(for: state.country) {
+            let g = Balance.rivalWeeklyGrowth(seed: stableHash(rival.name))
+            let noise = Double.random(in: -Balance.rivalWeeklyNoise...Balance.rivalWeeklyNoise,
+                                      using: &state.seedRNG)
+            let cap = (caps[rival.name] ?? rival.marketCap) * (1 + g + noise)
+            caps[rival.name] = max(Balance.rivalFloorCap, cap)
+        }
+        state.rivalCaps = caps
+    }
+
     private func checkRivalOvertakes() {
         let cap = marketCap
-        let rivals = Balance.rivals(for: state.country)
+        let rivals = currentRivals
         guard state.passedRivals != nil else {
             state.passedRivals = Set(rivals.filter { $0.marketCap < cap }.map(\.name))
             return
@@ -2759,7 +2791,7 @@ final class GameEngine {
     /// The carrier that swallows a collapsed rival the market clears: the
     /// next rung up by market cap (deterministic).
     private func collapseAcquirer(for collapsedName: String) -> String {
-        let rivals = Balance.rivals(for: state.country)
+        let rivals = currentRivals
         let cap = rivals.first { $0.name == collapsedName }?.marketCap ?? 0
         let above = rivals.filter { $0.marketCap > cap }
         return above.min { $0.marketCap < $1.marketCap }?.name

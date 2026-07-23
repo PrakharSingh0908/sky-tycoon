@@ -1338,3 +1338,53 @@ All three respect the no-formatting-in-Simulation rule and save-compat
   (milestones, ambitions, overtakes, record week) instead of waiting out
   the 3.5s timer. The four RootView banners were extracted into a `topBanner`
   helper to keep `body` inside the type-checker's budget.
+
+
+## §39 — Living Rivals + Capital (2026-07-23)
+
+Pillar B of the fun roadmap plus its flip side: the ladder becomes a cast
+of players who can fight you OR buy into you. Built in phases; each is
+shippable and bot-verified on its own. All of it is pure sim, deterministic
+(weekly RNG only), save-compat via optional fields.
+
+### The plan (four phases)
+1. **Rivals move** — dynamic, drifting market caps so the ladder lives.
+2. **Rivals act** — named route incursions, undercut, crew poaching, and a
+   persistent "nemesis" feud with the carrier just above you.
+3. **Capital: financial core** — equity-for-cash, weekly profit share,
+   buyback at current valuation, a cap-table card, and rescue financing.
+4. **Capital: the drama** — strategic rival stakes with a board voice,
+   takeover attempts you defend against, and an "exit" acquisition ending
+   (a second summit beside reaching #1).
+
+### Capital model (design, phases 3–4)
+An investor offers cash for a stake, valuing you at `marketCap`
+(`cash = marketCap × stake × dealDiscount`). Each settle they take
+`stake × max(0, dailyProfit)` off the top (upside only, never losses), and
+their slice reduces the net-worth score. Buy the stake back anytime at the
+CURRENT valuation — so early money is cheap insurance if you struggle,
+expensive if you soar. Max outside ownership caps below 50% (you keep
+control unless you accept a takeover); a valuation floor stops a near-broke
+founder being bought whole for pocket change.
+
+### Phase 1 shipped — rivals move
+- `GameState.rivalCaps: [String: Double]?` — each rival's LIVE cap. nil
+  seeds from the static ladder on the first close (old saves start from
+  today's caps, unannounced).
+- `driftRivals()` in `closeWeek`: every rival's cap drifts on a stable
+  per-rival annual growth rate (`Balance.rivalWeeklyGrowth(seed:)`, roughly
+  −2%…+10%/yr by name hash) plus small seeded noise
+  (`rivalWeeklyNoise = 0.5%/wk`), floored at `rivalFloorCap`. Iterates the
+  static ladder in its FIXED order (not the dictionary) so the RNG stream
+  stays deterministic; placed AFTER the crash/attrition/event draws so
+  existing systems' outcomes are unchanged for a given seed.
+- `GameEngine.currentRivals` applies the live caps and re-sorts; `industryRank`,
+  `nextRival`, `checkRivalOvertakes`, `collapseAcquirer`, and the
+  rival-collapse pool all read it now instead of the static ladder. So rank,
+  ambitions (rank rungs), overtake celebrations, and honors all reflect the
+  moving ladder.
+- Verified in-engine: over 3 years the caps spread (Himalaya +5%, Ganga
+  +10%, Peacock flat) and a re-run reproduces identical caps (deterministic).
+  Player economics are untouched, so no §26 balance regression.
+- Tuning (`rivalWeeklyGrowth` spread, noise, floor) lives in Balance; widen
+  later if the movement should bite harder in play.

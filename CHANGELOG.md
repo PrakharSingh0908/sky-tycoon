@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## The rival ladder is alive (GDD §39, Phase 1)
+
+- **Rival airlines' market caps now drift week to week** — some carriers climb, some stall, a few slip back — so the ladder moves under you instead of standing still. Your rank, the rivals you overtake, and the rung-based ambitions all reflect the living ladder now. It's the groundwork for rivals that actively fight you (and, later, invest in you). Fully deterministic; existing saves pick up from today's standings.
+
+*Why:* first slice of the Living Rivals plan. A frozen scoreboard isn't a rivalry; a moving one is.
+
+
 ## Route screen: service from the route, tidier layout, tap-anywhere cards
 
 - **Tap any aircraft on a route to open an action drawer** — assign it, move it here, take it off the route, or **send it for a line check ($30K) or heavy check ($250K) right there.** So a plane that grounded itself at 100% wear can be serviced straight from the route it flew, without hunting for it in the Fleet. Only affordable checks are offered, so no button dead-ends.
