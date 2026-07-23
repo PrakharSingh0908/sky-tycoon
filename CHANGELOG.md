@@ -7,9 +7,9 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
-## Workload shown as a vertical red gauge
+## People tab icon fills red with workload
 
-- On the People tab, each pool's workload is now a small **vertical gauge that fills red with the load** (full = at roster capacity, overwork pinned at the top), beside the percentage, instead of a horizontal bar. Happiness keeps its meter.
+- The **People icon in the bottom tab bar** now fills red from the bottom in proportion to your busiest crew pool's workload — a glanceable strain gauge, so you can see overwork building without opening the tab. It shows the plain icon until people are actually working.
 
 *Why:* per request.
 

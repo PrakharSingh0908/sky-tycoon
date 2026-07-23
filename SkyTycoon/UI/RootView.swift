@@ -10,6 +10,7 @@ import SwiftUI
 
 struct RootView: View {
     @Environment(GameEngine.self) private var engine
+    @Environment(\.displayScale) private var displayScale
     // Dev/test affordance: `simctl launch ... -openTab routes` starts on a
     // given tab (dashboard/fleet/routes/people/money).
     @State private var tab: GameTab = {
@@ -60,7 +61,7 @@ struct RootView: View {
                 .tabItem { Label("Fleet", systemImage: "airplane") }
                 .tag(GameTab.fleet)
             PeopleView()
-                .tabItem { Label("People", systemImage: "person.3") }
+                .tabItem { Label { Text("People") } icon: { peopleTabIcon } }
                 .tag(GameTab.people)
             MoneyView()
                 .tabItem { Label("Money", systemImage: "banknote") }
@@ -200,6 +201,45 @@ struct RootView: View {
                               reputation: engine.state.reputation,
                               auntName: engine.state.country.auntName)
         }
+    }
+
+    /// The People tab icon carries a red vertical fill that rises with your
+    /// busiest pool's workload — an at-a-glance strain gauge on the tab bar.
+    /// Falls back to the plain glyph when nobody's working yet.
+    private var peakWorkload: Double {
+        StaffRole.allCases.map { engine.projectedUtilization(role: $0) }.max() ?? 0
+    }
+
+    @ViewBuilder private var peopleTabIcon: some View {
+        if peakWorkload > 0.01, let img = workloadTabImage(load: peakWorkload) {
+            img
+        } else {
+            Image(systemName: "person.3")
+        }
+    }
+
+    /// Renders `person.3.fill` with the bottom `load` fraction filled red,
+    /// as an original-colour image so the tab bar keeps the two tones.
+    private func workloadTabImage(load: Double) -> Image? {
+        let glyph = ZStack {
+            Image(systemName: "person.3.fill")
+                .foregroundStyle(Color(white: 0.62))
+            Image(systemName: "person.3.fill")
+                .foregroundStyle(Theme.loss)
+                .mask {
+                    GeometryReader { geo in
+                        Rectangle()
+                            .frame(height: geo.size.height * min(1, max(0, load)))
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                    }
+                }
+        }
+        .font(.system(size: 23))
+        .frame(width: 36, height: 27)
+        let renderer = ImageRenderer(content: glyph)
+        renderer.scale = displayScale
+        guard let ui = renderer.uiImage else { return nil }
+        return Image(uiImage: ui.withRenderingMode(.alwaysOriginal))
     }
 
     /// A top celebration toast, flick-up-dismissible. Extracted so `body`

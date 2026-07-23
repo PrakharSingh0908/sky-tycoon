@@ -133,17 +133,13 @@ private struct StaffPoolCard: View {
             // Workload is a LIVE projection (immediacy rule): a hire or an
             // assignment change moves this meter the moment it happens.
             let workload = engine.projectedUtilization(role: role)
-            MeterRow(label: "Happiness", value: pool.happiness / 100,
-                     display: "\(Int(pool.happiness))",
-                     color: Theme.health(pool.happiness / 100))
-            // Workload as a vertical gauge that fills red with the load.
-            HStack(spacing: 10) {
-                Text("Workload").font(.game(.caption)).foregroundStyle(Theme.textSecondary)
-                Spacer()
-                TickerText(text: "\(Int(workload * 100))%",
-                           font: .game(.caption, weight: .semibold),
-                           color: workloadColor(workload))
-                workloadGauge(workload)
+            HStack(spacing: 14) {
+                MeterRow(label: "Happiness", value: pool.happiness / 100,
+                         display: "\(Int(pool.happiness))",
+                         color: Theme.health(pool.happiness / 100))
+                MeterRow(label: "Workload", value: min(workload, 1.0),
+                         display: "\(Int(workload * 100))%",
+                         color: workloadColor(workload))
             }
 
             warningView
@@ -233,23 +229,6 @@ private struct StaffPoolCard: View {
         case ..<1.0: Theme.warn
         default: Theme.loss
         }
-    }
-
-    /// A small vertical gauge whose red column rises with the workload
-    /// (full = at roster capacity; overwork sits pinned at the top).
-    private func workloadGauge(_ value: Double) -> some View {
-        let h: CGFloat = 26
-        return ZStack(alignment: .bottom) {
-            RoundedRectangle(cornerRadius: 3).fill(Theme.bgElevated)
-            RoundedRectangle(cornerRadius: 3)
-                .fill(Theme.loss)
-                .frame(height: h * CGFloat(min(1, max(0, value))))
-        }
-        .frame(width: 12, height: h)
-        .clipShape(RoundedRectangle(cornerRadius: 3))
-        .overlay(RoundedRectangle(cornerRadius: 3).strokeBorder(Theme.hairline, lineWidth: 1))
-        .animation(.snappy, value: value)
-        .accessibilityLabel("Workload \(Int(value * 100)) percent")
     }
 
     @ViewBuilder private var warningView: some View {
