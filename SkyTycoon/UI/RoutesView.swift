@@ -433,6 +433,9 @@ struct RouteDetailView: View {
     /// A tapped aircraft opens an action drawer: assign / move / take off,
     /// plus send it for a check (service a worn one right here).
     @State private var servicing: Aircraft?
+    /// The market read-outs (demand, rivals, share) fold away by default —
+    /// reference, not the levers you reach for (DESIGN_AUDIT §2).
+    @State private var marketExpanded = false
     @State private var clockToken = UUID()
     private let accent = Theme.teal
 
@@ -463,41 +466,48 @@ struct RouteDetailView: View {
                     let projLF = engine.routeEconomics(routeID: routeID)?.loadFactor
                         ?? route.lastLoadFactor
                     HStack(spacing: 20) {
-                        StatTile(label: "Distance", value: "\(Int(route.distanceKm)) km")
                         StatTile(label: "Proj. load factor", value: "\(Int(projLF * 100))%",
                                  color: Theme.health(projLF))
                         StatTile(label: "On-time", value: "\(Int(route.lastPunctuality * 100))%",
                                  color: Theme.health(route.lastPunctuality))
                     }
-                    // The pair's market (GDD §21): who's flying it, who the
-                    // passengers are, and how much of the pie you hold.
+                    // The pair's market (GDD §21) is reference, not a lever —
+                    // it folds behind a tap (DESIGN_AUDIT §2). Distance is in
+                    // the title and on the map, so it's dropped entirely.
                     if let econ = engine.routeEconomics(routeID: routeID) {
-                        Divider().overlay(Theme.hairline)
-                        HStack(spacing: 20) {
-                            StatTile(label: "Demand",
-                                     value: "~\(Int(econ.demand)) pax")
-                            StatTile(label: "Rivals",
-                                     value: econ.competitors == 0
-                                        ? "None" : "\(econ.competitors)",
-                                     color: econ.competitors == 0
-                                        ? Theme.profit : Theme.textPrimary)
-                            StatTile(label: "Your share",
-                                     value: "\(Int(econ.captureShare * 100))%",
-                                     color: Theme.health(econ.captureShare))
+                        DisclosureGroup(isExpanded: $marketExpanded) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack(spacing: 20) {
+                                    StatTile(label: "Demand", value: "~\(Int(econ.demand)) pax")
+                                    StatTile(label: "Rivals",
+                                             value: econ.competitors == 0
+                                                ? "None" : "\(econ.competitors)",
+                                             color: econ.competitors == 0
+                                                ? Theme.profit : Theme.textPrimary)
+                                    StatTile(label: "Your share",
+                                             value: "\(Int(econ.captureShare * 100))%",
+                                             color: Theme.health(econ.captureShare))
+                                }
+                                if econ.competitors > 0 && econ.captureShare < 0.4 {
+                                    Text("Passengers are choosing your rivals. Comfort, fair fares, and satisfaction win them back.")
+                                        .font(.game(.caption2)).foregroundStyle(Theme.warn)
+                                }
+                                if econ.maturity < 0.99 {
+                                    Text("New route: the market is still building, near \(Int(econ.maturity * 100))% of full demand. It fills in over the first \(Balance.routeRampWeeks) weeks.")
+                                        .font(.game(.caption2)).foregroundStyle(accent)
+                                }
+                                if econ.oversupplyYield < 0.995 {
+                                    Text("Over-supplied: too many seats for the demand, so fares dilute about \(Int((1 - econ.oversupplyYield) * 100))%. Trim frequency or fly a smaller aircraft.")
+                                        .font(.game(.caption2)).foregroundStyle(Theme.warn)
+                                }
+                            }
+                            .padding(.top, 8)
+                        } label: {
+                            Label("Market", systemImage: "chart.pie")
+                                .font(.game(.caption, weight: .semibold))
+                                .foregroundStyle(Theme.textSecondary)
                         }
-                        if econ.competitors > 0 && econ.captureShare < 0.4 {
-                            Text("Passengers are choosing your rivals. Comfort, fair fares, and satisfaction win them back.")
-                                .font(.game(.caption2)).foregroundStyle(Theme.warn)
-                        }
-                        // Market maturity & over-supply (GDD §26 Pillar 2).
-                        if econ.maturity < 0.99 {
-                            Text("New route: the market is still building, near \(Int(econ.maturity * 100))% of full demand. It fills in over the first \(Balance.routeRampWeeks) weeks.")
-                                .font(.game(.caption2)).foregroundStyle(accent)
-                        }
-                        if econ.oversupplyYield < 0.995 {
-                            Text("Over-supplied: too many seats for the demand, so fares dilute about \(Int((1 - econ.oversupplyYield) * 100))%. Trim frequency or fly a smaller aircraft.")
-                                .font(.game(.caption2)).foregroundStyle(Theme.warn)
-                        }
+                        .tint(Theme.textSecondary)
                     }
                     if let econ = engine.routeEconomics(routeID: routeID) {
                         // The fare↔satisfaction link, live: cheap fares

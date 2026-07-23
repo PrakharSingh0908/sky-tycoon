@@ -60,7 +60,9 @@ struct DashboardView: View {
             industryCard
             // Marketing lives at HQ now (§34) — an ongoing brand decision.
             marketingCard
-            if let report = engine.latestReport { lastWeekCard(report) }
+            // Last week's P&L lives on the Money tab's statement now (the HQ
+            // card just duplicated it); the hero's "last week" well is the
+            // glance (DESIGN_AUDIT §1).
         }
         // One-shot settle flash: the hero border blinks profit-green when a
         // week's numbers land, then eases back. Nothing moves while reading.
@@ -1123,48 +1125,6 @@ struct DashboardView: View {
         return out.reversed()
     }
 
-    // ── Last week ────────────────────────────────────────────────────────
-
-    private func lastWeekCard(_ report: WeeklyReport) -> some View {
-        GameCard {
-            SectionHeader(title: "Last week · \(report.date.description)",
-                          icon: "clock.arrow.circlepath", accent: accent)
-            HStack(spacing: 20) {
-                StatTile(label: "Revenue", value: report.revenue.money)
-                StatTile(label: "Costs", value: (report.profit - report.revenue).money,
-                         color: Theme.textSecondary)
-                StatTile(label: "Profit", value: report.profit.money,
-                         color: report.profit >= 0 ? Theme.profit : Theme.loss)
-            }
-            // Where the money went.
-            let slices = report.expenseSlices
-            if !slices.isEmpty {
-                Divider().overlay(Theme.hairline)
-                ExpensePie(slices: slices)
-            }
-            // Per-route P&L (route margin: revenue − fuel), best first.
-            if !engine.state.routes.isEmpty {
-                Divider().overlay(Theme.hairline)
-                ForEach(engine.state.routes.sorted { $0.lastWeeklyProfit > $1.lastWeeklyProfit }) { route in
-                    HStack {
-                        (Text(route.originID)
-                            + Text("  \(Image(systemName: "airplane"))  ")
-                                .font(.system(size: 11))
-                                .foregroundStyle(Theme.textSecondary)
-                            + Text(route.destinationID))
-                            .font(.game(.subheadline, weight: .semibold))
-                            .foregroundStyle(Theme.textPrimary)
-                        Text("LF \(Int(route.lastLoadFactor * 100))%")
-                            .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
-                        Spacer()
-                        TickerText(text: route.lastWeeklyProfit.money + "/wk",
-                                   font: .game(.subheadline, weight: .semibold),
-                                   color: route.lastWeeklyProfit >= 0 ? Theme.profit : Theme.loss)
-                    }
-                }
-            }
-        }
-    }
 }
 
 // ── The industry, in full: share pie + cap ladder ─────────────────────────

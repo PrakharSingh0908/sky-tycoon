@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Legibility pass: leaner HQ and route economics (DESIGN_AUDIT §1–2)
+
+- **Removed the HQ "Last week" card.** It duplicated the Money tab's statement (down to a second expense pie); the hero's net-worth panel is the glance, the statement is the detail. Less to scroll, no lost information.
+- **The route's Economics card now leads with its levers.** Fare, flights/week, projected load factor, and on-time stay in view; the market read-outs (demand, rivals, your share, and the maturity/over-supply notes) fold behind a **"Market"** tap. The Distance tile is gone (it's already in the route title and on the map). Far easier to read at a glance.
+
+*Why:* first two moves from the subtraction audit — remove duplicated information and quiet the read-outs so the levers lead.
+
+
 ## Map no longer flies grounded planes; rating beside the aircraft name
 
 - **Fixed:** a route whose only aircraft was in the shop for a check still showed planes flying on the map. The living map now only animates routes with an aircraft actually in the air (assigned and not grounded), so a grounded route sits still.
