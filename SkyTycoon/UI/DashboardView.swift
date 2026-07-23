@@ -81,6 +81,15 @@ struct DashboardView: View {
     // ── Routes need attention: defend what you built (GDD §26) — rows
     // embedded in the Head Quarter card.
 
+    /// A quiet group label inside Your Desk, so alerts and status don't blur.
+    private func deskEyebrow(_ text: String) -> some View {
+        Text(text)
+            .font(.data(.caption2)).tracking(0.85)
+            .foregroundStyle(Theme.textTertiary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 2)
+    }
+
     @ViewBuilder private var routeAttentionRows: some View {
         ForEach(engine.routesNeedingAttention) { alert in
             Button {
@@ -409,11 +418,12 @@ struct DashboardView: View {
     // timed modifiers in force come FIRST, then the Gazette news below.
     private var headquartersCard: some View {
         let items = gazetteItems
-        let hasOps = !engine.routesNeedingAttention.isEmpty
-            || !engine.state.activeEffects.isEmpty || !wornAircraft.isEmpty
-            || !engine.agingAircraft.isEmpty
+        let hasAttention = !engine.routesNeedingAttention.isEmpty
+            || !wornAircraft.isEmpty || !engine.agingAircraft.isEmpty
+        let hasEffects = !engine.state.activeEffects.isEmpty
         return GameCard {
             SectionHeader(title: "Your Desk", icon: "briefcase.fill", accent: accent)
+            if hasAttention { deskEyebrow("NEEDS ATTENTION") }
             routeAttentionRows
             ForEach(wornAircraft) { plane in
                 let critical = plane.wear >= Balance.wearDangerThreshold
@@ -455,7 +465,11 @@ struct DashboardView: View {
                 }
                 .buttonStyle(.plain)
             }
-            // Timed effects currently in force.
+            // Timed effects currently in force, under their own label.
+            if hasEffects {
+                if hasAttention { Divider().overlay(Theme.hairline) }
+                deskEyebrow("IN FORCE")
+            }
             ForEach(engine.state.activeEffects) { effect in
                 HStack {
                     StatusBadge(text: effect.label,
@@ -468,7 +482,9 @@ struct DashboardView: View {
                 }
             }
             // The Gazette (news) sits below the conditions and effects.
-            if hasOps && !items.isEmpty { Divider().overlay(Theme.hairline) }
+            if (hasAttention || hasEffects) && !items.isEmpty {
+                Divider().overlay(Theme.hairline)
+            }
             if !items.isEmpty { gazette(items) }
         }
     }

@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Tidier Your Desk
+
+- The desk was piling route alerts, worn-plane warnings, timed effects, and the news into one undifferentiated stack. It's now grouped under quiet labels: **NEEDS ATTENTION** (routes, worn/aging aircraft) and **IN FORCE** (active demand/fuel effects), with the Gazette below. Same information, far easier to scan.
+
+*Why:* per feedback that the desk was getting messy as more signals landed there.
+
+
 ## Rivals can buy you, lean on you, and try to take you (GDD §39, Phase 4)
 
 - **A rival can take a stake in you.** Your nemesis may offer cash for a slice of the airline (a "Strategic approach" on the Money → Capital card). Their money spends the same as a fund's, but they get a seat at the table.
