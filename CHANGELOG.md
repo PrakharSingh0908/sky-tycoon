@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Flight rating per aircraft (GDD §40)
+
+- Every aircraft now shows a **1–5 star flight rating** for its onboard experience, built from the cabin (seat pitch, width, material, ovens, wifi) and airframe condition, and pulled down by heavy wear and old age. It's on each Fleet card above the wear/condition meters, and as small stars beside each plane on a route's boarding pass. Refit a cabin or run a check and it climbs; let a jet get old and thrashed and it slips.
+
+*Why:* per request — a legible passenger-facing rating that rewards investing in the cabin and keeping airframes fresh.
+
+---
+
 ## Tidier Your Desk
 
 - The desk was piling route alerts, worn-plane warnings, timed effects, and the news into one undifferentiated stack. It's now grouped under quiet labels: **NEEDS ATTENTION** (routes, worn/aging aircraft) and **IN FORCE** (active demand/fuel effects), with the Gazette below. Same information, far easier to scan.
