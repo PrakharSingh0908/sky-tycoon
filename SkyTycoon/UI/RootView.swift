@@ -89,6 +89,11 @@ struct RootView: View {
         .overlay {
             if engine.state.isBankrupt { bankruptcyOverlay }
         }
+        // The exit ending: you sold the airline (a win) — GDD §39 Phase 4.
+        .overlay {
+            if engine.state.soldOut == true { exitOverlay }
+            else if engine.state.takeoverPending == true { takeoverOverlay }
+        }
         // ── Milestone celebration: a win, announced, then gone ────────────
         .overlay(alignment: .top) {
             if let celebration {
@@ -260,6 +265,86 @@ struct RootView: View {
         .background(Color.black.ignoresSafeArea())
     }
 
+    // A rival is bidding for control: defend or take the money (GDD §39 P4).
+    private var takeoverOverlay: some View {
+        let raider = engine.investors.first(where: { $0.isRival })?.name ?? "A rival"
+        let defendCost = engine.defendTakeoverCost()
+        let proceeds = engine.buyoutProceeds()
+        let canDefend = engine.state.cash >= defendCost
+        return VStack(spacing: 0) {
+            Spacer(minLength: 24)
+            Image(systemName: "flag.2.crossed.fill")
+                .font(.system(size: 48, weight: .semibold)).polishedSilver()
+            Text("Bid for control")
+                .font(.display(.largeTitle)).foregroundStyle(Theme.textPrimary)
+                .padding(.top, 12)
+            Text("\(raider) has crossed \(Int(Balance.takeoverStakeThreshold * 100))% and is moving to take \(engine.state.airlineName). Buy them out to keep control, or accept the offer and cash out.")
+                .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 32).padding(.top, 10)
+            Spacer(minLength: 20)
+            VStack(spacing: 10) {
+                Button {
+                    engine.defendTakeover()
+                } label: {
+                    Text(canDefend ? "Defend · \(defendCost.money)" : "Can't afford to defend")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(GameButtonStyle(color: Theme.sky, prominent: true))
+                .disabled(!canDefend)
+                .opacity(canDefend ? 1 : 0.4)
+                Button {
+                    engine.acceptBuyout()
+                } label: {
+                    Text("Accept buyout · \(proceeds.money)").frame(maxWidth: .infinity)
+                }
+                .buttonStyle(GameButtonStyle(finish: .bronze))
+            }
+            .padding(.horizontal, Theme.gutter)
+            .padding(.bottom, 28)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black.ignoresSafeArea())
+    }
+
+    // The exit ending: you sold, and it's a win (GDD §39 P4).
+    private var exitOverlay: some View {
+        VStack(spacing: 0) {
+            Spacer(minLength: 24)
+            Image(systemName: "checkmark.seal.fill")
+                .font(.system(size: 52, weight: .semibold))
+                .foregroundStyle(Theme.profit)
+            Text("Bought out")
+                .font(.display(.largeTitle)).foregroundStyle(Theme.textPrimary)
+                .padding(.top, 12)
+            Text("You sold \(engine.state.airlineName) for \((engine.state.exitProceeds ?? 0).money). From one leased turboprop to a carrier worth buying. Quite a run.")
+                .font(.game(.subheadline)).foregroundStyle(Theme.textSecondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 32).padding(.top, 10)
+            Spacer(minLength: 16)
+            HStack(alignment: .top, spacing: 8) {
+                runStat("Sold for", (engine.state.exitProceeds ?? 0).money)
+                runStat("Best rank", "#\(engine.industryRank.rank)")
+                runStat("Fleet", "\(engine.state.fleet.count)")
+                runStat("Rating", String(format: "%.1f★", engine.state.reputation))
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, Theme.gutter)
+            Button {
+                engine.restart()
+            } label: {
+                Text("Start a new airline").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(GameButtonStyle(color: Theme.profit, prominent: true))
+            .padding(.horizontal, Theme.gutter)
+            .padding(.top, 12).padding(.bottom, 24)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black.ignoresSafeArea())
+    }
+
     /// A board tile for the final ledger (mono caps value, engraved label).
     private func runStat(_ label: String, _ value: String) -> some View {
         InstrumentWell {
@@ -288,4 +373,24 @@ struct RootView: View {
 
 #Preview {
     RootView().environment(GameEngine.previewGame())
+}
+
+#Preview("Takeover bid") {
+    RootView().environment({ () -> GameEngine in
+        var s = GameEngine.previewGame().state
+        s.nemesis = "Peacock Air"
+        s.investors = [Investor(id: UUID(), name: "Peacock Air", isRival: true,
+                                stake: 0.36, boughtAtValuation: 1, sinceWeek: 0)]
+        s.takeoverPending = true
+        return GameEngine(state: s)
+    }())
+}
+
+#Preview("Bought out") {
+    RootView().environment({ () -> GameEngine in
+        var s = GameEngine.previewGame().state
+        s.soldOut = true
+        s.exitProceeds = 84_000_000
+        return GameEngine(state: s)
+    }())
 }

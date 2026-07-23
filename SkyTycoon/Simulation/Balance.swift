@@ -872,6 +872,22 @@ enum Balance {
         "Kestrel Holdings", "Beacon Partners",
     ]
 
+    // ── The drama: rival stakes, board, takeover, exit (GDD §39 Phase 4) ──
+    /// A strategic rival buys a bigger bite than a passive fund, at a keener
+    /// discount — they want leverage, not just a return.
+    static let investorRivalStake = 0.20
+    static let investorRivalDiscount = 0.80
+    /// While a rival holds equity, the odds each week of a board demand.
+    static let boardDemandChancePerWeek = 0.10
+    /// Comply and the pleased backer injects this share of valuation as cash;
+    /// refuse and they grow their stake by this much, creeping toward control.
+    static let boardComplyReward = 0.02
+    static let boardRefusalStakeBump = 0.06
+    /// Once a rival's combined stake reaches this, they move to take control.
+    static let takeoverStakeThreshold = 0.35
+    /// A full buyout pays a premium over the plain valuation of your shares.
+    static let exitPremium = 1.15
+
     // CEO bylines are drawn from the campaign's country name lists
     // (firstNames/lastNames) so rivals read local to the market (§34).
 

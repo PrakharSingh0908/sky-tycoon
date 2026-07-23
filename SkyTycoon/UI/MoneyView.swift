@@ -63,10 +63,35 @@ struct MoneyView: View {
 
     @ViewBuilder private var capitalCard: some View {
         let offer = engine.capitalOffer()
+        let rivalOffer = engine.rivalStakeOffer()
         let investors = engine.investors
-        if offer != nil || !investors.isEmpty {
+        let demand = engine.state.boardDemand
+        if offer != nil || rivalOffer != nil || demand != nil || !investors.isEmpty {
             GameCard {
                 SectionHeader(title: "Capital", icon: "chart.pie.fill", accent: accent)
+                // A rival backer leaning on the board (GDD §39 Phase 4).
+                if let demand {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("BOARDROOM")
+                            .font(.data(.caption2)).tracking(0.85).foregroundStyle(Theme.warn)
+                        Text("\(demand.funderName) wants fares pushed up on \(demand.routeName).")
+                            .font(.game(.subheadline)).foregroundStyle(Theme.textPrimary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        HStack(spacing: 10) {
+                            Button { engine.complyWithBoard() } label: {
+                                Text("Comply").frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(GameButtonStyle(color: accent, prominent: true))
+                            Button { engine.refuseBoard() } label: {
+                                Text("Refuse").frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(GameButtonStyle(finish: .obsidian))
+                        }
+                    }
+                    if !investors.isEmpty || offer != nil || rivalOffer != nil {
+                        Divider().overlay(Theme.hairline)
+                    }
+                }
                 if engine.outsideStake > 0 {
                     Text("Outside backers hold \(Int(engine.outsideStake * 100))% and take that share of every profitable week. Buy them back to keep it all.")
                         .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
@@ -113,6 +138,25 @@ struct MoneyView: View {
                     }
                     .buttonStyle(GameButtonStyle(color: offer.isRescue ? Theme.warn : accent,
                                                  prominent: true))
+                }
+                // A rival angling for a strategic stake — cash now, but they
+                // get a board voice and can move for control later (§39 P4).
+                if let rivalOffer {
+                    Divider().overlay(Theme.hairline)
+                    Text("STRATEGIC APPROACH")
+                        .font(.data(.caption2)).tracking(0.85).foregroundStyle(Theme.cornflower)
+                    Text("\(rivalOffer.funderName) wants a \(Int(rivalOffer.stake * 100))% stake for \(rivalOffer.cash.money).")
+                        .font(.game(.subheadline)).foregroundStyle(Theme.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text("A rival's money spends the same, but they get a seat at the table and may come for control.")
+                        .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Button {
+                        engine.acceptRivalStake(rivalOffer)
+                    } label: {
+                        Text("Take their money · \(rivalOffer.cash.money)").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(GameButtonStyle(color: Theme.cornflower))
                 }
             }
         }

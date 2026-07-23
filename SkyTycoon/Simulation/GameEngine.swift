@@ -337,15 +337,19 @@ final class GameEngine {
     /// advanceDay the clock drives.
     func stepOneDay() {
         guard blockingEvent == nil, !clockIsHeld,
-              !state.isBankrupt else { return }
+              !state.isBankrupt, !gameOver else { return }
         speed = .paused
         accumulator = 0
         advanceDay()
     }
 
+    /// Time also holds while a takeover decision is pending, and stops for
+    /// good once you've sold out (GDD §39 Phase 4).
+    var gameOver: Bool { (state.soldOut ?? false) || (state.takeoverPending ?? false) }
+
     private func clockFired(delta: Double) {
         guard speed != .paused, blockingEvent == nil, !clockIsHeld,
-              !state.isBankrupt else { return }
+              !state.isBankrupt, !gameOver else { return }
         accumulator += delta * speed.rawValue
         while accumulator >= secondsPerDay {
             accumulator -= secondsPerDay
@@ -824,6 +828,10 @@ final class GameEngine {
         driftRivals()
         rivalPoachSweep()
         state.nemesis = nextRival?.name
+        // Rival backers lean on the board and, if they hold enough, move for
+        // control (GDD §39 Phase 4).
+        maybeBoardDemand()
+        checkTakeover()
         // Ambition ladder (GDD §26 Pillar 5): pay newly-reached rungs.
         checkAmbitions()
         // Rival overtakes + personal bests (GDD §29).
@@ -2647,6 +2655,126 @@ final class GameEngine {
         state.investors = investors.filter { $0.id != investorID }
         logEvent(title: "Bought back \(inv.name)'s \(Int(inv.stake * 100))% for \(cost.money)",
                  isNegative: false)
+        save()
+    }
+
+    // ── The drama: rival stakes, board, takeover, exit (GDD §39 Phase 4) ──
+
+    /// Combined equity held by strategic rivals (as opposed to passive funds).
+    var rivalStake: Double { investors.filter(\.isRival).reduce(0) { $0 + $1.stake } }
+
+    /// A rival above you angling for a strategic stake — bigger and keener
+    /// than a fund. Appears once you're worth their attention, have room, and
+    /// don't already have a rival aboard.
+    func rivalStakeOffer() -> CapitalOffer? {
+        guard let nemesis = state.nemesis,
+              marketCap >= Balance.investorValuationFloor,
+              !investors.contains(where: { $0.isRival }),
+              outsideStake + Balance.investorRivalStake <= Balance.investorMaxOutsideStake
+        else { return nil }
+        let cash = (dealValuation * Balance.investorRivalStake
+                    * Balance.investorRivalDiscount / 10_000).rounded() * 10_000
+        return CapitalOffer(funderName: nemesis, stake: Balance.investorRivalStake,
+                            cash: cash, isRescue: false, isRival: true)
+    }
+
+    func acceptRivalStake(_ offer: CapitalOffer) {
+        guard offer.isRival,
+              outsideStake + offer.stake <= Balance.investorMaxOutsideStake else { return }
+        state.cash += offer.cash
+        var list = state.investors ?? []
+        list.append(Investor(id: UUID(), name: offer.funderName, isRival: true,
+                             stake: offer.stake, boughtAtValuation: dealValuation,
+                             sinceWeek: state.date.totalWeeks))
+        state.investors = list
+        logEvent(title: "\(offer.funderName) took a \(Int(offer.stake * 100))% strategic stake",
+                 isNegative: false)
+        save()
+    }
+
+    /// A rival backer occasionally leans on the board (GDD §39 Phase 4).
+    private func maybeBoardDemand() {
+        guard state.boardDemand == nil,
+              let backer = investors.first(where: { $0.isRival }),
+              Double.random(in: 0...1, using: &state.seedRNG) < Balance.boardDemandChancePerWeek,
+              let busiest = state.routes
+                .filter({ !$0.assignedAircraftIDs.isEmpty && $0.weeklyFrequency > 0 })
+                .max(by: { $0.lastWeeklyRevenue < $1.lastWeeklyRevenue })
+        else { return }
+        let name = "\(busiest.originID) ✈︎ \(busiest.destinationID)"
+        state.boardDemand = BoardDemand(funderName: backer.name, routeID: busiest.id, routeName: name)
+        logEvent(title: "\(backer.name) is leaning on the board over \(name)", isNegative: false)
+    }
+
+    /// Do as the board asks (push fares on the named route) for a cash vote
+    /// of confidence.
+    func complyWithBoard() {
+        guard let d = state.boardDemand else { return }
+        if let i = state.routes.firstIndex(where: { $0.id == d.routeID }) {
+            state.routes[i].fare = (state.routes[i].fare * 1.10).rounded()
+        }
+        let reward = (dealValuation * Balance.boardComplyReward / 10_000).rounded() * 10_000
+        state.cash += reward
+        state.boardDemand = nil
+        logEvent(title: "Did as \(d.funderName) asked; they backed it with \(reward.money)",
+                 isNegative: false)
+        save()
+    }
+
+    /// Refuse — the backer buys more of you, creeping toward control.
+    func refuseBoard() {
+        guard let d = state.boardDemand else { return }
+        if let i = state.investors?.firstIndex(where: { $0.name == d.funderName && $0.isRival }) {
+            state.investors?[i].stake = min(Balance.investorMaxOutsideStake,
+                                            state.investors![i].stake + Balance.boardRefusalStakeBump)
+        }
+        state.boardDemand = nil
+        logEvent(title: "Refused \(d.funderName); they bought more of your stock", isNegative: true)
+        checkTakeover()
+        save()
+    }
+
+    /// A rival whose combined stake reaches the threshold moves to take
+    /// control; the clock holds until you defend or sell.
+    private func checkTakeover() {
+        guard !(state.takeoverPending ?? false), !(state.soldOut ?? false),
+              rivalStake >= Balance.takeoverStakeThreshold else { return }
+        state.takeoverPending = true
+        speed = .paused
+        if let backer = investors.first(where: { $0.isRival }) {
+            logEvent(title: "\(backer.name) has moved to take control of the airline",
+                     isNegative: true)
+        }
+    }
+
+    /// Cost to buy the raider out entirely (at the current valuation) and
+    /// keep control.
+    func defendTakeoverCost() -> Double {
+        (dealValuation * rivalStake / 10_000).rounded() * 10_000
+    }
+    func defendTakeover() {
+        let cost = defendTakeoverCost()
+        guard state.cash >= cost else { return }
+        state.cash -= cost
+        state.investors = investors.filter { !$0.isRival }
+        state.takeoverPending = false
+        state.boardDemand = nil
+        logEvent(title: "Bought the raider out for \(cost.money) and kept control", isNegative: false)
+        save()
+    }
+
+    /// Proceeds if you accept the buyout: your remaining shares at a premium.
+    func buyoutProceeds() -> Double {
+        (dealValuation * (1 - outsideStake) * Balance.exitPremium / 10_000).rounded() * 10_000
+    }
+    /// Accept the buyout — the exit ending. A win: the run is over.
+    func acceptBuyout() {
+        let proceeds = buyoutProceeds()
+        state.cash += proceeds
+        state.exitProceeds = proceeds
+        state.soldOut = true
+        state.takeoverPending = false
+        speed = .paused
         save()
     }
 

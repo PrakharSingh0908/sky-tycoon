@@ -819,6 +819,15 @@ struct CapitalOffer: Identifiable, Equatable {
     let stake: Double          // fraction they'd buy
     let cash: Double           // what they'd pay now
     let isRescue: Bool         // harsh terms offered when you're insolvent
+    var isRival: Bool = false  // Phase 4: a strategic rival, not a passive fund
+}
+
+/// A demand from a rival backer holding equity (GDD §39 Phase 4). Comply for
+/// a cash vote of confidence, or refuse and watch their stake creep up.
+struct BoardDemand: Codable, Equatable {
+    var funderName: String
+    var routeID: UUID
+    var routeName: String
 }
 
 /// A failing carrier's whole operation, offered up for acquisition (GDD
@@ -954,6 +963,14 @@ struct GameState: Codable {
     /// Outside backers holding equity (GDD §39 Phase 3). Each takes a share
     /// of every profitable day until bought back. nil/empty = you own it all.
     var investors: [Investor]? = nil
+    /// A standing board demand from a rival backer (GDD §39 Phase 4).
+    var boardDemand: BoardDemand? = nil
+    /// A rival's combined stake has hit takeover territory; the decision to
+    /// defend or sell is pending, and the clock holds until it's answered.
+    var takeoverPending: Bool? = nil
+    /// The exit ending: you accepted a buyout. The run is over (a win).
+    var soldOut: Bool? = nil
+    var exitProceeds: Double? = nil
     /// The most recent notable carrier overtaken, for the celebration banner.
     var lastOvertakenRival: String? = nil
     /// Personal bests (GDD §29).

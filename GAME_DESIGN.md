@@ -1445,3 +1445,32 @@ founder being bought whole for pocket change.
   profitable days. Deterministic (arithmetic + hash-named funds).
 - Phase 4 (rival stakes, board demands, takeover, exit ending) will set
   `isRival = true` and layer on top of this core.
+
+### Phase 4 shipped — the drama (2026-07-23)
+- **Rival stakes.** `rivalStakeOffer()` — your nemesis angles for a
+  `investorRivalStake 20%` bite at a keener `0.80` discount, once you're
+  worth their attention and no rival is aboard. `acceptRivalStake` adds an
+  `Investor(isRival: true)`. Surfaced on the Money → Capital card as a
+  distinct "Strategic approach".
+- **Board demands.** While a rival holds equity, `maybeBoardDemand`
+  (`boardDemandChancePerWeek 10%`, seeded) posts a `BoardDemand` naming your
+  busiest route. `complyWithBoard` pushes that route's fare +10% and the
+  backer injects `boardComplyReward 2%` of valuation as cash; `refuseBoard`
+  grows their stake by `boardRefusalStakeBump 6%`, creeping toward control.
+  Shown as a Boardroom banner on the Capital card.
+- **Takeover.** When `rivalStake ≥ takeoverStakeThreshold 35%`,
+  `checkTakeover` sets `state.takeoverPending` and pauses the clock (the
+  `gameOver` guard on the tick). A full-screen RootView overlay: **Defend**
+  (buy the raider out entirely at the current valuation, cash permitting) or
+  **Accept buyout**.
+- **Exit ending.** `acceptBuyout` pays `buyoutProceeds = dealValuation ×
+  (1 − outsideStake) × exitPremium 1.15`, sets `state.soldOut`, and shows a
+  celebratory "Bought out" overlay with the run's numbers and a restart — a
+  second win condition beside reaching #1. `restart()` clears everything
+  (fresh state).
+- Verified in-engine: rival offer/accept (20%), a rival at 36% trips the
+  takeover on the next close and holds the clock, Defend clears them and
+  keeps control, Accept books proceeds and ends the run. Deterministic; new
+  state fields optional/nil-grandfathered.
+- Guardrails intact: outside ownership still caps <49% via the shared path;
+  investors share only profits; every money key is affordability-gated.

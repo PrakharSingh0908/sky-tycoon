@@ -7,6 +7,16 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Rivals can buy you, lean on you, and try to take you (GDD §39, Phase 4)
+
+- **A rival can take a stake in you.** Your nemesis may offer cash for a slice of the airline (a "Strategic approach" on the Money → Capital card). Their money spends the same as a fund's, but they get a seat at the table.
+- **The boardroom.** While a rival backer holds equity, they occasionally lean on you to push fares on your busiest route. **Comply** and they reward you with a cash vote of confidence; **refuse** and they quietly buy more of your stock, creeping toward control.
+- **Takeover bid.** If a rival's stake crosses 35%, they move for control and time stops: **defend** by buying them out at the going price, or **accept the buyout**.
+- **A new way to win: the exit.** Accepting a buyout sells the airline for a premium and ends the run on a high note ("You sold Aunt Air for $84M") — a second summit beside reaching #1.
+
+*Why:* the finale of Living Rivals & Capital. Outside money is now a full arc: take a rival's cash when you're hungry, and later decide whether to fight for independence or cash out rich.
+
+
 ## Raise capital: investors can buy in (GDD §39, Phase 3)
 
 - **A new Capital card on the Money tab** lets you take outside money. A fund will invest cash now for a slice of the airline (e.g. "$340K for 15%"). In return they take that share of every profitable week, forever, until you **buy them back** at the going valuation. Cash now versus your future upside, with a twist: the more you grow, the dearer the buyback, so early money is cheap insurance and expensive success.
