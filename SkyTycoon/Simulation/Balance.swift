@@ -852,6 +852,26 @@ enum Balance {
     static let incursionHeadlines = ["NEW ROUTE FIGHT", "THEY'VE MOVED IN", "FARE WAR"]
     static let poachHeadlines = ["POACHED", "TALENT RAID", "THEY TOOK ONE"]
 
+    // ── Capital & investors (GDD §39 Phase 3) ────────────────────────────
+    /// A backer pays below fair value for a stake — that gap (plus the
+    /// ongoing profit share) is their return.
+    static let investorDealDiscount = 0.85
+    /// A rescue backer drives a harder bargain.
+    static let investorRescueDiscount = 0.70
+    /// Deals value a near-broke founder at least this much, so a stake can't
+    /// be bought for pocket change.
+    static let investorValuationFloor = 2_000_000.0
+    /// You always keep control: total outside equity never exceeds this.
+    static let investorMaxOutsideStake = 0.49
+    /// Stake a growth round buys; a rescue takes more.
+    static let investorGrowthStake = 0.15
+    static let investorRescueStake = 0.35
+    static let investorFundNames = [
+        "Meridian Capital", "Highfield Partners", "Anchor Growth",
+        "Crescent Equity", "Northwind Ventures", "Stillwater Capital",
+        "Kestrel Holdings", "Beacon Partners",
+    ]
+
     // CEO bylines are drawn from the campaign's country name lists
     // (firstNames/lastNames) so rivals read local to the market (§34).
 

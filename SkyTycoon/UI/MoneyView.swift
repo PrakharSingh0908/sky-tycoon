@@ -20,6 +20,7 @@ struct MoneyView: View {
             // The bank leads (§34): financing is the first lever a founder
             // reaches for. Marketing moved to HQ.
             loansCard
+            capitalCard
             balanceSheetCard
             GameCard {
                 SectionHeader(title: "Daily P&L · 13 weeks", icon: "chart.bar.fill", accent: accent)
@@ -55,6 +56,65 @@ struct MoneyView: View {
                 RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 9, height: 9)
             }
             Text(text).font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+        }
+    }
+
+    // ── Capital & investors (GDD §39 Phase 3) ────────────────────────────
+
+    @ViewBuilder private var capitalCard: some View {
+        let offer = engine.capitalOffer()
+        let investors = engine.investors
+        if offer != nil || !investors.isEmpty {
+            GameCard {
+                SectionHeader(title: "Capital", icon: "chart.pie.fill", accent: accent)
+                if engine.outsideStake > 0 {
+                    Text("Outside backers hold \(Int(engine.outsideStake * 100))% and take that share of every profitable week. Buy them back to keep it all.")
+                        .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                ForEach(investors) { inv in
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(inv.name)
+                                .font(.game(.subheadline, weight: .semibold))
+                                .foregroundStyle(Theme.textPrimary)
+                            Text("\(Int(inv.stake * 100))% stake · held \(max(0, engine.state.date.totalWeeks - inv.sinceWeek)) wk")
+                                .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                        }
+                        Spacer(minLength: 8)
+                        let cost = engine.buyBackCost(inv)
+                        Button {
+                            engine.buyBack(investorID: inv.id)
+                        } label: {
+                            Text("Buy back · \(cost.money)")
+                        }
+                        .buttonStyle(GameButtonStyle(finish: .bronze))
+                        .disabled(engine.state.cash < cost)
+                        .opacity(engine.state.cash < cost ? 0.4 : 1)
+                    }
+                }
+                if let offer {
+                    if !investors.isEmpty { Divider().overlay(Theme.hairline) }
+                    Text(offer.isRescue ? "RESCUE FINANCING" : "RAISE CAPITAL")
+                        .font(.data(.caption2)).tracking(0.85)
+                        .foregroundStyle(offer.isRescue ? Theme.warn : Theme.textSecondary)
+                    Text("\(offer.funderName) will invest \(offer.cash.money) for \(Int(offer.stake * 100))% of the airline.")
+                        .font(.game(.subheadline)).foregroundStyle(Theme.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(offer.isRescue
+                         ? "Hard terms, but it clears the red today."
+                         : "They take \(Int(offer.stake * 100))% of profits until you buy them out at the going valuation.")
+                        .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Button {
+                        engine.acceptCapital(offer)
+                    } label: {
+                        Text("Accept · \(offer.cash.money)").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(GameButtonStyle(color: offer.isRescue ? Theme.warn : accent,
+                                                 prominent: true))
+                }
+            }
         }
     }
 

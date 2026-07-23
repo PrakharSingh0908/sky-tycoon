@@ -7,6 +7,15 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Raise capital: investors can buy in (GDD §39, Phase 3)
+
+- **A new Capital card on the Money tab** lets you take outside money. A fund will invest cash now for a slice of the airline (e.g. "$340K for 15%"). In return they take that share of every profitable week, forever, until you **buy them back** at the going valuation. Cash now versus your future upside, with a twist: the more you grow, the dearer the buyback, so early money is cheap insurance and expensive success.
+- **Rescue financing** — if you fall into the red, a backer offers a lifeline on harder terms (a bigger stake, a steeper discount): a way out of a cash crisis short of going under.
+- You always keep control (outside ownership is capped below half), and investors only ever share your **profits**, never your losses.
+
+*Why:* Phase 3 of Living Rivals & Capital. Money now has a real strategic third lane beside cash and debt: equity. (Next: rivals themselves buying stakes, board demands, and buyout offers.)
+
+
 ## Rivals fight back (GDD §39, Phase 2)
 
 - **Rivals now move onto your best routes by name** — when a fat, well-priced pair draws competition, a size-appropriate carrier is named as the challenger ("Monsoon Airways opened DEL ✈︎ BOM against you"), posted to the Gazette and flagged on your desk as "{rival} moved in." Defend your share (re-price, add capacity, lift service) or cede it.

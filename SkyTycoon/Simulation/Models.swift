@@ -801,6 +801,26 @@ struct RivalQuote: Codable, Equatable {
     var attribution: String  // "Rohan Mehta, Monsoon Airways"
 }
 
+/// An outside backer holding equity (GDD §39). Takes a share of every
+/// profitable day; buy the stake back at the current valuation to stop it.
+struct Investor: Codable, Identifiable, Equatable {
+    let id: UUID
+    var name: String
+    var isRival: Bool          // Phase 4: a strategic rival with a board voice
+    var stake: Double          // 0…1 of the airline
+    var boughtAtValuation: Double
+    var sinceWeek: Int
+}
+
+/// A standing offer of capital in exchange for equity (GDD §39 Phase 3).
+struct CapitalOffer: Identifiable, Equatable {
+    var id: String { funderName + "\(Int(cash))" }
+    let funderName: String
+    let stake: Double          // fraction they'd buy
+    let cash: Double           // what they'd pay now
+    let isRescue: Bool         // harsh terms offered when you're insolvent
+}
+
 /// A failing carrier's whole operation, offered up for acquisition (GDD
 /// §32): its planes, the routes it flies, its crew, and the reputation that
 /// quality earns. Generated when the card fires and persisted on the event.
@@ -931,6 +951,9 @@ struct GameState: Codable {
     /// The carrier directly above you — your nemesis (GDD §39 Pillar 2). Its
     /// jabs get personal and reference your busiest route.
     var nemesis: String? = nil
+    /// Outside backers holding equity (GDD §39 Phase 3). Each takes a share
+    /// of every profitable day until bought back. nil/empty = you own it all.
+    var investors: [Investor]? = nil
     /// The most recent notable carrier overtaken, for the celebration banner.
     var lastOvertakenRival: String? = nil
     /// Personal bests (GDD §29).

@@ -1416,3 +1416,32 @@ founder being bought whole for pocket change.
   the whole thing (caps, contenders, news) replays identically.
 - Player economics untouched (incursions only NAME the existing pressure);
   the poach is the one new material consequence, kept rare.
+
+### Phase 3 shipped — capital, financial core (2026-07-23)
+- **Model.** `Investor {id, name, isRival, stake, boughtAtValuation,
+  sinceWeek}`; `GameState.investors: [Investor]?` (nil = you own it all).
+  `CapitalOffer {funderName, stake, cash, isRescue}`.
+- **The deal.** `cash = dealValuation × stake × discount`, where
+  `dealValuation = max(marketCap, investorValuationFloor $2M)` and discount
+  is 0.85 (growth) / 0.70 (rescue) — the backer buys in below fair value,
+  that gap is their return. Growth rounds buy `investorGrowthStake 15%`;
+  rescue takes `investorRescueStake 35%`. Total outside equity never exceeds
+  `investorMaxOutsideStake 49%` (you keep control).
+- **Profit share.** At the daily settle, investors take
+  `outsideStake × max(0, dayProfit)` — upside only, never your losses. Booked
+  as a distribution (reduces cash), not an operating cost line. No RNG.
+- **Buyback.** `buyBackCost = dealValuation × stake` at the CURRENT
+  valuation — growing makes buying back dearer (and raising cash lifts the
+  valuation, so it compounds), which is exactly the tension: cheap insurance
+  early, expensive once you soar.
+- **Rescue.** When `cash < 0 || weeksInsolvent > 0`, `capitalOffer()` returns
+  a harsher rescue (35% at a 0.70 discount) — a dignified alternative to the
+  Grounded screen.
+- **UI.** A "Capital" card on the Money tab (below The Bank): the standing
+  offer with an `Accept · $X` key, and a cap table listing each backer with
+  a `Buy back · $X` key (disabled when unaffordable, so no dead key).
+- Verified in-engine: offer at 85% of value; stacking caps at 44% (won't
+  cross 49%); buyback scales with the risen valuation; investors skim only
+  profitable days. Deterministic (arithmetic + hash-named funds).
+- Phase 4 (rival stakes, board demands, takeover, exit ending) will set
+  `isRival = true` and layer on top of this core.

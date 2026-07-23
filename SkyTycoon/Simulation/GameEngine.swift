@@ -589,7 +589,11 @@ final class GameEngine {
 
         // 7. SETTLE — cash books only THIS day's profit; reputation drifts daily.
         weekReport = report
-        state.cash += report.profit - profitBefore
+        // Investors take their share of a profitable day (upside only — never
+        // your losses); a distribution to owners, not an operating cost (§39).
+        let dayProfit = report.profit - profitBefore
+        let investorCut = outsideStake > 0 ? max(0, dayProfit) * outsideStake : 0
+        state.cash += dayProfit - investorCut
         let paxWeightedSat = state.routes.isEmpty ? 60.0
             : state.routes.map(\.satisfaction).reduce(0, +) / Double(state.routes.count)
         let repTarget = 1 + (paxWeightedSat / 100) * 4
@@ -2590,6 +2594,60 @@ final class GameEngine {
         let trailingYearProfit = state.reports.suffix(52).map(\.profit).reduce(0, +)
         return max(0, max(0, netWorth)
             + Balance.marketCapEarningsMultiple * max(0, trailingYearProfit))
+    }
+
+    // ── Capital & investors (GDD §39 Phase 3) ────────────────────────────
+
+    var investors: [Investor] { state.investors ?? [] }
+    /// Fraction of the airline owned by outside backers (0…1).
+    var outsideStake: Double { investors.reduce(0) { $0 + $1.stake } }
+    /// The valuation deals are struck at — never below the founder floor.
+    var dealValuation: Double { max(marketCap, Balance.investorValuationFloor) }
+
+    /// A standing capital offer, or nil when you're already at the ownership
+    /// cap. Turns into a harsher RESCUE offer when you're bleeding cash.
+    func capitalOffer() -> CapitalOffer? {
+        let rescue = state.cash < 0 || state.weeksInsolvent > 0
+        let stake = rescue ? Balance.investorRescueStake : Balance.investorGrowthStake
+        guard outsideStake + stake <= Balance.investorMaxOutsideStake else { return nil }
+        let discount = rescue ? Balance.investorRescueDiscount : Balance.investorDealDiscount
+        let cash = (dealValuation * stake * discount / 10_000).rounded() * 10_000
+        // A stable fund name per offer window (changes as the airline grows).
+        let bucket = Int(dealValuation.rounded()) / 5_000_000
+        let name = stablePick(Balance.investorFundNames, seed: "fund\(bucket)\(rescue ? "R" : "")")
+        return CapitalOffer(funderName: name, stake: stake, cash: cash, isRescue: rescue)
+    }
+
+    /// Accept a capital offer: cash now, a new backer on the cap table.
+    func acceptCapital(_ offer: CapitalOffer) {
+        guard outsideStake + offer.stake <= Balance.investorMaxOutsideStake else { return }
+        state.cash += offer.cash
+        var list = state.investors ?? []
+        list.append(Investor(id: UUID(), name: offer.funderName, isRival: false,
+                             stake: offer.stake, boughtAtValuation: dealValuation,
+                             sinceWeek: state.date.totalWeeks))
+        state.investors = list
+        logEvent(title: "\(offer.funderName) took a \(Int(offer.stake * 100))% stake for \(offer.cash.money)",
+                 isNegative: false)
+        save()
+    }
+
+    /// What it costs to buy a backer out right now: their stake at the
+    /// CURRENT valuation (so growing makes buyback dearer — the whole point).
+    func buyBackCost(_ investor: Investor) -> Double {
+        (dealValuation * investor.stake / 10_000).rounded() * 10_000
+    }
+
+    /// Repurchase a stake if the cash is there; the profit share stops.
+    func buyBack(investorID: UUID) {
+        guard let inv = investors.first(where: { $0.id == investorID }) else { return }
+        let cost = buyBackCost(inv)
+        guard state.cash >= cost else { return }
+        state.cash -= cost
+        state.investors = investors.filter { $0.id != investorID }
+        logEvent(title: "Bought back \(inv.name)'s \(Int(inv.stake * 100))% for \(cost.money)",
+                 isNegative: false)
+        save()
     }
 
     /// Player's weekly passengers, live-projected (immediacy rule).
