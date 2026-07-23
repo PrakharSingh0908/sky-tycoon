@@ -374,13 +374,12 @@ private struct BoardingPassCard: View {
     }
 
     private func aircraftRow(_ plane: Aircraft) -> some View {
-        let spec = Balance.specs[plane.type]!
-        return HStack(spacing: 8) {
+        HStack(spacing: 8) {
             Image(systemName: "airplane").font(.caption2).foregroundStyle(accent)
             Text(plane.nickname)
                 .font(.game(.caption, weight: .semibold)).foregroundStyle(Theme.textPrimary)
-            Text(spec.displayName)
-                .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+            // The onboard rating for this aircraft (GDD §40).
+            StarRating(rating: plane.serviceRating, size: 8)
             Spacer()
             if plane.groundedWeeksRemaining > 0 {
                 StatusBadge(text: "In shop · \(plane.groundedWeeksRemaining) wk", color: Theme.warn)

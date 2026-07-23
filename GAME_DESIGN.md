@@ -1474,3 +1474,16 @@ founder being bought whole for pocket change.
   state fields optional/nil-grandfathered.
 - Guardrails intact: outside ownership still caps <49% via the shared path;
   investors share only profits; every money key is affordability-gated.
+
+## §40 — Per-aircraft flight rating (2026-07-24)
+
+Every delivered aircraft now carries a 1…5 star **flight rating** for its
+onboard experience. `Aircraft.serviceRating` builds on the existing
+`comfortScore` (cabin comfort × condition) and pulls it down for heavy wear
+(up to −0.15 at 100%) and old age (dips after 12 years, up to −0.12), mapped
+to 1…5 stars. Pure/deterministic, no new state. Shown as stars in the Fleet
+card (above wear/condition) and beside each aircraft on a route's boarding
+pass. It moves the instant you refit a cabin, run a check, or as a jet ages
+— a legible reason to invest in the cabin architect and keep airframes fresh.
+A top cabin on a pristine new jet approaches 5★; a thrashed old economy
+layout bottoms near 1★.
