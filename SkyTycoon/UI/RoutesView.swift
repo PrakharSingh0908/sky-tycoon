@@ -510,6 +510,19 @@ struct RouteDetailView: View {
                     MeterRow(label: "Passenger satisfaction", value: route.satisfaction / 100,
                              display: "\(Int(route.satisfaction))/100",
                              color: Theme.health(route.satisfaction / 100))
+                    // The onboard rating passengers get on this pair (GDD §40):
+                    // the average across the aircraft serving it.
+                    if let rating = engine.routeServiceRating(routeID: routeID) {
+                        HStack {
+                            Text("Flight rating").font(.game(.subheadline))
+                                .foregroundStyle(Theme.textSecondary)
+                            Spacer()
+                            StarRating(rating: rating, size: 11)
+                            Text(String(format: "%.1f", rating))
+                                .font(.game(.caption, weight: .semibold))
+                                .foregroundStyle(Theme.textPrimary)
+                        }
+                    }
                     cateringRow(route)
                 }
                 weeklyMoneyCard(route)

@@ -2593,6 +2593,17 @@ final class GameEngine {
     func city(_ id: String) -> City? { state.cities.first { $0.id == id } }
     var latestReport: WeeklyReport? { state.reports.last }
 
+    /// The average onboard flight rating (1...5) across the aircraft serving
+    /// a route — what a passenger on this pair experiences (GDD §40). nil
+    /// when nothing is assigned yet.
+    func routeServiceRating(routeID: UUID) -> Double? {
+        let planes = state.fleet.filter {
+            $0.assignedRouteID == routeID && $0.status != .onOrder
+        }
+        guard !planes.isEmpty else { return nil }
+        return planes.map(\.serviceRating).reduce(0, +) / Double(planes.count)
+    }
+
     // ── The industry ladder (2026-07-18) ─────────────────────────────────
     // Player valuation: book value plus an earnings multiple on the
     // trailing year — simple enough to explain, moves with both growth

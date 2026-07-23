@@ -13,6 +13,8 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 *Why:* per request — a legible passenger-facing rating that rewards investing in the cabin and keeping airframes fresh.
 
+**On each route too:** a route's detail now shows a **Flight rating** — the average onboard rating across the aircraft serving that pair — right under passenger satisfaction, so you can see the experience you're offering on that specific route.
+
 **Now it counts:** the rating actually drives passengers — it's the comfort input to both route satisfaction and the competition for share, so a higher-rated fleet wins more travellers and a worn, aging one loses them. (It replaces the old comfort term rather than adding a second one, so nothing is double-counted; the effect is deliberately light.)
 
 ---
