@@ -756,10 +756,16 @@ struct RouteDetailView: View {
                 Image(systemName: kind == .onRoute ? "checkmark.circle.fill" : "plus.circle")
                     .foregroundStyle(kind == .onRoute ? Theme.profit : Theme.textSecondary)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(plane.nickname)
-                        .font(.game(.subheadline, weight: .semibold))
-                        .foregroundStyle(Theme.textPrimary)
-                        .lineLimit(1)
+                    HStack(spacing: 6) {
+                        Text(plane.nickname)
+                            .font(.game(.subheadline, weight: .semibold))
+                            .foregroundStyle(Theme.textPrimary)
+                            .lineLimit(1)
+                        // Onboard flight rating beside the aircraft (GDD §40).
+                        if plane.status != .onOrder {
+                            StarRating(rating: plane.serviceRating, size: 8)
+                        }
+                    }
                     Text("\(spec.displayName) · \(Int(plane.effectiveRangeKm(spec: spec))) km")
                         .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
                         .lineLimit(1)
