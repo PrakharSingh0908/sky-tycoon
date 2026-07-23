@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Map no longer flies grounded planes; rating beside the aircraft name
+
+- **Fixed:** a route whose only aircraft was in the shop for a check still showed planes flying on the map. The living map now only animates routes with an aircraft actually in the air (assigned and not grounded), so a grounded route sits still.
+- The flight rating stars now sit **next to the aircraft's name** on the Fleet card (instead of a separate row).
+
+*Why:* per report and request.
+
+
 ## Flight rating per aircraft (GDD §40)
 
 - Every aircraft now shows a **1–5 star flight rating** for its onboard experience, built from the cabin (seat pitch, width, material, ovens, wifi) and airframe condition, and pulled down by heavy wear and old age. It's on each Fleet card above the wear/condition meters, and as small stars beside each plane on a route's boarding pass. Refit a cabin or run a check and it climbs; let a jet get old and thrashed and it slips.

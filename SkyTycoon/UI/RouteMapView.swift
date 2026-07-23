@@ -416,12 +416,17 @@ struct RouteMapView: View {
     /// smooth — the busiest routes get planes first.
     private func drawFlights(ctx: inout GraphicsContext, size: CGSize, radius: Double) {
         guard !reduceMotion else { return }
-        let staffed = Set(engine.state.fleet.compactMap(\.assignedRouteID))
+        // Only routes with an aircraft actually IN THE AIR fly on the map —
+        // a plane in the shop (grounded for a check) doesn't count, so a
+        // route whose only jet is grounded shows no motion.
+        let flying = Set(engine.state.fleet.filter {
+            $0.status == .assigned && $0.groundedWeeksRemaining == 0
+        }.compactMap(\.assignedRouteID))
         let focusRoute = focusRouteID.flatMap { id in
             engine.state.routes.first { $0.id == id }
         }
         let candidates = (focusRoute.map { [$0] } ?? engine.state.routes)
-            .filter { staffed.contains($0.id) && $0.weeklyFrequency > 0 }
+            .filter { flying.contains($0.id) && $0.weeklyFrequency > 0 }
             .sorted { $0.weeklyFrequency > $1.weeklyFrequency }
         let roundTrip = 8.0          // seconds out-and-back at x1
         var budget = 40              // global plane cap (perf)

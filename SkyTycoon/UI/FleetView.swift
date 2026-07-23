@@ -111,7 +111,13 @@ private struct AircraftCard: View {
         GameCard {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(plane.nickname).font(.game(.headline, weight: .bold))
+                    HStack(spacing: 6) {
+                        Text(plane.nickname).font(.game(.headline, weight: .bold))
+                        // Onboard flight rating right beside the name (GDD §40).
+                        if plane.status != .onOrder {
+                            StarRating(rating: plane.serviceRating, size: 9)
+                        }
+                    }
                     Text("\(spec.displayName) · \(plane.seats(spec: spec)) seats · \(Int(plane.effectiveRangeKm(spec: spec))) km range · \(String(format: "%.1f", plane.ageYears))y")
                         .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
                 }
@@ -130,17 +136,6 @@ private struct AircraftCard: View {
             if plane.status == .onOrder {
                 deliveryProgress(spec: spec)
             } else {
-                // Onboard experience (GDD §40): cabin + condition, dragged
-                // down by wear and age. What a passenger would rate this jet.
-                HStack {
-                    Text("Flight rating").font(.game(.caption))
-                        .foregroundStyle(Theme.textSecondary)
-                    Spacer()
-                    StarRating(rating: plane.serviceRating, size: 11)
-                    Text(String(format: "%.1f", plane.serviceRating))
-                        .font(.game(.caption, weight: .semibold))
-                        .foregroundStyle(Theme.textPrimary)
-                }
                 HStack(spacing: 14) {
                     MeterRow(label: "Wear", value: plane.wear / 100,
                              display: "\(Int(plane.wear))",
