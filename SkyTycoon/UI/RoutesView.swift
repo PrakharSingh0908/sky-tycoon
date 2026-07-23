@@ -466,11 +466,12 @@ struct RouteDetailView: View {
                     let projLF = engine.routeEconomics(routeID: routeID)?.loadFactor
                         ?? route.lastLoadFactor
                     HStack(spacing: 20) {
-                        StatTile(label: "Proj. load factor", value: "\(Int(projLF * 100))%",
-                                 color: Theme.health(projLF))
-                        StatTile(label: "On-time", value: "\(Int(route.lastPunctuality * 100))%",
-                                 color: Theme.health(route.lastPunctuality))
+                        InstrumentGauge(value: projLF, label: "Load factor",
+                                        icon: "person.2.fill")
+                        InstrumentGauge(value: route.lastPunctuality, label: "On-time",
+                                        icon: "clock.fill")
                     }
+                    .padding(.vertical, 2)
                     // The pair's market (GDD §21) is reference, not a lever —
                     // it folds behind a tap (DESIGN_AUDIT §2). Distance is in
                     // the title and on the map, so it's dropped entirely.

@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Load factor and on-time as cockpit dials
+
+- A route's **projected load factor and on-time** now read as machined **instrument gauges** — 270° arc dials with a glowing health-colored arc, graduation ticks, a hub icon (passengers / a clock), and a mono readout that sweeps when the numbers move. A new reusable `InstrumentGauge` in the design system, replacing the flat percentage tiles. It leans into the "instruments, not menus" charter and makes the two numbers you tune against far more alive.
+
+*Why:* per request — a more exciting, enriched presentation for the route's key read-outs.
+
+
 ## Legibility pass: leaner HQ and route economics (DESIGN_AUDIT §1–2)
 
 - **Removed the HQ "Last week" card.** It duplicated the Money tab's statement (down to a second expense pie); the hero's net-worth panel is the glance, the statement is the detail. Less to scroll, no lost information.

@@ -195,6 +195,66 @@ struct StatTile: View {
     }
 }
 
+// ── InstrumentGauge — a cockpit dial for a 0...1 reading ────────────────
+
+/// A machined 270° dial for a fraction (load factor, punctuality): a
+/// recessed arc track ringed with graduation ticks, a glowing milled arc in
+/// the semantic color sweeping to the value, and a mono readout at the hub
+/// under a polished icon. It sweeps when the value changes — an instrument
+/// reading a live machine, not a flat percentage.
+struct InstrumentGauge: View {
+    let value: Double              // 0...1
+    let label: String
+    var icon: String = "gauge.with.dots.needle.bottom.50percent"
+    var display: String? = nil     // defaults to a percentage
+    var tint: Color? = nil         // override; else the health color
+
+    private let sweep = 0.75        // 270° of the circle
+    private let diameter: CGFloat = 78
+
+    var body: some View {
+        let v = max(0, min(1, value))
+        let color = tint ?? Theme.health(v)
+        VStack(spacing: 7) {
+            ZStack {
+                // Recessed arc track, cut into the panel.
+                Circle().trim(from: 0, to: sweep)
+                    .stroke(LinearGradient(colors: [.black.opacity(0.55), .black.opacity(0.26)],
+                                           startPoint: .top, endPoint: .bottom),
+                            style: StrokeStyle(lineWidth: 7, lineCap: .round))
+                    .rotationEffect(.degrees(135))
+                // Graduation ticks along the arc.
+                ForEach(0..<11, id: \.self) { i in
+                    Capsule().fill(Color.white.opacity(0.16))
+                        .frame(width: 1.5, height: 4)
+                        .frame(width: diameter, height: diameter, alignment: .top)
+                        .rotationEffect(.degrees(135 + Double(i) / 10 * 270))
+                }
+                // Milled value arc + light bleed.
+                Circle().trim(from: 0, to: sweep * v)
+                    .stroke(color, style: StrokeStyle(lineWidth: 7, lineCap: .round))
+                    .rotationEffect(.degrees(135))
+                    .shadow(color: color.opacity(0.6), radius: 4)
+                // Hub readout.
+                VStack(spacing: 0) {
+                    Image(systemName: icon).font(.system(size: 12, weight: .semibold))
+                        .polishedSilver()
+                    TickerText(text: display ?? "\(Int(v * 100))%",
+                               font: .data(.title3, weight: .semibold),
+                               color: Theme.textPrimary)
+                }
+            }
+            .frame(width: diameter, height: diameter)
+            .animation(.snappy, value: v)
+            Text(label.uppercased())
+                .font(.data(.caption2)).tracking(0.9)
+                .foregroundStyle(Theme.textSecondary)
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityLabel("\(label) \(Int(v * 100)) percent")
+    }
+}
+
 // ── MeterBar — any 0...1 quantity (v3.1.4 machined) ─────────────────────
 
 /// A machined instrument channel: a recessed groove engraved into the
@@ -919,6 +979,23 @@ struct GameScreen<Content: View>: View {
 
 
 // Machined meter pin: the instrument channel at every fill level and color.
+#Preview("Instrument gauges") {
+    GameCard {
+        SectionHeader(title: "Economics", icon: "slider.horizontal.3", accent: Theme.teal)
+        HStack(spacing: 20) {
+            InstrumentGauge(value: 0.86, label: "Load factor", icon: "person.2.fill")
+            InstrumentGauge(value: 0.58, label: "On-time", icon: "clock.fill")
+        }
+        HStack(spacing: 20) {
+            InstrumentGauge(value: 0.30, label: "Load factor", icon: "person.2.fill")
+            InstrumentGauge(value: 1.0, label: "On-time", icon: "clock.fill")
+        }
+    }
+    .padding(16)
+    .background(Theme.bg)
+    .preferredColorScheme(.dark)
+}
+
 #Preview("Meters") {
     GameCard {
         MeterRow(label: "Happiness", value: 0.70, color: Theme.profit)
