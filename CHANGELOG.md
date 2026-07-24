@@ -7,6 +7,14 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Dials everywhere: fixed ticks + wear/condition gauges
+
+- **Fixed the dial's graduation ticks** — they were ~90° out of phase and floated off the arc; they now sit exactly on the track with the ends aligned.
+- **Fleet cards now show Wear and Condition as the same instrument dials** (in place of the flat bars) — wear reads red as it climbs, condition green as it holds, consistent with the route gauges.
+
+*Why:* per report + request.
+
+
 ## Load factor and on-time as cockpit dials
 
 - A route's **projected load factor and on-time** now read as machined **instrument gauges** — 270° arc dials with a glowing health-colored arc, graduation ticks, a hub icon (passengers / a clock), and a mono readout that sweeps when the numbers move. A new reusable `InstrumentGauge` in the design system, replacing the flat percentage tiles. It leans into the "instruments, not menus" charter and makes the two numbers you tune against far more alive.

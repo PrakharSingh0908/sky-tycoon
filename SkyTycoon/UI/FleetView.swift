@@ -136,14 +136,17 @@ private struct AircraftCard: View {
             if plane.status == .onOrder {
                 deliveryProgress(spec: spec)
             } else {
-                HStack(spacing: 14) {
-                    MeterRow(label: "Wear", value: plane.wear / 100,
-                             display: "\(Int(plane.wear))",
-                             color: Theme.health(1 - plane.wear / 100))
-                    MeterRow(label: "Condition", value: plane.condition / 100,
-                             display: "\(Int(plane.condition))",
-                             color: Theme.health(plane.condition / 100))
+                HStack(spacing: 20) {
+                    InstrumentGauge(value: plane.wear / 100, label: "Wear",
+                                    icon: "wrench.and.screwdriver.fill",
+                                    display: "\(Int(plane.wear))",
+                                    tint: Theme.health(1 - plane.wear / 100))
+                    InstrumentGauge(value: plane.condition / 100, label: "Condition",
+                                    icon: "checkmark.seal.fill",
+                                    display: "\(Int(plane.condition))",
+                                    tint: Theme.health(plane.condition / 100))
                 }
+                .padding(.vertical, 2)
                 // The quiet-but-mortal warning (GDD §17): past the danger
                 // line, a flying airframe can be LOST. Not a popup — a
                 // line on the card the player either heeds or answers for.

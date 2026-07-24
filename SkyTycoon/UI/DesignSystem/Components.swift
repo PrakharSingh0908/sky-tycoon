@@ -223,12 +223,15 @@ struct InstrumentGauge: View {
                                            startPoint: .top, endPoint: .bottom),
                             style: StrokeStyle(lineWidth: 7, lineCap: .round))
                     .rotationEffect(.degrees(135))
-                // Graduation ticks along the arc.
+                // Graduation ticks along the arc. A top-pinned tick sits at
+                // 12 o'clock (270° clockwise from the trim's 3 o'clock zero),
+                // so to land it on the arc angle (135° + f·270°) it rotates by
+                // 225° + f·270° — the +90° that keeps ticks ON the track.
                 ForEach(0..<11, id: \.self) { i in
                     Capsule().fill(Color.white.opacity(0.16))
                         .frame(width: 1.5, height: 4)
                         .frame(width: diameter, height: diameter, alignment: .top)
-                        .rotationEffect(.degrees(135 + Double(i) / 10 * 270))
+                        .rotationEffect(.degrees(225 + Double(i) / 10 * 270))
                 }
                 // Milled value arc + light bleed.
                 Circle().trim(from: 0, to: sweep * v)
