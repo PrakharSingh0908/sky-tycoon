@@ -7,6 +7,13 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## One-tap assign for available aircraft
+
+- Tapping an **available (idle) aircraft** in a route's "Aircraft on this route" list now **assigns it in one tap**, instead of opening an action menu with an "Assign to this route" button. Planes already on the route (take off / service) or on another route (move here) still open the drawer, since those are deliberate moves.
+
+*Why:* per request — assigning a free plane is the common case and shouldn't need a menu.
+
+
 ## Living map: one plane per aircraft, sized, constant speed, no glow
 
 - **Planes on a route now match the aircraft actually flying it** — a one-plane route shows one plane (it was drawing a count based on weekly frequency, so a daily-doubled route looked like two jets).

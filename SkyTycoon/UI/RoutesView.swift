@@ -758,10 +758,13 @@ struct RouteDetailView: View {
     private func assignRow(_ plane: Aircraft, route: Route, kind: AssignRowKind) -> some View {
         let spec = Balance.specs[plane.type]!
         return Button {
-            // Every delivered plane opens the action drawer: assign / move /
-            // take off route, and service it right here (GDD §39). On-order
-            // planes have nothing to do yet.
-            if plane.status != .onOrder { servicing = plane }
+            // A free plane just assigns in one tap. Planes already on this
+            // route, or on another, open the action drawer (take off / move /
+            // service). On-order planes have nothing to do yet.
+            switch kind {
+            case .free: engine.assign(aircraftID: plane.id, to: route.id)
+            case .onRoute, .busy: if plane.status != .onOrder { servicing = plane }
+            }
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: kind == .onRoute ? "checkmark.circle.fill" : "plus.circle")
