@@ -15,7 +15,6 @@ struct DashboardView: View {
     @State private var settleFlash = false
     @State private var showingIndustry = false
     @State private var gazettePage = 0
-    @State private var eventsExpanded = false
     /// The hero's supporting stats (rating, last week, fleet, routes) collapse
     /// behind a disclosure so the score leads.
     @State private var heroStatsExpanded = false
@@ -973,7 +972,6 @@ struct DashboardView: View {
                 ? rangeSeries(engine.state.debtHistory ?? []) : []
             TrendChart(values: series,
                        color: Theme.cornflower, window: window, unit: unit,
-                       events: chartEventMarks,
                        secondary: debtSeries,
                        format: trendMetric == .reputation
                            ? { String(format: "%.1f★", $0) } : { $0.money })
@@ -983,36 +981,6 @@ struct DashboardView: View {
                     legendChip(color: Theme.loss, text: "Debt", dashed: true)
                     Spacer()
                 }
-            }
-
-            // The rules on the chart, expandable into the history book:
-            // latest 8, one strict line each — date column, title, sign dot.
-            if !(engine.state.eventLog ?? []).isEmpty {
-                DisclosureGroup(isExpanded: $eventsExpanded) {
-                    VStack(alignment: .leading, spacing: 7) {
-                        ForEach((engine.state.eventLog ?? []).suffix(8).reversed()) { entry in
-                            HStack(spacing: 10) {
-                                Text("Y\((entry.totalWeek - 1) / 52 + 1) W\(String(format: "%02d", (entry.totalWeek - 1) % 52 + 1))")
-                                    .font(.data(.caption2)).tracking(0.85)
-                                    .foregroundStyle(Theme.textTertiary)
-                                    .frame(width: 58, alignment: .leading)
-                                Text(entry.title)
-                                    .font(.game(.caption)).foregroundStyle(Theme.textPrimary)
-                                    .lineLimit(1)
-                                Spacer(minLength: 8)
-                                Circle()
-                                    .fill(entry.isNegative ? Theme.loss : Theme.profit)
-                                    .frame(width: 6, height: 6)
-                            }
-                        }
-                    }
-                    .padding(.top, 8)
-                } label: {
-                    Text("MAJOR EVENTS")
-                        .font(.data(.caption2)).tracking(0.85)
-                        .foregroundStyle(Theme.textSecondary)
-                }
-                .tint(Theme.textSecondary)
             }
         }
     }
@@ -1025,21 +993,6 @@ struct DashboardView: View {
                 .overlay(Rectangle().stroke(color,
                     style: StrokeStyle(lineWidth: 1.5, dash: dashed ? [3, 2] : [])))
             Text(text).font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
-        }
-    }
-
-    /// Event weeks → the chart's x units for the active range (weekly
-    /// points, 4-week months, 13-week quarters).
-    private var chartEventMarks: [ChartEventMark] {
-        let now = engine.state.date.totalWeeks
-        // Weeks per chart bucket: 1 (W), ~4.3 (M, 30-day), 13 (Y, quarter).
-        let divisor: Double = switch financeRange {
-        case .weekly: 1; case .monthly: 30.0 / 7.0; case .yearly: 13
-        }
-        return (engine.state.eventLog ?? []).map {
-            ChartEventMark(id: $0.id,
-                           offset: Double($0.totalWeek - now) / divisor,
-                           negative: $0.isNegative)
         }
     }
 

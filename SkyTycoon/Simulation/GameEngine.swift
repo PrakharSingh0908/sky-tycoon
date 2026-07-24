@@ -1028,6 +1028,47 @@ final class GameEngine {
                                 fuelEventMult: fuelMult, demandEventMult: demandMult)
     }
 
+    // ── Fare curve: the pricing what-if (deepen the fare knob) ───────────
+
+    /// One sample on the fare↔outcome curve.
+    struct FarePoint: Identifiable {
+        let id: Int
+        let fare: Double
+        let loadFactor: Double
+        let revenue: Double
+    }
+
+    /// Sweeps the fare across a plausible range and re-runs the SAME
+    /// economics the weekly tick uses, so pricing becomes a strategic read
+    /// instead of a guess: you see revenue rise then fall as demand thins,
+    /// and where it peaks. Fuel and the fixed costs (crew, lease, upkeep)
+    /// don't move with fare, so the revenue-max fare is also the profit-max
+    /// fare. Returns [] when the route can't fly (no aircraft / no schedule).
+    func fareCurve(routeID: UUID, samples: Int = 28) -> [FarePoint] {
+        guard let route = state.routes.first(where: { $0.id == routeID }) else { return [] }
+        let planes = state.fleet.filter {
+            route.assignedAircraftIDs.contains($0.id) && $0.groundedWeeksRemaining == 0
+        }
+        guard !planes.isEmpty, route.weeklyFrequency > 0 else { return [] }
+        let profile = Balance.countryProfiles[state.country]!
+        let fuelMult = state.activeEffects
+            .filter { $0.kind == .fuelPrice }.reduce(1.0) { $0 * $1.multiplier }
+            * trendMultiplier(.fuel)
+        let demandMult = state.activeEffects
+            .filter { $0.kind == .demand }.reduce(1.0) { $0 * $1.multiplier }
+            * trendMultiplier(.demand)
+        let ref = route.distanceKm * Balance.referenceFarePerKm * profile.fareLevel
+        let lo = max(5, ref * 0.45), hi = ref * 2.1
+        return (0..<samples).map { i in
+            let f = (lo + (hi - lo) * Double(i) / Double(samples - 1)).rounded()
+            var probe = route
+            probe.fare = f
+            let e = computeEconomics(route: probe, planes: planes, profile: profile,
+                                     fuelEventMult: fuelMult, demandEventMult: demandMult)
+            return FarePoint(id: i, fare: f, loadFactor: e.loadFactor, revenue: e.revenue)
+        }
+    }
+
     /// A flying route that has slipped and wants a look (GDD §26).
     struct RouteAttention: Identifiable {
         let id: UUID

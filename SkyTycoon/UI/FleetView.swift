@@ -118,7 +118,7 @@ private struct AircraftCard: View {
                             StarRating(rating: plane.serviceRating, size: 9)
                         }
                     }
-                    Text("\(spec.displayName) · \(plane.seats(spec: spec)) seats · \(Int(plane.effectiveRangeKm(spec: spec))) km range · \(String(format: "%.1f", plane.ageYears))y")
+                    Text(spec.displayName)
                         .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
                 }
                 Spacer()
@@ -136,7 +136,7 @@ private struct AircraftCard: View {
             if plane.status == .onOrder {
                 deliveryProgress(spec: spec)
             } else {
-                HStack(spacing: 20) {
+                HStack(spacing: 16) {
                     InstrumentGauge(value: plane.wear / 100, label: "Wear",
                                     icon: "wrench.and.screwdriver.fill",
                                     display: "\(Int(plane.wear))",
@@ -145,6 +145,15 @@ private struct AircraftCard: View {
                                     icon: "checkmark.seal.fill",
                                     display: "\(Int(plane.condition))",
                                     tint: Theme.health(plane.condition / 100))
+                    // Range dial reads the airframe's reach against the
+                    // longest-legged airframe in service, so a widebody's
+                    // needle sweeps far past a feeder's.
+                    let range = plane.effectiveRangeKm(spec: spec)
+                    let maxRange = Balance.specs.values.map(\.rangeKm).max() ?? range
+                    InstrumentGauge(value: min(1, range / maxRange), label: "Range",
+                                    icon: "arrow.left.and.right",
+                                    display: String(format: "%.1fk", range / 1000),
+                                    tint: Theme.sky)
                 }
                 .padding(.vertical, 2)
                 // The quiet-but-mortal warning (GDD §17): past the danger
@@ -163,7 +172,9 @@ private struct AircraftCard: View {
                         .background(Theme.loss.opacity(0.10),
                                     in: RoundedRectangle(cornerRadius: 10))
                 }
-                statusLine
+                if showsStatusLine {
+                    statusLine
+                }
                 actions
             }
         }
@@ -190,20 +201,21 @@ private struct AircraftCard: View {
         return engine.state.routes.first { $0.id == id }
     }
 
+    /// The route pairing moved onto the Route key, so the status line only
+    /// speaks up when there's something else to say: in shop, idle, or the
+    /// weekly lease bill.
+    private var showsStatusLine: Bool {
+        plane.groundedWeeksRemaining > 0 || currentRoute == nil
+    }
+
     private var statusLine: some View {
         HStack(spacing: 6) {
             if plane.groundedWeeksRemaining > 0 {
                 StatusBadge(text: "In shop · \(plane.groundedWeeksRemaining) wk", color: Theme.warn)
-            } else if let route = currentRoute {
-                StatusBadge(text: "\(route.originID) ✈︎ \(route.destinationID)", color: Theme.profit)
-            } else {
+            } else if currentRoute == nil {
                 StatusBadge(text: "Idle", color: Theme.textSecondary)
             }
             Spacer()
-            if plane.acquisition == .leased {
-                Text("\(plane.weeklyLeaseCost.money)/wk lease")
-                    .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
-            }
         }
     }
 
@@ -238,11 +250,7 @@ private struct AircraftCard: View {
             Button("Heavy check · $250K · 2 wk") {
                 engine.orderCheck(aircraftID: plane.id, heavy: true)
             }
-            if !(plane.hasGalleyOven ?? false) {
-                Button("Fit galley oven · \(Balance.galleyOvenCost.money)") {
-                    engine.installGalleyOven(aircraftID: plane.id)
-                }
-            }
+            // Galley-oven fit hidden for now (per request).
             Divider()
             if plane.acquisition == .leased {
                 Button("Return to lessor", role: .destructive) {
@@ -255,7 +263,7 @@ private struct AircraftCard: View {
                 }
             }
         } label: {
-            menuChip("Service", icon: "wrench.and.screwdriver.fill", finish: .obsidian)
+            menuChip("Service", finish: .obsidian)
         }
     }
 
@@ -287,16 +295,20 @@ private struct AircraftCard: View {
                 }
             }
         } label: {
-            menuChip("Route", icon: "point.topleft.down.to.point.bottomright.curvepath",
+            // The route now lives on the key itself: assigned planes show
+            // their pairing, idle ones invite one. No icon, no separate tag.
+            menuChip(currentRoute.map { "\($0.originID) ✈︎ \($0.destinationID)" } ?? "Route",
                      finish: .bronze)
         }
     }
 
     /// Menu chips wear the same machined key surface as real buttons, so
     /// the action row reads as one bank of console keys.
-    private func menuChip(_ title: String, icon: String, finish: MetalFinish) -> some View {
+    private func menuChip(_ title: String, icon: String? = nil, finish: MetalFinish) -> some View {
         HStack(spacing: 5) {
-            Image(systemName: icon).font(.caption2.weight(.medium))
+            if let icon {
+                Image(systemName: icon).font(.caption2.weight(.medium))
+            }
             Text(title)
         }
         .foregroundStyle(finish.ink)

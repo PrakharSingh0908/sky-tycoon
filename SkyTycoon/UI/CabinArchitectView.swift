@@ -163,9 +163,7 @@ struct CabinArchitectView: View {
                 }
             }
             Divider().overlay(Theme.hairline)
-            PillStepper(label: "Galley ovens", value: "\(draft.galleyUnits)", accent: accent,
-                onDecrement: { draft.galleyUnits = max(0, draft.galleyUnits - 1) },
-                onIncrement: { draft.galleyUnits = min(3, draft.galleyUnits + 1) })
+            // Galley-oven stepper hidden for now (per request).
             Toggle(isOn: $draft.hasWifi) {
                 VStack(alignment: .leading, spacing: 1) {
                     Text("Cabin wifi")
@@ -293,7 +291,7 @@ struct CabinFloorplan: View {
                     draw(ctx: &ctx, size: size, m: m, galleyZone: galleyZone)
                 }
                 .frame(width: geo.size.width,
-                       height: m.contentHeight + galleyZone)
+                       height: m.contentHeight + galleyZone + m.galleyRowH)
             }
         }
     }
@@ -322,15 +320,27 @@ struct CabinFloorplan: View {
         ctx.fill(hull, with: .color(Color.white.opacity(0.05)))
         ctx.stroke(hull, with: .color(Color.white.opacity(0.15)), lineWidth: 1.5)
 
-        // Cockpit hint + wifi in the dome.
+        // Cockpit windscreen — two angled glass panes at the nose tip,
+        // leaving the centerline free for the wifi dome marker.
+        for side in [-1.0, 1.0] {
+            let s = CGFloat(side)
+            var pane = Path()
+            pane.move(to: CGPoint(x: w / 2 + s * 8, y: 16))
+            pane.addLine(to: CGPoint(x: w / 2 + s * 20, y: 30))
+            pane.addLine(to: CGPoint(x: w / 2 + s * 9, y: 33))
+            pane.closeSubpath()
+            ctx.fill(pane, with: .color(Theme.teal.opacity(0.16)))
+            ctx.stroke(pane, with: .color(.white.opacity(0.18)), lineWidth: 0.8)
+        }
+        // Cockpit bulkhead line, and the wifi dome if fitted.
         var door = Path()
-        door.move(to: CGPoint(x: wallL + 10, y: 40))
-        door.addLine(to: CGPoint(x: wallR - 10, y: 40))
+        door.move(to: CGPoint(x: wallL + 10, y: 42))
+        door.addLine(to: CGPoint(x: wallR - 10, y: 42))
         ctx.stroke(door, with: .color(Color.white.opacity(0.12)), lineWidth: 1)
         if layout.hasWifi {
             ctx.draw(Text(Image(systemName: "wifi"))
-                        .font(.system(size: 11, weight: .bold)).foregroundStyle(accent),
-                     at: CGPoint(x: w / 2, y: 24))
+                        .font(.system(size: 10, weight: .bold)).foregroundStyle(accent),
+                     at: CGPoint(x: w / 2, y: 25))
         }
 
         // ── Column letters (skip I, like real airlines) ──────────────────
@@ -372,6 +382,28 @@ struct CabinFloorplan: View {
             y += m.galleyRowH
         }
 
+        // ── Wing box + over-wing exits ───────────────────────────────────
+        // The spar passes under the mid-cabin: shade the band it occupies
+        // and mark the over-wing exits as green slots on both walls.
+        if m.rows >= 4 {
+            let wingRows = max(1, m.rows / 5)
+            let wingStart = Int((Double(m.rows) - Double(wingRows)) * 0.55)
+            let wingTop = y + CGFloat(wingStart) * m.rowH
+            let band = CGRect(x: wallL, y: wingTop,
+                              width: wallR - wallL, height: CGFloat(wingRows) * m.rowH)
+            ctx.fill(Path(band),
+                     with: .linearGradient(
+                        Gradient(colors: [.white.opacity(0.015), .white.opacity(0.08),
+                                          .white.opacity(0.015)]),
+                        startPoint: CGPoint(x: band.midX, y: band.minY),
+                        endPoint: CGPoint(x: band.midX, y: band.maxY)))
+            for wall in [wallL, wallR] {
+                let slot = CGRect(x: wall - 1.5, y: wingTop - 2, width: 3, height: 14)
+                ctx.fill(Path(roundedRect: slot, cornerRadius: 1.5),
+                         with: .color(Theme.profit.opacity(0.75)))
+            }
+        }
+
         // ── Seat rows ────────────────────────────────────────────────────
         for row in 0..<m.rows {
             let rowY = y + CGFloat(row) * m.rowH
@@ -386,6 +418,22 @@ struct CabinFloorplan: View {
                          center: seatCenterX(s, m: m),
                          top: rowY, m: m, base: seatBase, cushion: cushion)
             }
+        }
+
+        // ── Aft lavatories — a pair of rear galley/lav blocks that give the
+        // cabin a proper back wall instead of trailing off into the tail.
+        let aftY = y + CGFloat(m.rows) * m.rowH
+        let lavW = (wallR - wallL - m.aisleW - 24) / 2
+        for b in 0..<2 {
+            let lx = b == 0 ? wallL + 12 : wallR - 12 - lavW
+            let rect = CGRect(x: lx, y: aftY + 4, width: lavW, height: m.galleyRowH - 14)
+            ctx.fill(Path(roundedRect: rect, cornerRadius: 6),
+                     with: .color(Theme.teal.opacity(0.14)))
+            ctx.stroke(Path(roundedRect: rect, cornerRadius: 6),
+                       with: .color(Theme.teal.opacity(0.4)), lineWidth: 1)
+            ctx.draw(Text("LAV").font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(Theme.teal.opacity(0.9)),
+                     at: CGPoint(x: rect.midX, y: rect.midY))
         }
     }
 
@@ -404,9 +452,14 @@ struct CabinFloorplan: View {
     private func drawSeat(ctx: inout GraphicsContext, center: CGFloat,
                           top: CGFloat, m: Metrics, base: Color, cushion: Color) {
         let x = center - m.seatW / 2
-        // Backrest with armrest nubs.
+        // Backrest with armrest nubs — a top-lit gradient gives the shell
+        // a little moulded depth instead of reading as a flat chip.
         let back = CGRect(x: x, y: top, width: m.seatW, height: m.seatDepth * 0.78)
-        ctx.fill(Path(roundedRect: back, cornerRadius: m.seatW * 0.22), with: .color(base))
+        ctx.fill(Path(roundedRect: back, cornerRadius: m.seatW * 0.22),
+                 with: .linearGradient(
+                    Gradient(colors: [base.opacity(1), base.opacity(0.78)]),
+                    startPoint: CGPoint(x: back.midX, y: back.minY),
+                    endPoint: CGPoint(x: back.midX, y: back.maxY)))
         // Headrest band.
         ctx.fill(Path(roundedRect: CGRect(x: x + m.seatW * 0.16, y: top + 1.5,
                                           width: m.seatW * 0.68, height: m.seatDepth * 0.16),

@@ -232,3 +232,111 @@ struct LoadFactorSparkline: View {
         }
     }
 }
+
+// ── FareCurveChart — the pricing what-if (deepen the fare knob) ──────────
+
+/// Turns fare from a guess into a strategic read: revenue as a function of
+/// fare (the hero curve), the player's current fare and the revenue peak
+/// marked, with load factor traced as a dashed line so the yield-vs-fill
+/// tradeoff is visible. The sim's own economics generate every point.
+struct FareCurveChart: View {
+    let points: [GameEngine.FarePoint]
+    let currentFare: Double
+    var accent: Color = Theme.orange
+    var height: CGFloat = 120
+
+    var body: some View {
+        if points.count >= 2,
+           let maxRev = points.map(\.revenue).max(), maxRev > 0,
+           let best = points.max(by: { $0.revenue < $1.revenue }) {
+            curve(maxRev: maxRev, best: best)
+        } else {
+            Text("Assign an aircraft and set a schedule to see the pricing curve.")
+                .font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+                .frame(maxWidth: .infinity, minHeight: 60)
+        }
+    }
+
+    private func curve(maxRev: Double, best: GameEngine.FarePoint) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Chart {
+                ForEach(points) { p in
+                    AreaMark(x: .value("Fare", p.fare), y: .value("Revenue", p.revenue))
+                        .foregroundStyle(.linearGradient(
+                            colors: [accent.opacity(0.28), accent.opacity(0.02)],
+                            startPoint: .top, endPoint: .bottom))
+                        .interpolationMethod(.catmullRom)
+                    LineMark(x: .value("Fare", p.fare), y: .value("Revenue", p.revenue))
+                        .foregroundStyle(accent)
+                        .lineStyle(StrokeStyle(lineWidth: 2))
+                        .interpolationMethod(.catmullRom)
+                }
+                // Load factor, scaled onto the revenue axis (shape only): it
+                // slides down as fare climbs — the fill you trade for yield.
+                ForEach(points) { p in
+                    LineMark(x: .value("Fare", p.fare),
+                             y: .value("Load", p.loadFactor * maxRev),
+                             series: .value("Series", "load"))
+                        .foregroundStyle(Theme.warn)
+                        .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [3, 3]))
+                        .interpolationMethod(.catmullRom)
+                }
+                RuleMark(x: .value("Fare", currentFare))
+                    .foregroundStyle(Theme.textSecondary.opacity(0.8))
+                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [2, 2]))
+                    .annotation(position: .top, alignment: .center, spacing: 1) {
+                        Text("Now").font(.game(.caption2, weight: .semibold))
+                            .foregroundStyle(Theme.textSecondary)
+                    }
+                PointMark(x: .value("Fare", best.fare), y: .value("Revenue", best.revenue))
+                    .foregroundStyle(Theme.profit)
+                    .symbolSize(70)
+                    .annotation(position: .top, spacing: 1) {
+                        Text("Peak").font(.game(.caption2, weight: .semibold))
+                            .foregroundStyle(Theme.profit)
+                    }
+            }
+            .chartYAxis(.hidden)
+            .chartXAxis {
+                AxisMarks(values: .automatic(desiredCount: 4)) { v in
+                    AxisValueLabel {
+                        if let d = v.as(Double.self) {
+                            Text(d.money).font(.game(.caption2))
+                                .foregroundStyle(Theme.textSecondary)
+                        }
+                    }
+                }
+            }
+            .frame(height: height)
+            // Legend — which line is which.
+            HStack(spacing: 14) {
+                legendDot(accent, "Revenue")
+                legendDot(Theme.warn, "Load factor", dashed: true)
+                Spacer()
+            }
+        }
+    }
+
+    private func legendDot(_ color: Color, _ label: String, dashed: Bool = false) -> some View {
+        HStack(spacing: 5) {
+            RoundedRectangle(cornerRadius: 1)
+                .fill(color)
+                .frame(width: dashed ? 12 : 8, height: 2.5)
+                .opacity(dashed ? 0.8 : 1)
+            Text(label).font(.game(.caption2)).foregroundStyle(Theme.textSecondary)
+        }
+    }
+}
+
+#Preview("Fare curve") {
+    let engine = GameEngine.previewGame()
+    let route = engine.openRoute(from: "DEL", to: "GOI", fare: 90, frequency: 7)!
+    if let plane = engine.state.fleet.first(where: { $0.status != .onOrder }) {
+        engine.assign(aircraftID: plane.id, to: route.id)
+    }
+    return FareCurveChart(points: engine.fareCurve(routeID: route.id),
+                          currentFare: engine.state.routes.first!.fare)
+        .padding(20)
+        .background(Theme.card)
+        .preferredColorScheme(.dark)
+}

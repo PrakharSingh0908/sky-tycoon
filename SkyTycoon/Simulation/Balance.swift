@@ -894,9 +894,9 @@ enum Balance {
     // ── The event deck (GDD §4.7, M3) ────────────────────────────────────
 
     // ── Airworthiness (GDD §17) ──────────────────────────────────────────
-    /// Wear gained per block hour (2026-07-21): eased 0.05 → 0.035 so an
-    /// airframe takes noticeably longer to reach the danger zone.
-    static let wearPerBlockHour = 0.035
+    /// Wear gained per block hour (2026-07-24): eased 0.035 → 0.02275
+    /// (×0.65) so an airframe takes even longer to reach the danger zone.
+    static let wearPerBlockHour = 0.02275
     /// Opt-in auto-service (GDD §36) sends a plane in for a line check once
     /// its wear crosses this — comfortably below the danger zone.
     static let autoServiceWearThreshold = 78.0

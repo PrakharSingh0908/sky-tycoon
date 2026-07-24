@@ -467,10 +467,6 @@ struct MoneyView: View {
             SectionHeader(title: "The bank", icon: "building.columns.fill", accent: accent)
             Text("Lending limit: total debt ≤ \(Balance.borrowingLimit(netWorth: engine.netWorth).money) (from net worth). Current debt \(engine.totalDebt.money).")
                 .font(.game(.caption)).foregroundStyle(Theme.textSecondary)
-            // Borrowed principal lands in cash the moment you sign; net
-            // worth holds still because debt rises with it. Say so.
-            Text("Loans deposit to cash in full on signing.")
-                .font(.game(.caption2)).foregroundStyle(Theme.textTertiary)
             ForEach(engine.state.loans) { loan in
                 VStack(alignment: .leading, spacing: 6) {
                     MeterRow(label: "Remaining of \(loan.principal.money)",

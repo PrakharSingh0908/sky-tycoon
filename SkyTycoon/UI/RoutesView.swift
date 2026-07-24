@@ -460,6 +460,14 @@ struct RouteDetailView: View {
                     PillStepper(label: "Flights/week", value: "\(route.weeklyFrequency)", accent: accent,
                         onDecrement: { engine.setFrequency(routeID: routeID, frequency: route.weeklyFrequency - 1) },
                         onIncrement: { engine.setFrequency(routeID: routeID, frequency: route.weeklyFrequency + 1) })
+                    // The pricing what-if (deepen the fare knob): revenue vs
+                    // fare, your fare and the revenue peak marked, so raising
+                    // or cutting is a strategic read, not a guess.
+                    let fareCurve = engine.fareCurve(routeID: routeID)
+                    if !fareCurve.isEmpty {
+                        Divider().overlay(Theme.hairline)
+                        FareCurveChart(points: fareCurve, currentFare: route.fare, accent: accent)
+                    }
                     Divider().overlay(Theme.hairline)
                     // Projected LF: moves the instant fare/frequency/
                     // assignment change (immediacy rule).
@@ -534,7 +542,7 @@ struct RouteDetailView: View {
                                 .foregroundStyle(Theme.textPrimary)
                         }
                     }
-                    cateringRow(route)
+                    // Catering picker hidden for now (per request).
                 }
                 weeklyMoneyCard(route)
             }
@@ -664,6 +672,7 @@ struct RouteDetailView: View {
         let pct = Int((econ.priceRatio - 1) * 100)
         return pct == 0 ? "at market" : (pct > 0 ? "\(pct)% over market" : "\(-pct)% under market")
     }
+
 
     // ── What one week of this route really earns: three numbers, no math ─
 

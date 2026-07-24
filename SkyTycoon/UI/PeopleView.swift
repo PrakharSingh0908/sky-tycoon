@@ -119,15 +119,25 @@ private struct StaffPoolCard: View {
         engine.state.applicants.filter { $0.role == role }
     }
 
+    /// A representative face for the department heading — the first hired
+    /// member if there is one, else a stock portrait for the role.
+    private func roleAvatar(_ role: StaffRole) -> String {
+        if let hired = pool.members.first?.avatar { return hired }
+        switch role {
+        case .pilots: return "avatar_pilot_m_01"
+        case .cabinCrew: return "avatar_crew_f_01"
+        case .ground: return "avatar_ground_m_01"
+        case .hq: return "avatar_hq_f_01"
+        }
+    }
+
     var body: some View {
         GameCard {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(role.displayName).font(.game(.headline, weight: .bold))
-                    StarRating(rating: pool.skill, size: 9)
-                }
+            HStack(spacing: 10) {
+                PersonAvatar(avatar: roleAvatar(role), name: role.displayName, size: 34)
+                Text(role.displayName).font(.game(.headline, weight: .bold))
                 Spacer()
-                StatusBadge(text: "\(pool.headcount) staff", color: accent)
+                StarRating(rating: pool.skill, size: 11)
             }
 
             // Workload is a LIVE projection (immediacy rule): a hire or an

@@ -210,34 +210,86 @@ struct InstrumentGauge: View {
     var tint: Color? = nil         // override; else the health color
 
     private let sweep = 0.75        // 270° of the circle
-    private let diameter: CGFloat = 78
+    private let diameter: CGFloat = 100
 
     var body: some View {
         let v = max(0, min(1, value))
         let color = tint ?? Theme.health(v)
+        // The face is recessed inside the bezel; the track rides a touch
+        // inside the face so the arc never kisses the enamel rim. A thin
+        // bezel keeps the metal without crowding three dials in a row.
+        let face = diameter - 7
+        let track = face - 12
         VStack(spacing: 7) {
             ZStack {
-                // Recessed arc track, cut into the panel.
-                Circle().trim(from: 0, to: sweep)
-                    .stroke(LinearGradient(colors: [.black.opacity(0.55), .black.opacity(0.26)],
-                                           startPoint: .top, endPoint: .bottom),
-                            style: StrokeStyle(lineWidth: 7, lineCap: .round))
-                    .rotationEffect(.degrees(135))
-                // Graduation ticks along the arc. A top-pinned tick sits at
-                // 12 o'clock (270° clockwise from the trim's 3 o'clock zero),
-                // so to land it on the arc angle (135° + f·270°) it rotates by
-                // 225° + f·270° — the +90° that keeps ticks ON the track.
-                ForEach(0..<11, id: \.self) { i in
-                    Capsule().fill(Color.white.opacity(0.16))
-                        .frame(width: 1.5, height: 4)
-                        .frame(width: diameter, height: diameter, alignment: .top)
-                        .rotationEffect(.degrees(225 + Double(i) / 10 * 270))
+                // ── Turned-steel bezel: an angular sweep of light around the
+                // rim reads as a machined metal ring, seated with a drop
+                // shadow so it sits proud of the panel.
+                Circle()
+                    .fill(AngularGradient(
+                        gradient: Gradient(colors: [
+                            Color(white: 0.62), Color(white: 0.34), Color(white: 0.52),
+                            Color(white: 0.30), Color(white: 0.46), Color(white: 0.62)]),
+                        center: .center, angle: .degrees(-40)))
+                    .overlay(Circle().strokeBorder(
+                        LinearGradient(colors: [.white.opacity(0.4), .black.opacity(0.4)],
+                                       startPoint: .topLeading, endPoint: .bottomTrailing),
+                        lineWidth: 0.75))
+                    .shadow(color: .black.opacity(0.35), radius: 2, y: 1)
+
+                // ── Enamel face, sunk into the bezel: near-black, lifting
+                // slightly toward the rim, ringed by a dark inner cut.
+                Circle()
+                    .fill(RadialGradient(colors: [Color(white: 0.13), Color(white: 0.035)],
+                                         center: .center, startRadius: 2, endRadius: face / 2))
+                    .overlay(Circle().strokeBorder(
+                        LinearGradient(colors: [.black.opacity(0.95), .white.opacity(0.08)],
+                                       startPoint: .top, endPoint: .bottom),
+                        lineWidth: 1))
+                    .frame(width: face, height: face)
+
+                // ── Dial internals: recessed track, graduations, value arc.
+                ZStack {
+                    // Recessed arc track, cut into the face.
+                    Circle().trim(from: 0, to: sweep)
+                        .stroke(LinearGradient(colors: [.black.opacity(0.6), .black.opacity(0.28)],
+                                               startPoint: .top, endPoint: .bottom),
+                                style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                        .rotationEffect(.degrees(135))
+                    // Graduation ticks. A top-pinned tick sits at 12 o'clock
+                    // (270° clockwise from the trim's 3 o'clock zero), so to
+                    // land it on the arc angle (135° + f·270°) it rotates by
+                    // 225° + f·270° — the +90° that keeps ticks ON the track.
+                    // Every fifth tick is a longer, brighter major graduation.
+                    ForEach(0..<11, id: \.self) { i in
+                        Capsule().fill(Color.white.opacity(i % 5 == 0 ? 0.38 : 0.14))
+                            .frame(width: i % 5 == 0 ? 2 : 1.5,
+                                   height: i % 5 == 0 ? 6 : 4)
+                            .frame(width: track, height: track, alignment: .top)
+                            .rotationEffect(.degrees(225 + Double(i) / 10 * 270))
+                    }
+                    // Milled value arc: a specular sheen laid over the semantic
+                    // color, its light bleeding out of the groove.
+                    Circle().trim(from: 0, to: sweep * v)
+                        .stroke(color, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                        .overlay(
+                            Circle().trim(from: 0, to: sweep * v)
+                                .stroke(LinearGradient(colors: [.white.opacity(0.55), .clear],
+                                                       startPoint: .top, endPoint: .bottom),
+                                        style: StrokeStyle(lineWidth: 6, lineCap: .round)))
+                        .rotationEffect(.degrees(135))
+                        .shadow(color: color.opacity(0.7), radius: 4)
                 }
-                // Milled value arc + light bleed.
-                Circle().trim(from: 0, to: sweep * v)
-                    .stroke(color, style: StrokeStyle(lineWidth: 7, lineCap: .round))
-                    .rotationEffect(.degrees(135))
-                    .shadow(color: color.opacity(0.6), radius: 4)
+                .frame(width: track, height: track)
+
+                // ── Glass sheen: a soft highlight across the upper face, the
+                // last thing before the readout, so the dial reads as domed.
+                Circle()
+                    .fill(LinearGradient(colors: [.white.opacity(0.18), .clear],
+                                         startPoint: .top, endPoint: .center))
+                    .frame(width: face, height: face)
+                    .allowsHitTesting(false)
+
                 // Hub readout.
                 VStack(spacing: 0) {
                     Image(systemName: icon).font(.system(size: 12, weight: .semibold))

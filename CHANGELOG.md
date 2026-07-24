@@ -7,6 +7,83 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Privacy manifest for TestFlight / App Store
+
+- Added `PrivacyInfo.xcprivacy` to the app target. Declares **no tracking and no data collection**, and the single required-reason API in use: **UserDefaults** (`CA92.1`, local-only prefs). All game state is a JSON file in the app container and never leaves the device.
+- Verified: the manifest ships in the Release bundle, passes `plutil -lint`, and a clean **Release** build (`-validate-for-store`) succeeds with zero warnings.
+
+*Why:* pre-launch. External TestFlight (Beta App Review) and App Store submission require a privacy manifest for apps using required-reason APIs. This clears that blocker.
+
+---
+
+## Avatars on People headings + leaner fare curve
+
+- Each **staff pool heading** (People) now leads with a **role avatar** before the name: the first hired member's portrait, or a stock portrait for the role when the pool is empty.
+- Removed the three-line **advice paragraph** under the fare curve. The chart's **Now** and **Peak** markers carry the read on their own.
+
+*Why:* per request. The avatar gives each department a face; the prose under the chart was saying what the markers already show.
+
+---
+
+## Fare curve: pricing is now a strategic read
+
+- The route **Economics** card gains a **pricing curve** right under the Fare stepper. It sweeps the fare across a range and re-runs the *same* economics the weekly tick uses, plotting **revenue vs fare** (blue) with **load factor** traced as an amber dashed line so the yield-vs-fill tradeoff is visible.
+- The player's current fare (**Now**) and the revenue-maximizing fare (**Peak**) are both marked, with a one-line read: how full you are and what you earn today, where revenue peaks, and which way to lean.
+- New engine API `fareCurve(routeID:)` returns the what-if samples. Because fuel and fixed costs don't move with fare, the revenue-max fare is also the profit-max fare, so "Peak" is the honest target.
+
+*Why:* fare is the knob you touch every week; this turns it from a guess into a deliberate read without adding any new systems or interrupts. Depth in the existing lever, per the engagement discussion (option 4).
+
+---
+
+## Catering & galley-oven options hidden
+
+- Hidden the three player-facing catering/oven controls **for now**: the route **Catering** picker (Routes), the **Fit galley oven** service action (Fleet), and the **Galley ovens** stepper (Cabin Architect).
+- The underlying model and simulation are left untouched, so existing saves stay valid and the options can be restored by re-adding the UI calls.
+
+*Why:* per request — pulling these out of the flow while the feature is reconsidered. Kept the data layer intact so it's a one-line-per-site restore.
+
+---
+
+## Slower airframe wear + bigger dials
+
+- **Wear accrual** slowed to ×0.65 (`wearPerBlockHour` 0.035 → 0.02275). Airframes take noticeably longer to reach the danger zone, so heavy-utilization routes need less babysitting between checks.
+- **InstrumentGauge** diameter bumped 80 → 92pt. The icon and readout keep their fixed sizes, so the dials just gain face and presence.
+
+*Why:* per request — wear was eating into flying time faster than felt fair, and the dials wanted more room to read as instruments.
+
+---
+
+## Refined Cabin Architect + lighter dial bezel
+
+- **Cabin Architect** floorplan now reads as a real airframe: a cockpit windscreen at the nose, a shaded **wing box** with green **over-wing exit** slots on both walls, a pair of **aft lavatories** giving the cabin a proper back wall, and a top-lit gradient on each seat shell for a little moulded depth.
+- **InstrumentGauge** bezel dialed back to a middle ground: a thinner turned-steel ring with gentler contrast and a softer seating shadow, so three dials in a row no longer feel crowded.
+- Removed the wrench **icon from the Service button** on Fleet cards, matching the icon-free Route key.
+
+*Why:* per request — keep the metal the dials gained but stop it crowding the layout, and make the Cabin Architect feel considered rather than a flat seat grid.
+
+---
+
+## Machined instrument dials + leaner Fleet cards
+
+- **InstrumentGauge** reworked into a proper cockpit dial: a turned-steel bezel ring seated with a drop shadow, a recessed near-black enamel face, a domed glass sheen, brighter major graduations every fifth tick, and a specular sheen laid over the value arc. Used on Fleet (wear/condition/range) and Routes (load factor/on-time).
+- **Fleet card** description line trimmed to just the model name. Seats, range, and age are dropped, since the dials and the route already carry the numbers that matter.
+- Removed the **/wk lease** figure from the Fleet status line.
+- **The bank** (Money): dropped the "Loans deposit to cash in full on signing." caption. The lending-limit figure stays.
+
+*Why:* per request — the dials should feel crafted, not flat; and the Fleet card was repeating spec numbers that the gauges now show at a glance.
+
+---
+
+## Route pairing lives on the Fleet card's Route key + a Range dial
+
+- On each **Fleet card**, the **Route button** now shows the assigned pairing (e.g. `DEL ✈︎ BOM`) as its own label; idle planes still read "Route". The button's leading icon is **gone**, and the separate route status tag has been **removed** from the status line.
+- The status line now only appears when it has something to add: **In shop**, **Idle**, or the **weekly lease bill**. Assigned owned planes no longer carry an empty status row.
+- Added a third instrument dial, **Range**, to the right of Condition. It reads the airframe's reach against the longest-legged airframe in service, so a widebody's needle sweeps far past a feeder's.
+
+*Why:* per request — the route tag and the Route button were saying the same thing twice, so the pairing folds onto the key it controls. Range earns a dial so reach reads at a glance alongside wear and condition.
+
+---
+
 ## One-tap assign for available aircraft
 
 - Tapping an **available (idle) aircraft** in a route's "Aircraft on this route" list now **assigns it in one tap**, instead of opening an action menu with an "Assign to this route" button. Planes already on the route (take off / service) or on another route (move here) still open the drawer, since those are deliberate moves.
