@@ -7,6 +7,16 @@ track the build phases in [GAME_DESIGN.md](GAME_DESIGN.md) §8 and milestones in
 
 ---
 
+## Living map: one plane per aircraft, sized, constant speed, no glow
+
+- **Planes on a route now match the aircraft actually flying it** — a one-plane route shows one plane (it was drawing a count based on weekly frequency, so a daily-doubled route looked like two jets).
+- **Planes are smaller and sized to the airframe** — a feeder is a speck, a widebody a touch bigger.
+- **Constant on-screen speed** — every flight crosses the map at the same visual pace whether it's a short hop or a long haul (the round-trip time now scales with the arc's length).
+- **Removed the load-factor "breathing" glow** on the arcs; routes now hold a steady, calm glow.
+
+*Why:* per request — the motion was busy and slightly misleading; this makes it accurate and calmer.
+
+
 ## Dials everywhere: fixed ticks + wear/condition gauges
 
 - **Fixed the dial's graduation ticks** — they were ~90° out of phase and floated off the arc; they now sit exactly on the track with the ends aligned.

@@ -310,22 +310,10 @@ struct RouteMapView: View {
 
             let color = color(for: route)
             let coreWidth = 1.5 + CGFloat(route.weeklyFrequency) / 28.0 * 3.0
-            let staffed = staffedRouteIDs.contains(route.id)
-            let dash: [CGFloat] = staffed ? [] : [6, 6]
-            // Load-factor "breathing": a fuller staffed route pulses a wider,
-            // brighter glow; planned routes stay steady. Per-route phase so
-            // the network doesn't throb in unison.
-            var glowAlpha = 0.30
-            var glowWidth = coreWidth + 4
-            if staffed && !reduceMotion {
-                let lf = min(1, max(0, route.lastLoadFactor))
-                let off = Double(abs(route.id.hashValue) % 997) / 997.0 * 2 * .pi
-                let pulse = 0.5 + 0.5 * sin(flightPhase * 1.4 + off)
-                glowAlpha = 0.30 + 0.28 * lf * pulse
-                glowWidth = coreWidth + 4 + CGFloat(7 * lf * pulse)
-            }
-            ctx.stroke(arc, with: .color(color.opacity(glowAlpha)),
-                       style: StrokeStyle(lineWidth: glowWidth, lineCap: .round, dash: dash))
+            let dash: [CGFloat] = staffedRouteIDs.contains(route.id) ? [] : [6, 6]
+            // A steady soft glow under the core — no breathing.
+            ctx.stroke(arc, with: .color(color.opacity(0.30)),
+                       style: StrokeStyle(lineWidth: coreWidth + 4, lineCap: .round, dash: dash))
             ctx.stroke(arc, with: .color(color),
                        style: StrokeStyle(lineWidth: coreWidth, lineCap: .round, dash: dash))
         }
@@ -416,38 +404,41 @@ struct RouteMapView: View {
     /// smooth — the busiest routes get planes first.
     private func drawFlights(ctx: inout GraphicsContext, size: CGSize, radius: Double) {
         guard !reduceMotion else { return }
-        // Only routes with an aircraft actually IN THE AIR fly on the map —
-        // a plane in the shop (grounded for a check) doesn't count, so a
-        // route whose only jet is grounded shows no motion.
-        let flying = Set(engine.state.fleet.filter {
+        // One drawn plane per aircraft ACTUALLY IN THE AIR on the route — a
+        // jet in the shop doesn't count, and a one-plane route shows exactly
+        // one plane (the count is the fleet, not the frequency).
+        let flyingByRoute = Dictionary(grouping: engine.state.fleet.filter {
             $0.status == .assigned && $0.groundedWeeksRemaining == 0
-        }.compactMap(\.assignedRouteID))
+                && $0.assignedRouteID != nil
+        }, by: { $0.assignedRouteID! })
         let focusRoute = focusRouteID.flatMap { id in
             engine.state.routes.first { $0.id == id }
         }
         let candidates = (focusRoute.map { [$0] } ?? engine.state.routes)
-            .filter { flying.contains($0.id) && $0.weeklyFrequency > 0 }
-            .sorted { $0.weeklyFrequency > $1.weeklyFrequency }
-        let roundTrip = 8.0          // seconds out-and-back at x1
+            .filter { $0.weeklyFrequency > 0 && (flyingByRoute[$0.id]?.isEmpty == false) }
+            .sorted { (flyingByRoute[$0.id]?.count ?? 0) > (flyingByRoute[$1.id]?.count ?? 0) }
         var budget = 40              // global plane cap (perf)
         for route in candidates {
             guard budget > 0,
                   let (p1, c, p2) = arcPoints(for: route, size: size, radius: radius)
             else { continue }
-            // ~1 plane per daily departure, capped at 3.
-            let daily = Int((Double(route.weeklyFrequency) / 7.0).rounded())
-            let count = min(budget, min(3, max(1, daily)))
+            let planes = flyingByRoute[route.id] ?? []
+            let count = min(budget, min(planes.count, 4))
+            // Constant SCREEN speed regardless of route length: the round trip
+            // takes as long as the arc is long (≈ px ÷ px-per-second), so a
+            // short hop and a long haul cross the map at the same visual pace.
+            let arcLen = 0.5 * (hypot(p2.x - p1.x, p2.y - p1.y)
+                                + hypot(c.x - p1.x, c.y - p1.y)
+                                + hypot(p2.x - c.x, p2.y - c.y))
+            let roundTrip = max(3.0, 2 * arcLen / 34.0)
             let col = color(for: route)
-            // A stable per-route offset spaces this route's planes around the
-            // cycle and desyncs routes from one another.
             let jitter = Double(abs(route.id.hashValue) % 997) / 997.0
             for i in 0..<count {
                 budget -= 1
                 let offset = (Double(i) / Double(count) + jitter)
                     .truncatingRemainder(dividingBy: 1.0)
-                // One lap is a full round trip: out (0→0.5) then back
-                // (0.5→1), so a plane shuttles smoothly and never teleports,
-                // and a single plane naturally shows both directions.
+                // One lap is a full round trip: out (0→0.5) then back (0.5→1),
+                // so a plane shuttles smoothly and never teleports.
                 let lap = (flightPhase / roundTrip + offset)
                     .truncatingRemainder(dividingBy: 1.0)
                 let outbound = lap < 0.5
@@ -459,9 +450,17 @@ struct RouteMapView: View {
 
                 drawArrivalRipple(ctx: &ctx, lap: lap, origin: p1, dest: p2, color: col)
                 drawTrail(ctx: &ctx, p1: p1, c: c, p2: p2, t: t, paramDir: paramDir)
-                drawPlane(ctx: &ctx, at: pos, angle: atan2(tan.y, tan.x))
+                drawPlane(ctx: &ctx, at: pos, angle: atan2(tan.y, tan.x),
+                          size: planeSize(planes[i].type))
             }
         }
+    }
+
+    /// Marker size scaled to the airframe: a feeder is a speck, a widebody a
+    /// bit bigger. Smaller overall than the old fixed marker.
+    private func planeSize(_ type: AircraftType) -> CGFloat {
+        let seats = Double(Balance.specs[type]?.maxSeats ?? 50)
+        return 9 + CGFloat(min(1, seats / 300)) * 8      // ≈ 9…17 pt
     }
 
     /// A short fading streak trailing the plane along the arc.
@@ -507,12 +506,13 @@ struct RouteMapView: View {
     /// Draws the top-view aircraft, rotated to travel. The source art's nose
     /// points up (−y), so we rotate by `angle + π/2` to align it with the
     /// heading. Falls back to a dart if the image is unavailable.
-    private func drawPlane(ctx: inout GraphicsContext, at p: CGPoint, angle: Double) {
+    private func drawPlane(ctx: inout GraphicsContext, at p: CGPoint, angle: Double,
+                           size: CGFloat = 16) {
         var g = ctx
         g.translateBy(x: p.x, y: p.y)
         g.rotate(by: .radians(angle + .pi / 2))
         if let img = Self.planeImage {
-            let s: CGFloat = 22
+            let s = size
             let rect = CGRect(x: -s / 2, y: -s / 2, width: s, height: s)
             // A soft shadow lifts the white airframe off bright terrain.
             g.drawLayer { layer in
